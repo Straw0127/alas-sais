@@ -392,6 +392,9 @@ if 'morning' in OPT:   # 6:00 AM: bulb off, sun through the open window, the yar
     for n_ in skyN:
         if n_.type == 'VALTORGB': n_.color_ramp.elements[0].color = (1.0, 0.75, 0.5, 1); n_.color_ramp.elements[1].color = (0.45, 0.6, 0.85, 1)
         if n_.type == 'EMISSION': n_.inputs['Strength'].default_value = 3.0
+# lamps light the house but are never seen as glowing shapes themselves (the bulbs are their own meshes)
+for o_ in bpy.data.objects:
+    if o_.type == 'LIGHT' and o_.data.type in ('AREA', 'POINT', 'SPOT') and o_.name != 'moonWin': o_.visible_camera = False
 # ---------------------------------------------------------------- cameras
 def KW(kx, ky, z):   # kitchen-local (as in kitchen.py) -> house
     return (ky + XK - KDIM[1] - 0.1, -kx + CY + 1.3, z)
