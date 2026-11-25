@@ -414,6 +414,138 @@ def baby_cry(d=3.2):
     y = crush(lp(y, 4500) * 0.7, 6, 3) + hp(noise(d), 1500) * 0.03
     return reverb(y, 1.0, 0.35)
 
+# ---------------------------------------------------------------- pack 3: player actions
+def fabric_swish(d=0.8, lo=600, hi=5000):
+    n = int(d * SR); x = bp(noise(d), lo, hi)
+    e = np.sin(np.linspace(0, np.pi, n)) ** 1.3
+    flutter = 0.6 + 0.4 * np.abs(np.sin(np.linspace(0, d * 38, n)))
+    return x * e * flutter
+def latch_click(d=0.25):
+    t = t_(d); return metal_hit(2900, d, damp=0.02) * 0.6 + np.sin(2 * np.pi * 180 * t) * np.exp(-t / 0.015) * 0.5
+def door_open_slow():
+    y = np.zeros(int(2.6 * SR)); place(y, latch_click() * 0.8, 0.0)
+    place(y, creak(2.0, f0=700, rate=(10, 45), res=(260, 700, 1500)) * 0.9, 0.18)
+    place(y, bp(noise(1.8), 80, 400) * env(int(1.8 * SR), 0.4, 0.8) * 0.15, 0.3)  # air moving
+    return reverb(y, 1.0, 0.3)
+def door_close_shut():
+    y = np.zeros(int(2.0 * SR))
+    place(y, creak(0.6, rate=(30, 80), res=(300, 820, 1700)) * 0.6, 0.0)
+    t = t_(0.9); thud = np.sin(2 * np.pi * 60 * t) * np.exp(-t / 0.09) * 1.1 + bp(noise(0.9), 120, 1500) * np.exp(-t / 0.04)
+    place(y, dist(thud, 2), 0.5); place(y, latch_click() * 0.9, 0.56)
+    return reverb(y, 1.1, 0.3)
+def door_push_strain():
+    """Body against the door: wood groaning under load, hands on the frame. Loop-friendly 4 s."""
+    d = 4.0; y = creak(d, rate=(6, 22), res=(180, 520, 1200)) * 0.8
+    y += bp(noise(d), 60, 300) * 0.25 * (0.6 + 0.4 * np.sin(np.linspace(0, 9, int(d * SR))))
+    return loopify(reverb(y, 0.6, 0.2), 0.6)
+def curtain_open_pull():
+    y = np.zeros(int(1.6 * SR))
+    for k in range(7): place(y, metal_hit(rng.uniform(2700, 3400), 0.25, damp=0.04) * 0.45, 0.05 + k * 0.07 + rng.uniform(0, 0.02))
+    place(y, fabric_swish(0.9, 500, 6000) * 0.9, 0.0)
+    place(y, lp(noise(1.2), 300) * env(int(1.2 * SR), 0.05, 0.9) * 0.25, 0.2)  # night air rushing in
+    return reverb(y, 0.8, 0.25)
+def curtain_close_pull():
+    y = np.zeros(int(1.4 * SR))
+    place(y, fabric_swish(0.7, 700, 6500) * 1.0, 0.0)
+    for k in range(6): place(y, metal_hit(rng.uniform(2500, 3100), 0.25, damp=0.04) * 0.5, 0.12 + k * 0.06 + rng.uniform(0, 0.02))
+    t = t_(0.3); place(y, bp(noise(0.3), 200, 1200) * np.exp(-t / 0.05) * 0.6, 0.55)  # fabric slaps the frame
+    return reverb(y, 0.7, 0.22)
+def curtain_grip():
+    """Fists bunched in the curtain, fabric strained. Loop 4 s."""
+    d = 4.0; n = int(d * SR)
+    y = bp(noise(d), 800, 5000) * 0.25 * (0.5 + 0.5 * np.abs(np.sin(np.linspace(0, 14, n))) ** 3)
+    for k in range(5): place(y, metal_hit(rng.uniform(2800, 3200), 0.2, damp=0.03) * 0.12, rng.uniform(0.2, d - 0.3))
+    return loopify(reverb(y, 0.5, 0.2), 0.6)
+def hide_bed():
+    """Drop to the floor, slide under the bed: knees thump, cloth drags on wood, bed slats creak."""
+    y = np.zeros(int(2.2 * SR)); t = t_(0.4)
+    knee = np.sin(2 * np.pi * 85 * t) * np.exp(-t / 0.05)
+    place(y, knee * 0.9, 0.0); place(y, knee * 0.7, 0.18)
+    drag = bp(noise(1.1), 250, 2200) * env(int(1.1 * SR), 0.1, 0.4) * (0.5 + 0.5 * np.sin(np.linspace(0, 20, int(1.1 * SR))) ** 2)
+    place(y, drag * 0.8, 0.3)
+    place(y, creak(0.7, rate=(25, 70), res=(380, 950, 2100)) * 0.35, 0.9)
+    place(y, kulambo_rustle() * 0.6, 0.35)
+    return reverb(y, 0.6, 0.2)
+def unhide_bed():
+    y = np.zeros(int(1.8 * SR))
+    drag = bp(noise(0.9), 250, 2400) * env(int(0.9 * SR), 0.1, 0.3)
+    place(y, drag * 0.7, 0.0); place(y, creak(0.5, rate=(30, 80), res=(380, 950, 2100)) * 0.3, 0.1)
+    t = t_(0.3); place(y, np.sin(2 * np.pi * 90 * t) * np.exp(-t / 0.05) * 0.5, 0.9)
+    return reverb(y, 0.6, 0.2)
+def hide_cabinet():
+    y = np.zeros(int(2.0 * SR))
+    place(y, cabinet_door(True) * 0.8, 0.0)
+    t = t_(0.5); place(y, np.sin(2 * np.pi * 110 * t) * np.exp(-t / 0.06) * 0.6, 0.45)  # knees on plywood
+    place(y, bp(noise(0.6), 400, 3000) * env(int(0.6 * SR), 0.05, 0.3) * 0.4, 0.5)
+    for k in range(4): place(y, metal_hit(rng.uniform(1500, 2400), 0.2, damp=0.04) * 0.15, 0.55 + k * 0.05)  # pots shift
+    place(y, cabinet_door(False) * 0.7, 0.95)
+    return reverb(y, 0.4, 0.15)
+def hide_sofa():
+    y = np.zeros(int(1.6 * SR))
+    t = t_(0.5); place(y, lp(noise(0.5), 400) * np.exp(-t / 0.08) * 0.8, 0.0)  # cushion thump
+    place(y, plastic_crinkle(1.0) * 0.8, 0.15)
+    return y
+def turn_whoosh():
+    d = 0.5; n = int(d * SR); y = bp(noise(d), 200, 1500) * np.sin(np.linspace(0, np.pi, n)) ** 2
+    return y * 0.6 + fabric_swish(0.5, 1500, 6000) * 0.3
+def run_pant(d=4.0):
+    """Ragged panting while running (loopable)."""
+    y = np.zeros(int(d * SR)); at = 0.0
+    while at < d - 0.4:
+        place(y, breath(0.28, True, False) * 0.7, at); place(y, breath(0.3, False, True) * 0.9, at + 0.3); at += rng.uniform(0.6, 0.72)
+    return loopify(lp(y, 5000), 0.4)
+def nervous_breath(d=6.0):
+    y = np.zeros(int(d * SR)); at = 0.1
+    while at < d - 1.4:
+        place(y, breath(0.9, True, False) * 0.5, at); place(y, breath(1.1, False, False) * 0.4, at + 1.0); at += rng.uniform(2.2, 2.8)
+    return loopify(y, 0.6)
+def floor_creak():
+    return reverb(creak(0.6, rate=(20, 50), res=(250, 600, 1400)) * 0.7, 0.8, 0.25)
+def steps_run_cement():
+    return footsteps(12, 0.28, 'cement', True)
+def flashlight_on():
+    d = 0.35; t = t_(d); y = flashlight_click() 
+    z = np.zeros(int(d * SR)); place(z, y, 0); z += np.sin(2 * np.pi * 15000 * t) * 0.01 * (t > 0.03)
+    return z
+def salt_throw():
+    y = np.zeros(int(1.4 * SR))
+    place(y, fabric_swish(0.3, 1500, 7000) * 0.6, 0.0)
+    for _ in range(260): place(y, hp(noise(0.006), 3500)[:int(0.006 * SR)] * rng.uniform(0.05, 0.6), 0.25 + rng.exponential(0.18))
+    return reverb(y, 0.5, 0.2)
+def tv_click_off():
+    d = 0.9; t = t_(d)
+    y = light_switch() 
+    z = np.zeros(int(d * SR)); place(z, y, 0)
+    z += np.sin(2 * np.pi * 15734 * t) * 0.05 * np.exp(-t / 0.3) + lp(noise(d), 200) * np.exp(-t / 0.08) * 0.4
+    return z
+
+# ---------------------------------------------------------------- pack 4: phone call
+def ringtone(d=6.0):
+    """Cheap feature-phone ring: original square-wave motif, buzz of the vibrate motor under it."""
+    y = np.zeros(int(d * SR)); notes = [988, 1319, 988, 1175, 988, 1319, 1480, 1319]
+    def tone(f, L):
+        t = t_(L); return signal.square(2 * np.pi * f * t, 0.35) * 0.35 * env(len(t), 0.005, 0.02)
+    at = 0.0
+    while at < d - 1.4:
+        for k, f in enumerate(notes): place(y, tone(f, 0.11), at + k * 0.13)
+        at += 2.0
+    t = t_(d); buzz = signal.sawtooth(2 * np.pi * 180 * t) * 0.08 * ((np.sin(2 * np.pi * 0.5 * t) > 0) * 1.0)
+    y = lp(y, 5000) + lp(buzz, 900)
+    return reverb(y, 0.4, 0.15)
+def phone_pickup():
+    d = 0.8; t = t_(d); y = metal_hit(3000, 0.2, damp=0.01) * 0.5
+    z = np.zeros(int(d * SR)); place(z, y, 0); z += bp(noise(d), 300, 3400) * 0.08 * (t > 0.08) * np.exp(-(t - 0.08).clip(0) / 0.5)
+    return z
+def phone_hangup():
+    d = 1.6; y = np.zeros(int(d * SR)); t = t_(0.2)
+    for k in range(3): place(y, np.sin(2 * np.pi * 425 * t) * 0.5 * env(len(t), 0.005, 0.02), 0.1 + k * 0.45)
+    return y
+def line_static(d=8.0):
+    n = int(d * SR); y = bp(noise(d), 300, 3400) * 0.12
+    cr = np.zeros(n)
+    for _ in range(int(d * 6)): place(cr, hp(noise(0.02), 1500) * rng.uniform(0.1, 0.6), rng.uniform(0, d - 0.05))
+    return loopify(y + cr * 0.3, 0.5)
+
 if __name__ == '__main__':
     jobs = {
         'amb_house': (amb_house, 0.7), 'amb_garden': (amb_garden, 0.6), 'amb_menu': (amb_menu, 0.7),
@@ -432,7 +564,13 @@ if __name__ == '__main__':
         'fluorescent_hum': (fluorescent, 0.5), 'clock_tick': (clock_tick, 0.6), 'power_down': (power_down, 0.85),
         'breaker': (breaker, 0.85), 'cabinet_open': (lambda: cabinet_door(True), 0.75), 'cabinet_close': (lambda: cabinet_door(False), 0.8),
         'plastic_crinkle': (plastic_crinkle, 0.6), 'breath_hold_gasp': (breath_hold, 0.85), 'distant_scream': (distant_scream, 0.6),
-        'rain_heavy': (rain_heavy, 0.75), 'kulambo_rustle': (kulambo_rustle, 0.6), 'baby_cry': (baby_cry, 0.6),
+        'rain_heavy': (rain_heavy, 0.75),
+        'ringtone': (ringtone, 0.7), 'phone_pickup': (phone_pickup, 0.6), 'phone_hangup': (phone_hangup, 0.6), 'line_static': (line_static, 0.4),
+        'door_open_slow': (door_open_slow, 0.85), 'door_close_shut': (door_close_shut, 0.95), 'door_push_strain': (door_push_strain, 0.6),
+        'curtain_open_pull': (curtain_open_pull, 0.8), 'curtain_close_pull': (curtain_close_pull, 0.85), 'curtain_grip': (curtain_grip, 0.5),
+        'hide_bed': (hide_bed, 0.85), 'unhide_bed': (unhide_bed, 0.75), 'hide_cabinet': (hide_cabinet, 0.8), 'hide_sofa': (hide_sofa, 0.7),
+        'turn_whoosh': (turn_whoosh, 0.5), 'run_pant': (run_pant, 0.6), 'nervous_breath': (nervous_breath, 0.45), 'floor_creak': (floor_creak, 0.6),
+        'steps_run_cement': (steps_run_cement, 0.9), 'flashlight_on': (flashlight_on, 0.6), 'salt_throw': (salt_throw, 0.7), 'tv_click_off': (tv_click_off, 0.7), 'kulambo_rustle': (kulambo_rustle, 0.6), 'baby_cry': (baby_cry, 0.6),
     }
     import sys as _s
     if len(_s.argv) > 1:

@@ -1,0 +1,1544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>ALAS-SAIS</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 16 16%27%3E%3Crect width=%2716%27 height=%2716%27 fill=%27%23000%27/%3E%3Ccircle cx=%278%27 cy=%278%27 r=%275%27 fill=%27none%27 stroke=%27%23b3261e%27 stroke-width=%272%27/%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;700&family=Special+Elite&family=Inter:wght@400;600&display=swap">
+<style>*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:#000;overflow:hidden;overscroll-behavior:none;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+body{font-family:Inter,system-ui,sans-serif;color:#e9dfcb}
+#wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#000}
+#stage{position:absolute;left:0;top:0;width:1280px;height:720px;transform-origin:0 0;overflow:hidden;background:#000}
+.layer{position:absolute;inset:0}
+.bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:opacity .3s ease,filter .4s ease,transform .6s ease;pointer-events:none}
+.bg.now{transition:none}
+#dark{pointer-events:none;opacity:0;transition:opacity .3s}
+#grain{pointer-events:none;opacity:0;mix-blend-mode:overlay}
+#vig{pointer-events:none;background:radial-gradient(ellipse at 50% 50%,transparent 45%,rgba(0,0,0,.75) 100%)}
+#flash{pointer-events:none;opacity:0;background:#b3261e;z-index:9}
+#fog{pointer-events:none;opacity:0;transition:opacity 1s;background:radial-gradient(ellipse at 50% 40%,rgba(200,210,220,.32),rgba(200,210,220,.05) 60%,transparent 75%)}
+#fog .hand{position:absolute;width:110px;height:140px;border-radius:40% 40% 30% 30%;background:radial-gradient(rgba(10,10,12,.55),transparent 70%)}
+#scare{display:none;position:absolute;inset:0;background:#000;overflow:hidden;z-index:10}
+#scare img{position:absolute;inset:-6%;width:112%;height:112%;object-fit:cover}
+#scare.go img{animation:scare 1.5s cubic-bezier(.2,1.6,.4,1) forwards}
+#scare.go.soft img{animation:scaresoft 1.5s ease-out forwards}
+@keyframes scare{0%{transform:scale(1.7) translate(0,4%);filter:brightness(2) contrast(1.6)}8%{transform:scale(1.15) translate(-2%,1%)}12%{transform:scale(1.25) translate(2%,-1%);filter:brightness(1.3) contrast(1.4) hue-rotate(-12deg)}18%{transform:scale(1.12) translate(-1%,2%)}25%{transform:scale(1.2) translate(1%,-2%)}40%{transform:scale(1.08)}100%{transform:scale(1.04);filter:brightness(.6)}}
+@keyframes scaresoft{0%{transform:scale(1.25);filter:brightness(.6)}100%{transform:scale(1.05);filter:brightness(.5)}}
+#scare.go::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(0,0,0,.35) 0 2px,transparent 2px 4px);animation:tear .12s steps(2) 10}
+@keyframes tear{0%{transform:translateY(0)}100%{transform:translateY(6px)}}
+.shake{animation:shake .4s linear}
+@keyframes shake{0%,100%{transform:translate(0,0)}20%{transform:translate(-6px,3px)}40%{transform:translate(5px,-4px)}60%{transform:translate(-4px,-2px)}80%{transform:translate(4px,4px)}}
+/* HUD */
+#hud{pointer-events:none;z-index:4}
+#hud .pe{pointer-events:auto}
+#clock{position:absolute;left:24px;top:20px;padding:10px 16px;background:rgba(8,8,8,.72);border:1px solid #2a2620;border-radius:14px}
+#clock b{display:block;font-family:Oswald,sans-serif;font-weight:500;font-size:34px;letter-spacing:2px;line-height:1}
+#clock span{font-size:13px;letter-spacing:2px;color:#a39886}
+#topr{position:absolute;right:20px;top:20px;display:flex;gap:10px;align-items:center}
+.chip{padding:8px 12px;background:rgba(8,8,8,.72);border:1px solid #2a2620;border-radius:12px;font-size:14px;color:#c9bfab;display:flex;align-items:center;gap:8px}
+.bar{width:90px;height:10px;border:1px solid #6b6253;padding:1px}.bar i{display:block;height:100%;background:#e0a24a}
+#pauseBtn{width:56px;height:56px;border-radius:14px;background:rgba(8,8,8,.72);border:1px solid #2a2620;color:#e9dfcb;font:700 20px Oswald,sans-serif}
+#cap{position:absolute;left:50%;transform:translateX(-50%);bottom:150px;max-width:900px;padding:8px 16px;background:rgba(0,0,0,.66);font-family:'Special Elite',monospace;font-size:21px;color:#e6dccb;text-align:center;opacity:0;transition:opacity .4s;pointer-events:none}
+#msg{position:absolute;left:50%;top:18px;transform:translateX(-50%) translateY(-140%);width:560px;padding:14px 18px;background:rgba(18,18,20,.94);border:1px solid #3a352d;border-radius:18px;transition:transform .45s cubic-bezier(.2,1.2,.4,1);box-shadow:0 12px 40px #000;pointer-events:none}
+#msg.show{transform:translateX(-50%) translateY(0)}
+#msg small{display:block;color:#a39886;font-size:13px;letter-spacing:1px;margin-bottom:4px}
+#msg p{margin:0;font-size:18px;line-height:1.4}
+.btn{min-height:56px;padding:0 14px;border-radius:14px;border:1px solid #3a352d;background:rgba(10,10,10,.8);color:#e9dfcb;font:600 16px Inter,sans-serif;display:flex;align-items:center;justify-content:center;text-align:center;line-height:1.15;cursor:pointer;touch-action:none}
+.btn:active,.btn.down{background:#3a1a14;border-color:#b3261e}
+.btn.cur{border-color:#e0a24a;color:#e0a24a}
+.btn.off{opacity:.35}
+.btn.hold{background:rgba(70,14,10,.85);border-color:#b3261e;font-family:Oswald,sans-serif;font-weight:500;letter-spacing:2px;font-size:20px}
+.btn.hold.down{background:#b3261e;color:#fff}
+#breathMeter{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:120px;height:120px;border-radius:50%;opacity:0;transition:opacity .2s;pointer-events:none}
+/* screens */
+.scr{position:absolute;inset:0;display:none;background:#07080a;z-index:20}
+.scr.show{display:block}
+.center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;text-align:center;padding:40px}
+h1.logo{margin:0;font-family:Oswald,sans-serif;font-weight:700;font-size:96px;letter-spacing:12px;line-height:1;color:#e9dfcb}
+.sub{font-family:'Special Elite',monospace;color:#a39886;font-size:20px;margin:0}
+.menu{display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+.mi{background:none;border:0;color:#a39886;font:500 28px Oswald,sans-serif;letter-spacing:4px;text-transform:uppercase;padding:6px 0;min-height:52px;cursor:pointer;text-align:left;display:flex;gap:14px;align-items:baseline}
+.mi:hover,.mi:active{color:#e9dfcb}.mi[disabled]{opacity:.3}
+.mi small{font:400 13px Inter,sans-serif;letter-spacing:1px;color:#8a8070}
+.panel{position:absolute;inset:40px 60px;background:#0c0c0b;border:1px solid #2a2620;padding:30px 40px;display:flex;flex-direction:column;gap:20px;overflow:auto}
+.panel h2{margin:0;font:700 36px Oswald,sans-serif;letter-spacing:6px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:36px}
+.field{display:flex;flex-direction:column;gap:8px;font-size:15px;color:#c9bfab}
+.seg{display:flex;gap:6px}.seg .btn{flex:1;min-height:48px}
+input[type=range]{width:100%;accent-color:#b3261e;height:30px}
+.tog{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.lang{position:absolute;right:36px;top:30px;display:flex;gap:8px}
+.lang .btn{min-height:46px}
+.note{font-size:13px;color:#8a8070}
+#loadBar{width:360px;height:6px;background:#1c1a17}#loadBar i{display:block;height:100%;width:0;background:#b3261e;transition:width .2s}
+.over{background:radial-gradient(ellipse at 70% 40%,#2a0a07,#050303)}
+.over .center{align-items:flex-start;padding-left:90px}
+.over h1{margin:0;font:700 72px Oswald,sans-serif;letter-spacing:4px}
+.hintbox{max-width:560px;padding:16px 18px;border:1px solid #3a1d16;background:rgba(14,6,5,.8);font-size:17px;line-height:1.5;text-align:left}
+.row2{display:flex;gap:14px}
+.cta{min-height:56px;padding:0 28px;font:500 20px Oswald,sans-serif;letter-spacing:4px;border:1px solid #6b2a20;background:none;color:#e9dfcb;border-radius:4px;cursor:pointer}
+.cta.red{background:#b3261e;border-color:#b3261e;color:#fff}
+.rule{display:flex;gap:16px;align-items:center;max-width:820px;text-align:left;padding:14px 16px;background:rgba(20,18,16,.8);border:1px solid #2a2620}
+.rule img{width:180px;height:101px;object-fit:cover}
+.rule b{font-family:Oswald,sans-serif;letter-spacing:2px;font-size:20px;color:#e0a24a}
+#rotate{display:none;position:fixed;inset:0;z-index:99;background:#07080a;color:#e9dfcb;align-items:center;justify-content:center;flex-direction:column;gap:20px;text-align:center;font-family:Oswald,sans-serif;font-size:24px;letter-spacing:2px}
+#rotate .ph{width:60px;height:100px;border:4px solid #e9dfcb;border-radius:12px;animation:rot 2s ease-in-out infinite}
+@keyframes rot{0%,30%{transform:rotate(0)}60%,100%{transform:rotate(-90deg)}}
+@media (prefers-reduced-motion:reduce){.bg{transition:none}}
+
+/* camera rig + in-scene pieces */
+#cam{transform-origin:50% 50%;will-change:transform}
+#black{background:#000;opacity:0;pointer-events:none}
+#fx{pointer-events:none;perspective:1100px}
+.leaf{position:absolute;background-repeat:no-repeat;background-size:1280px 720px;transform-origin:0 50%;box-shadow:0 0 30px rgba(0,0,0,.6)}
+.half{position:absolute;top:0;height:100%;width:50%;background-repeat:no-repeat;background-size:1280px 720px}
+.crt{position:absolute;background:#f4f7ff;box-shadow:0 0 40px #cfe0ff}
+.grainS{position:absolute;width:6px;height:6px;border-radius:50%;background:#f2efe6;box-shadow:0 0 6px #fff}
+/* hotspots */
+#hot{z-index:3}
+#hotbg{position:absolute;inset:0;touch-action:none}
+.spot{position:absolute;touch-action:none;cursor:pointer}
+.spot .dot{position:absolute;left:50%;top:50%;width:30px;height:30px;margin:-15px 0 0 -15px;border-radius:50%;border:2px solid rgba(233,223,203,.7);box-shadow:0 0 14px rgba(233,223,203,.35);animation:pulse 2.2s ease-in-out infinite}
+.spot .dot::after{content:"";position:absolute;inset:8px;border-radius:50%;background:rgba(233,223,203,.85)}
+.spot .lbl{position:absolute;left:50%;top:50%;transform:translate(-50%,24px);white-space:nowrap;padding:5px 11px;border-radius:999px;background:rgba(0,0,0,.62);font:600 15px Inter,sans-serif;color:#e9dfcb;letter-spacing:.3px;border:1px solid rgba(233,223,203,.18)}
+.spot.hold .dot{border-color:rgba(224,90,60,.9);box-shadow:0 0 18px rgba(179,38,30,.6)}
+.spot.hold .dot::after{background:#e0553c}
+.spot.hold .lbl{font-family:Oswald,sans-serif;font-weight:500;letter-spacing:2px;border-color:rgba(179,38,30,.6)}
+.spot.down .dot{transform:scale(1.6);animation:none;background:rgba(179,38,30,.35)}
+.spot.down .lbl{background:#b3261e;color:#fff}
+.spot.off{opacity:.4}
+.spot.urgent .dot{border-color:#e0a24a;animation-duration:.8s}
+.spot.focus .dot{animation:focus .7s ease-in-out infinite;border-color:#ffd27a}
+.spot.focus .lbl{background:#e0a24a;color:#111}
+.spot.exit .dot{display:none}
+.spot.exit{background:linear-gradient(to top,rgba(0,0,0,.6),transparent)}
+.spot.exit .lbl{top:auto;bottom:14px;transform:translateX(-50%);font-family:Oswald,sans-serif;letter-spacing:3px;font-size:17px}
+.dim .spot .lbl{opacity:.55}
+@keyframes pulse{0%,100%{transform:scale(1);opacity:.75}50%{transform:scale(1.18);opacity:1}}
+@keyframes focus{0%,100%{transform:scale(1.2);box-shadow:0 0 10px #ffd27a}50%{transform:scale(1.7);box-shadow:0 0 34px #ffd27a}}
+#hint{position:absolute;left:50%;bottom:76px;transform:translateX(-50%);padding:7px 14px;border-radius:10px;background:rgba(0,0,0,.6);font-size:16px;color:#d8cdb8;opacity:0;transition:opacity .4s;pointer-events:none;white-space:nowrap}
+#runBtn{min-height:56px;font:600 15px Oswald,sans-serif;letter-spacing:3px;cursor:pointer;touch-action:manipulation}
+#runBtn.cur{border-color:#e0a24a;color:#e0a24a}
+/* phone call */
+#phone{position:absolute;left:26px;bottom:24px;width:300px;padding:16px;border-radius:26px;background:linear-gradient(#1b1d1f,#0c0d0e);border:2px solid #34312b;box-shadow:0 20px 50px #000,inset 0 0 0 6px #050505;transform:translateY(130%);transition:transform .5s cubic-bezier(.2,1.2,.4,1);z-index:5}
+#phone.show{transform:translateY(0)}
+#phone.ring{animation:buzz .3s linear infinite}
+@keyframes buzz{0%,100%{margin-left:0}25%{margin-left:-3px}75%{margin-left:3px}}
+.ph-top{display:flex;justify-content:space-between;font:500 13px Oswald,sans-serif;letter-spacing:2px;color:#8fd18a;background:#132015;padding:6px 10px;border-radius:8px}
+.ph-who{display:flex;align-items:center;gap:12px;margin:14px 2px}
+.ph-av{width:46px;height:46px;border-radius:50%;background:#2b241c;display:flex;align-items:center;justify-content:center;font:700 22px Oswald,sans-serif;color:#e0a24a}
+.ph-who b{font:500 24px Oswald,sans-serif;letter-spacing:1px}
+.ph-btns{display:flex;gap:10px}
+.ph-btns button{flex:1;min-height:56px;border-radius:16px;border:0;font:600 17px Inter,sans-serif;color:#fff;cursor:pointer;touch-action:manipulation}
+.ph-g{background:#2e7d32}.ph-r{background:#b3261e}
+#phone.talk .ph-g{display:none}
+#phone.talk{width:240px;padding:12px}
+#phone.talk .ph-who{margin:8px 2px}
+#sub{position:absolute;left:50%;bottom:110px;transform:translateX(-50%);width:max-content;max-width:680px;padding:12px 20px;background:rgba(0,0,0,.78);border-left:3px solid #e0a24a;font-size:21px;line-height:1.4;color:#efe6d4;opacity:0;transition:opacity .3s;pointer-events:none}
+#sub b{display:block;font:500 12px Oswald,sans-serif;letter-spacing:3px;color:#e0a24a;margin-bottom:3px}
+#sub.show{opacity:1}
+</style>
+</head>
+<body>
+<div id="wrap"><div id="stage">
+
+  <div id="view" class="layer">
+    <div id="cam" class="layer">
+      <img id="bgA" class="bg" alt="">
+      <img id="bgB" class="bg" alt="" style="opacity:0">
+      <div id="fx" class="layer"></div>
+      <div id="fog" class="layer"><div class="hand" style="left:500px;top:230px"></div><div class="hand" style="left:690px;top:260px;transform:rotate(12deg)"></div></div>
+    </div>
+    <div id="dark" class="layer"></div>
+    <div id="black" class="layer"></div>
+  </div>
+  <div id="grain" class="layer"></div>
+  <div id="vig" class="layer"></div>
+  <div id="hot" class="layer"></div>
+
+  <div id="hud" class="layer">
+    <div id="clock"><b id="clock-t">12:00 AM</b><span id="clock-n">NIGHT 1</span></div>
+    <div id="topr">
+      <div class="chip" id="salt" style="display:none">ASIN <b id="salt-n">2</b></div>
+      <div class="chip"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#e9dfcb" stroke-width="2" aria-hidden="true"><path d="M8 3h8l-1 6H9z"/><rect x="9" y="9" width="6" height="12" rx="1"/></svg><div class="bar"><i id="batt-i"></i></div></div>
+      <button id="runBtn" class="pe chip" type="button">WALK</button>
+      <button id="pauseBtn" class="pe" type="button" aria-label="Pause">II</button>
+    </div>
+    <div id="msg"><small>TITA CORA</small><p id="msg-text"></p></div>
+    <div id="cap"></div>
+    <div id="breathMeter"></div>
+    <div id="hint"></div>
+    <div id="sub"><b>TITA CORA</b><span id="sub-t"></span></div>
+    <div id="phone" class="pe">
+      <div class="ph-top"><span id="ph-state">INCOMING CALL</span><span id="ph-time"></span></div>
+      <div class="ph-who"><div class="ph-av">C</div><b id="ph-who">Tita Cora</b></div>
+      <div class="ph-btns"><button type="button" id="ph-ans" class="ph-g">Answer</button><button type="button" id="ph-dec" class="ph-r">Decline</button></div>
+    </div>
+  </div>
+  <div id="flash" class="layer"></div>
+  <div id="scare"><img id="scare-img" alt=""></div>
+
+  <!-- screens -->
+  <div id="scr-load" class="scr"><div class="center">
+    <h1 class="logo">ALAS-SAIS</h1>
+    <div id="loadBar"><i id="load-i"></i></div>
+    <p class="sub" id="load-msg">Loading</p>
+    <button class="cta red" id="load-go" type="button" style="visibility:hidden">▶ PLAY</button>
+    <p class="note" data-t="headphones"></p>
+  </div></div>
+
+  <div id="scr-menu" class="scr" style="background:#000">
+    <img src="assets/img/ext_house.jpg" alt="" class="bg" style="opacity:.85">
+    <div class="lang"><button class="btn langbtn" data-lang="en" type="button">ENGLISH</button><button class="btn langbtn" data-lang="fil" type="button">FILIPINO</button></div>
+    <div style="position:absolute;left:90px;top:70px;display:flex;flex-direction:column;gap:22px">
+      <div><h1 class="logo">ALAS-SAIS</h1><p class="sub" id="m-sub"></p></div>
+      <div class="menu">
+        <button class="mi" id="m-new" type="button" data-t="new_game"></button>
+        <button class="mi" id="m-cont" type="button"><span data-t="cont"></span><small></small></button>
+        <button class="mi" id="m-nights" type="button"><span data-t="nights"></span><small></small></button>
+        <button class="mi" id="m-settings" type="button" data-t="settings"></button>
+        <button class="mi" id="m-credits" type="button" data-t="credits"></button>
+        <button class="mi" id="m-quit" type="button" data-t="quit"></button>
+      </div>
+    </div>
+    <p class="note" style="position:absolute;left:90px;bottom:26px" data-t="headphones"></p>
+  </div>
+
+  <div id="scr-nights" class="scr"><div class="panel">
+    <h2 data-t="nights"></h2><div class="menu" id="night-list"></div>
+    <div><button class="cta" id="n-back" type="button" data-t="back"></button></div>
+  </div></div>
+
+  <div id="scr-settings" class="scr"><div class="panel">
+    <h2 data-t="settings"></h2>
+    <div class="grid3">
+      <div style="display:flex;flex-direction:column;gap:18px">
+        <div class="field"><span data-t="language"></span><div class="seg"><button class="btn langbtn" data-lang="en" type="button">English</button><button class="btn langbtn" data-lang="fil" type="button">Filipino</button></div></div>
+        <div class="field"><span data-t="graphics"></span><div class="seg"><button class="btn" data-gfx="low" type="button"></button><button class="btn" data-gfx="medium" type="button"></button><button class="btn" data-gfx="high" type="button"></button></div></div>
+        <div class="field"><span data-t="fullscreen"></span><button class="btn" id="s-full" type="button" data-t="fullscreen"></button></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <label class="field"><span><span data-t="master"></span> <b id="vl-master"></b></span><input type="range" id="v-master" min="0" max="100"></label>
+        <label class="field"><span><span data-t="sfx"></span> <b id="vl-sfx"></b></span><input type="range" id="v-sfx" min="0" max="100"></label>
+        <label class="field"><span><span data-t="amb"></span> <b id="vl-amb"></b></span><input type="range" id="v-amb" min="0" max="100"></label>
+        <label class="field"><span><span data-t="music"></span> <b id="vl-music"></b></span><input type="range" id="v-music" min="0" max="100"></label>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:18px">
+        <div class="field tog"><span data-t="captions"></span><button class="btn" id="t-cap" type="button"></button></div>
+        <div class="field tog"><span data-t="reduced"></span><button class="btn" id="t-red" type="button"></button></div>
+        <p class="note">Keyboard: 1–5 rooms · R run · E action · H hide · SPACE hold · F flashlight · Q asin · Esc pause</p>
+      </div>
+    </div>
+    <div><button class="cta" id="s-back" type="button" data-t="back"></button></div>
+  </div></div>
+
+  <div id="scr-credits" class="scr"><div class="panel">
+    <h2 data-t="credits"></h2><p id="credits-text" style="white-space:pre-line;font-size:17px;line-height:1.6;margin:0"></p>
+    <div><button class="cta" id="c-back" type="button" data-t="back"></button></div>
+  </div></div>
+
+  <div id="scr-intro" class="scr"><div class="center">
+    <p class="sub">12:00 AM</p>
+    <h1 class="logo" id="intro-n" style="font-size:72px"></h1>
+    <p class="sub" id="intro-name"></p>
+    <div id="intro-rules" style="display:flex;flex-direction:column;gap:12px;align-items:center"></div>
+    <button class="cta red" id="intro-go" type="button" data-t="begin"></button>
+  </div></div>
+
+  <div id="scr-pause" class="scr" style="background:rgba(0,0,0,.82)"><div class="center">
+    <h1 class="logo" style="font-size:56px" data-t="paused"></h1>
+    <div class="menu" style="align-items:center">
+      <button class="mi" id="p-resume" type="button" data-t="resume"></button>
+      <button class="mi" id="p-restart" type="button" data-t="restart"></button>
+      <button class="mi" id="p-settings" type="button" data-t="settings"></button>
+      <button class="mi" id="p-menu" type="button" data-t="main_menu"></button>
+    </div>
+  </div></div>
+
+  <div id="scr-win" class="scr" style="background:radial-gradient(ellipse at 50% 30%,#3a2a18,#07080a 70%)"><div class="center">
+    <p class="sub" id="win-n"></p>
+    <h1 class="logo" style="font-size:110px">6:00 AM</h1>
+    <p class="sub" data-t="survived"></p>
+    <p class="note" id="win-time"></p>
+    <div class="row2"><button class="cta red" id="w-next" type="button" data-t="next"></button><button class="cta" id="w-menu" type="button" data-t="main_menu"></button></div>
+  </div></div>
+
+  <div id="scr-over" class="scr over">
+    <img id="over-bg" alt="" class="bg" style="opacity:.35;filter:saturate(.6)">
+    <div class="center">
+      <p class="sub" id="over-time" style="color:#d2553a"></p>
+      <h1><span id="over-who"></span></h1>
+      <p class="sub" data-t="caught"></p>
+      <div class="hintbox" id="over-hint"></div>
+      <div class="row2"><button class="cta red" id="o-retry" type="button" data-t="retry"></button><button class="cta" id="o-menu" type="button" data-t="main_menu"></button></div>
+    </div>
+  </div>
+
+  <div id="scr-end" class="scr" style="background:radial-gradient(ellipse at 50% 20%,#5a4a2a,#07080a 75%)"><div class="center">
+    <h1 class="logo" data-t="end_title"></h1>
+    <p class="sub" style="max-width:760px;line-height:1.6" data-t="end_text"></p>
+    <p class="note" data-t="thanks"></p>
+    <button class="cta red" id="e-menu" type="button" data-t="credits"></button>
+  </div></div>
+
+  <div id="scr-exit" class="scr"><div class="center">
+    <h1 class="logo" style="font-size:64px">ALAS-SAIS</h1><p class="sub" data-t="thanks"></p><p class="note" data-t="exit_text"></p>
+    <button class="cta" id="exit-back" type="button" data-t="main_menu"></button>
+  </div></div>
+
+</div></div>
+<div id="rotate"><div class="ph"></div><div data-t="rotate"></div><button class="cta" id="rot-ok" type="button" data-t="play_anyway"></button></div>
+<script>var CALLS = {"1": [{"fil": "Hello? Migo? Si Tita Cora 'to. Pasensya na, gabi na akong tumawag.", "en": "Hello? Migo? It's Tita Cora. Sorry for calling so late."}, {"fil": "Hindi ako makakauwi ngayong gabi. Ikaw muna ang bahala sa bahay hanggang umaga, ha?", "en": "I can't come home tonight. You're in charge of the house until morning, okay?"}, {"fil": "Makinig kang mabuti. Isara mo agad ang pinto ng kwarto mo. Pindutin mo lang ang pinto.", "en": "Listen carefully. Close your bedroom door right away. Just tap the door.", "focus": "door"}, {"fil": "Kapag may narinig kang kumakaladkad sa pasilyo, tapos gumalaw ang seradura, huwag kang bibitaw. Diinan mo nang matagal ang pinto.", "en": "If you hear something dragging down the hallway and the handle starts to turn, don't let go. Press and hold the door.", "focus": "door"}, {"fil": "Kapag nakapasok siya, magtago ka agad sa ilalim ng kama.", "en": "If she gets in, hide under the bed right away.", "focus": "bed"}, {"fil": "At kapag inangat niya ang kumot, pigilan mo ang hininga mo. Pindutin mo nang matagal ang screen. Huwag kang gagalaw.", "en": "And if she lifts the blanket, hold your breath. Press and hold the screen. Don't move."}, {"fil": "Hindi siya nakakakita. Nakikinig lang siya.", "en": "She can't see. She only listens."}, {"fil": "Puwede kang lumabas ng kwarto. Pindutin mo lang ang ibaba ng screen para pumunta sa pasilyo. Pero huwag kang lalayo nang matagal.", "en": "You can leave the room. Tap the bottom of the screen to go to the hallway. But don't stay away for long.", "focus": "exit"}, {"fil": "Pagsapit ng alas-sais, tutunog ang kampana ng simbahan. Doon ka lang ligtas.", "en": "At six, the church bell will ring. Only then are you safe."}, {"fil": "Sige na. Mag-iingat ka, anak. At kung may kumatok, huwag mong bubuksan.", "en": "Go on. Be careful, anak. And if someone knocks, don't open the door."}], "2": [{"fil": "Migo? Buhay ka pa. Salamat sa Diyos.", "en": "Migo? You're still alive. Thank God."}, {"fil": "Ngayong gabi, bantayan mo rin ang sala. Kapag nag-static ang TV, patayin mo agad.", "en": "Tonight, watch the living room too. When the TV turns to static, switch it off right away.", "focus": "tv"}, {"fil": "Kapag may narinig kang umiiyak na sanggol, hindi 'yon sanggol.", "en": "If you hear a baby crying, that is not a baby."}, {"fil": "Patayin mo ang ilaw, tapos magtago ka sa likod ng sofa. Huwag kang sisilip.", "en": "Turn off the lights, then hide behind the sofa. Don't peek.", "focus": "sofa"}, {"fil": "Huwag mong kakalimutan ang pinto ng kwarto. Gising pa rin siya.", "en": "Don't forget the bedroom door. She's still awake."}], "3": [{"fil": "Migo, may naririnig ka bang kalansing sa kusina? Parang mga kutsara?", "en": "Migo, do you hear clinking in the kitchen? Like spoons?"}, {"fil": "Huwag kang maingay. Kapag tumakbo ka, naaamoy ka niya.", "en": "Stay quiet. If you run, she can smell you."}, {"fil": "Magtago ka sa kabinet sa ilalim ng lababo. Habang nandiyan siya, huwag kang gagalaw.", "en": "Hide in the cabinet under the sink. While she's there, don't move.", "focus": "cabinet"}, {"fil": "May asin sa garapon. Isaboy mo sa kanya at aatras siya. Dalawa lang 'yan, kaya tipirin mo.", "en": "There's salt in the jar. Throw it at her and she'll back off. You only have two, so save them.", "focus": "salt"}, {"fil": "At kapag nawalan ng kuryente, nasa kusina ang breaker.", "en": "And if the power goes out, the breaker is in the kitchen."}], "4": [{"fil": "Migo, makinig ka. Kapag tumahimik ang mga kuliglig sa labas, nandiyan na siya.", "en": "Migo, listen. When the crickets outside go quiet, she's there."}, {"fil": "Buksan mo ang kurtina at ilawan mo siya. Pindutin mo nang matagal ang dilim.", "en": "Open the curtain and shine your light on her. Press and hold on the dark."}, {"fil": "Pero kapag nasa salamin na siya, isara mo ang kurtina at hawakan mo. Huwag mong bibitawan.", "en": "But once she's at the glass, shut the curtain and hold it. Don't let go.", "focus": "curtain"}, {"fil": "Kalahati lang ng katawan niya ang lumilipad. Ang kalahati, nasa bakuran.", "en": "Only half of her flies. The other half is in the yard."}], "5": [{"fil": "Migo, huling gabi na 'to. Gising silang lahat ngayong gabi.", "en": "Migo, this is the last night. All of them are awake tonight."}, {"fil": "Uulan nang malakas. Hindi mo sila masyadong maririnig. Mag-ingat ka.", "en": "It's going to rain hard. You won't hear them well. Be careful."}, {"fil": "Pagsapit ng alas-singko, mamamatay ang kuryente. Alam mo na ang gagawin.", "en": "At five, the power will die. You know what to do."}, {"fil": "Malapit na akong umuwi, anak. Hintayin mo ako.", "en": "I'm almost home, anak. Wait for me."}, {"fil": "Migo, ikaw ba 'yan sa bintana?", "en": "Migo... is that you at the window?"}]};
+/* ALAS-SAIS — English / Filipino text */
+var STR = {
+  en: {
+    title_sub: "Five Nights in Lola Pilar's House",
+    loading: 'Loading', tap_start: 'Tap to start', headphones: 'Headphones recommended. Listen before you look.',
+    new_game: 'New Game', cont: 'Continue', nights: 'Night Selection', settings: 'Settings', credits: 'Credits', quit: 'Exit Game',
+    night_n: 'Night {n}', night_names: ['The First Encounter', 'Something Is Inside', 'No Place Is Safe', 'The House Is Awake', 'The Final Night'],
+    locked: 'Locked', back: 'Back', resume: 'Resume', restart: 'Restart Night', main_menu: 'Main Menu', paused: 'Paused',
+    language: 'Language', graphics: 'Graphics', low: 'Low', medium: 'Medium', high: 'High',
+    master: 'Master', sfx: 'Sound effects', amb: 'Ambience', music: 'Music', captions: 'Sound captions', reduced: 'Reduced intensity',
+    fullscreen: 'Fullscreen', on: 'On', off: 'Off',
+    go_hall: 'Hallway', h_door: 'HOLD the door to keep it shut · double-tap to open it', h_curtain: 'HOLD the curtain shut · double-tap to open it',
+    h_light: 'Hold on the dark to use the flashlight', h_breath: 'HOLD anywhere to hold your breath', h_run: 'Running is fast but loud', run_on: 'RUN', run_off: 'WALK',
+    ph_calling: 'INCOMING CALL', ph_answer: 'Answer', ph_decline: 'Decline', ph_mute: 'End call', ph_live: 'ON CALL', ph_ended: 'CALL ENDED', ph_who: 'Tita Cora',
+    a_close_short: 'Close', a_lights: 'Light switch', a_salt_jar: 'Asin', a_door: 'Door',
+    rooms: { bedroom: 'Bedroom', hall: 'Hallway', living: 'Living room', kitchen: 'Kitchen', curtain: 'Curtain' },
+    run: 'Run', walk: 'Walk',
+    a_door_close: 'Close door', a_door_open: 'Open door', a_hold_door: 'HOLD DOOR', a_hide_bed: 'Hide under bed', a_hide_cab: 'Hide in cabinet',
+    a_hide_sofa: 'Hide behind sofa', a_unhide: 'Get out', a_breath: 'HOLD BREATH', a_tv: 'Turn off TV', a_lights_on: 'Lights on', a_lights_off: 'Lights off',
+    a_curtain_open: 'Open curtain', a_curtain_close: 'Close curtain', a_hold_curtain: 'HOLD CURTAIN', a_light: 'FLASHLIGHT', a_salt: 'Throw asin ({n})', a_breaker: 'Reset breaker',
+    begin: 'Tap to begin', survived: 'You survived', time_survived: 'Time survived', next: 'Continue',
+    caught: 'caught you.', retry: 'Retry Night', rotate: 'Turn your phone sideways', play_anyway: 'Play anyway',
+    who: { kumot: 'KUMOT', malik: 'MALIKMATA', kal: 'KALANSING', silip: 'SILIP' },
+    hint: {
+      kumot: 'When the handle rattles, close the door and HOLD it. If she gets in, hide under the bed and hold your breath when the blanket moves.',
+      malik: 'When the TV turns on by itself, switch it off fast. If it is already out: lights off, hide, and do not move.',
+      kal: 'Do not run. When the metal clinks get close, throw asin or hide in the cabinet and do not touch anything.',
+      silip: 'When the crickets go quiet, check the curtain and hold the flashlight on her. If she is at the glass, keep the curtain shut and HOLD it.'
+    },
+    new_threat: 'New', intro_rules: {
+      1: ['kumot'], 2: ['malik'], 3: ['kal'], 4: ['silip'], 5: []
+    },
+    final_night: 'All four are awake. Survive until the bell.',
+    end_title: 'UMAGA', end_text: 'The bell rings over San Lucio. You walk out into the morning light. Your phone buzzes: "Salamat, Migo. Kita tayo mamayang gabi." The vow is yours now.',
+    thanks: 'Thank you for playing.', exit_text: 'You can close this tab now.',
+    credits_text: 'ALAS-SAIS\nDesign, story, 3D scenes, sound and code: made with Claude for Straw0127\n\nAll images rendered in Blender (Cycles)\nAll sounds synthesized from scratch\nFonts: Oswald, Special Elite, Inter (SIL Open Font License)\n\nInspired by the room-to-room survival of Five Nights at Freddy\'s: Sister Location.\nAll characters, story, art and sound are original.\nEntities inspired by Filipino folklore: Batibat, Tiyanak, Aswang, Manananggal.',
+    cap: {
+      cap_scuffs_far: '[ slow slipper scuffs, far down the hallway ]', cap_scuffs_near: '[ slipper scuffs, close to the bedroom ]', cap_wheeze: '[ a wet wheeze outside the door ]',
+      cap_rattle: '[ the door handle rattles ]', cap_scuffs_leave: '[ scuffs fading away ]', cap_hum: '[ an old woman humming, inside the room ]', cap_lift: '[ the mosquito net moves... ]',
+      cap_static: '[ the TV turns on by itself: static ]', cap_cry: '[ a baby crying through the static ]', cap_vhs: '[ tape warble, something climbs out ]', cap_giggle: '[ a child giggles nearby ]',
+      cap_clinks_far: '[ faint metal clinking in the kitchen ]', cap_clinks_near: '[ metal clinking, getting closer ]', cap_sniff: '[ sniffing ]', cap_kal_in: '[ she is in the kitchen ]', cap_taps: '[ tapping on the cabinet doors ]',
+      cap_nails: '[ fingernails on the glass ]', crickets: '[ the crickets go silent ]', blackout: '[ the power dies ]', breaker: '[ power restored ]',
+      kal_retreat: '[ she hisses at the salt and backs away ]', silip_back: '[ wings flap, she pulls back into the dark ]', malik_return: '[ the static fades, the TV goes dark ]',
+      kumot_enter: '[ the door bursts open ]', battery_dead: '[ the flashlight dies ]', gasp: '[ you gasp for air ]', no_power: '[ no power ]'
+    },
+    texts: {
+      1: ['Migo, lock up by midnight. Close the bedroom door. If you hear the handle, HOLD it shut.', 'If something comes in, get under the bed and don\'t breathe. I mean it.', 'Don\'t leave before the 6 AM bell. - Tita Cora'],
+      2: ['Migo. Don\'t leave the TV on. If it turns on by itself, turn it off. Fast.', 'If you hear a baby crying in the sala... don\'t answer it. Lights off, hide.'],
+      3: ['The kitchen. Walk, don\'t run. She hears everything.', 'There\'s asin by the stove. Throw it if she comes. The breaker is in there too.'],
+      4: ['Don\'t open the back curtain at night unless you have to.', 'When the crickets stop, she is moving. Use the flashlight. If she\'s at the glass, keep it shut.'],
+      5: ['Last night, Migo. They\'re all awake.', 'Survive until the bell. Please.']
+    }
+  },
+  fil: {
+    title_sub: 'Limang Gabi sa Bahay ni Lola Pilar',
+    loading: 'Naglo-load', tap_start: 'I-tap para magsimula', headphones: 'Mas maganda kung naka-headphones. Makinig bago tumingin.',
+    new_game: 'Bagong Laro', cont: 'Ituloy', nights: 'Pumili ng Gabi', settings: 'Settings', credits: 'Credits', quit: 'Umalis sa Laro',
+    night_n: 'Gabi {n}', night_names: ['Ang Unang Pagkikita', 'May Nasa Loob', 'Walang Ligtas na Lugar', 'Gising na ang Bahay', 'Ang Huling Gabi'],
+    locked: 'Naka-lock', back: 'Bumalik', resume: 'Ituloy', restart: 'Ulitin ang Gabi', main_menu: 'Main Menu', paused: 'Naka-pause',
+    language: 'Wika', graphics: 'Graphics', low: 'Mababa', medium: 'Katamtaman', high: 'Mataas',
+    master: 'Master', sfx: 'Sound effects', amb: 'Ambience', music: 'Musika', captions: 'Captions ng tunog', reduced: 'Bawas-takot (intensity)',
+    fullscreen: 'Fullscreen', on: 'Bukas', off: 'Sarado',
+    go_hall: 'Pasilyo', h_door: 'HAWAKAN nang matagal ang pinto · i-double tap para buksan', h_curtain: 'HAWAKAN nang matagal ang kurtina · i-double tap para buksan',
+    h_light: 'Pindutin nang matagal ang dilim para sa flashlight', h_breath: 'PINDUTIN nang matagal kahit saan para pigilan ang hininga', h_run: 'Mabilis ang takbo pero maingay', run_on: 'TAKBO', run_off: 'LAKAD',
+    ph_calling: 'TUMATAWAG', ph_answer: 'Sagutin', ph_decline: 'Tanggihan', ph_mute: 'Ibaba', ph_live: 'KAUSAP', ph_ended: 'TAPOS ANG TAWAG', ph_who: 'Tita Cora',
+    a_close_short: 'Isara', a_lights: 'Switch ng ilaw', a_salt_jar: 'Asin', a_door: 'Pinto',
+    rooms: { bedroom: 'Kwarto', hall: 'Pasilyo', living: 'Sala', kitchen: 'Kusina', curtain: 'Kurtina' },
+    run: 'Takbo', walk: 'Lakad',
+    a_door_close: 'Isara ang pinto', a_door_open: 'Buksan ang pinto', a_hold_door: 'HAWAKAN ANG PINTO', a_hide_bed: 'Magtago sa ilalim ng kama', a_hide_cab: 'Magtago sa kabinet',
+    a_hide_sofa: 'Magtago sa likod ng sofa', a_unhide: 'Lumabas', a_breath: 'PIGILAN ANG HININGA', a_tv: 'Patayin ang TV', a_lights_on: 'Buksan ang ilaw', a_lights_off: 'Patayin ang ilaw',
+    a_curtain_open: 'Buksan ang kurtina', a_curtain_close: 'Isara ang kurtina', a_hold_curtain: 'HAWAKAN ANG KURTINA', a_light: 'FLASHLIGHT', a_salt: 'Ihagis ang asin ({n})', a_breaker: 'I-reset ang breaker',
+    begin: 'I-tap para magsimula', survived: 'Nakaligtas ka', time_survived: 'Tagal ng pagligtas', next: 'Ituloy',
+    caught: 'ang nakahuli sa\'yo.', retry: 'Ulitin ang Gabi', rotate: 'Ipahiga ang phone mo', play_anyway: 'Laruin pa rin',
+    who: { kumot: 'KUMOT', malik: 'MALIKMATA', kal: 'KALANSING', silip: 'SILIP' },
+    hint: {
+      kumot: 'Pag kumalansing ang hawakan ng pinto, isara at HAWAKAN. Pag nakapasok siya, magtago sa ilalim ng kama at pigilan ang hininga pag gumalaw ang kulambo.',
+      malik: 'Pag kusang bumukas ang TV, patayin agad. Pag nakalabas na: patayin ang ilaw, magtago, at \'wag gagalaw.',
+      kal: '\'Wag tatakbo. Pag malapit na ang kalansing, ihagis ang asin o magtago sa kabinet at \'wag hahawak ng kahit ano.',
+      silip: 'Pag tumahimik ang mga kuliglig, silipin ang kurtina at itutok ang flashlight sa kanya. Pag nasa salamin na siya, isara at HAWAKAN ang kurtina.'
+    },
+    new_threat: 'Bago', intro_rules: { 1: ['kumot'], 2: ['malik'], 3: ['kal'], 4: ['silip'], 5: [] },
+    final_night: 'Gising na silang apat. Mabuhay hanggang tumunog ang kampana.',
+    end_title: 'UMAGA', end_text: 'Tumunog ang kampana sa San Lucio. Lumabas ka sa liwanag ng umaga. Nag-vibrate ang phone mo: "Salamat, Migo. Kita tayo mamayang gabi." Sa\'yo na ang panata.',
+    thanks: 'Salamat sa paglalaro.', exit_text: 'Puwede mo nang isara ang tab na ito.',
+    credits_text: 'ALAS-SAIS\nDisenyo, kuwento, 3D, tunog at code: ginawa kasama si Claude para kay Straw0127\n\nLahat ng larawan ay ni-render sa Blender (Cycles)\nLahat ng tunog ay ginawa mula sa simula\nFonts: Oswald, Special Elite, Inter (SIL Open Font License)\n\nHango sa room-to-room survival ng Five Nights at Freddy\'s: Sister Location.\nOrihinal ang lahat ng karakter, kuwento, larawan at tunog.\nMga nilalang na hango sa alamat ng Pilipinas: Batibat, Tiyanak, Aswang, Manananggal.',
+    cap: {
+      cap_scuffs_far: '[ mabagal na kaluskos ng tsinelas, malayo sa pasilyo ]', cap_scuffs_near: '[ kaluskos ng tsinelas, malapit na sa kwarto ]', cap_wheeze: '[ basang paghinga sa labas ng pinto ]',
+      cap_rattle: '[ kumakalansing ang hawakan ng pinto ]', cap_scuffs_leave: '[ papalayong kaluskos ]', cap_hum: '[ may matandang humuhuni, nasa loob ng kwarto ]', cap_lift: '[ gumagalaw ang kulambo... ]',
+      cap_static: '[ kusang bumukas ang TV: static ]', cap_cry: '[ may sanggol na umiiyak sa static ]', cap_vhs: '[ kumikislot na tape, may lumalabas ]', cap_giggle: '[ may batang humahagikgik sa malapit ]',
+      cap_clinks_far: '[ mahinang kalansing ng bakal sa kusina ]', cap_clinks_near: '[ kalansing ng bakal, papalapit ]', cap_sniff: '[ may sumisinghot ]', cap_kal_in: '[ nasa kusina na siya ]', cap_taps: '[ kinakatok ang mga pinto ng kabinet ]',
+      cap_nails: '[ mga kuko sa salamin ]', crickets: '[ tumahimik ang mga kuliglig ]', blackout: '[ nawalan ng kuryente ]', breaker: '[ bumalik ang kuryente ]',
+      kal_retreat: '[ sumirit siya sa asin at umatras ]', silip_back: '[ pumagaspas ang pakpak, umatras siya sa dilim ]', malik_return: '[ nawala ang static, namatay ang TV ]',
+      kumot_enter: '[ biglang bumukas ang pinto ]', battery_dead: '[ namatay ang flashlight ]', gasp: '[ napahingal ka ]', no_power: '[ walang kuryente ]'
+    },
+    texts: {
+      1: ['Migo, mag-lock ka bago maghatinggabi. Isara mo ang pinto ng kwarto. Pag narinig mo ang hawakan, HAWAKAN mo.', 'Pag may pumasok, sa ilalim ka ng kama at \'wag kang hihinga. Seryoso ako.', '\'Wag kang aalis hangga\'t hindi tumutunog ang kampana ng alas-sais. - Tita Cora'],
+      2: ['Migo. \'Wag mong iiwang bukas ang TV. Pag kusang bumukas, patayin mo. Bilisan mo.', 'Pag may narinig kang sanggol na umiiyak sa sala... \'wag mong sasagutin. Patayin ang ilaw, magtago.'],
+      3: ['Ang kusina. Maglakad ka, \'wag tumakbo. Naririnig niya lahat.', 'May asin sa tabi ng kalan. Ihagis mo pag lumapit siya. Nandoon din ang breaker.'],
+      4: ['\'Wag mong bubuksan ang kurtina sa likod tuwing gabi maliban kung kailangan.', 'Pag tumahimik ang kuliglig, gumagalaw siya. Gamitin ang flashlight. Pag nasa salamin na siya, \'wag mong bubuksan.'],
+      5: ['Huling gabi na, Migo. Gising na silang lahat.', 'Mabuhay ka hanggang tumunog ang kampana. Pakiusap.']
+    }
+  }
+};
+
+/* ALAS-SAIS — core game logic. Pure: no DOM. Shared by the game and the headless tests. */
+var AS = (function () {
+  'use strict';
+
+  var NIGHTS = [
+    { hourSec: 45, lv: { kumot: [3, 6], malik: [0, 0], kal: [0, 0], silip: [0, 0] }, blackouts: 0 },
+    { hourSec: 50, lv: { kumot: [5, 8], malik: [4, 7], kal: [0, 0], silip: [0, 0] }, blackouts: 0 },
+    { hourSec: 55, lv: { kumot: [6, 9], malik: [5, 8], kal: [3, 6], silip: [0, 0] }, blackouts: 1 },
+    { hourSec: 58, lv: { kumot: [7, 10], malik: [6, 9], kal: [5, 8], silip: [3, 6] }, blackouts: 2 },
+    { hourSec: 60, lv: { kumot: [10, 14], malik: [9, 13], kal: [8, 12], silip: [6, 11] }, blackouts: 3 }
+  ];
+  var ROOMS = ['bedroom', 'hall', 'living', 'kitchen', 'curtain'];
+  // seconds to walk between a room and the hallway (running is 0.6x)
+  var LEG = { bedroom: 1.2, hall: 0, living: 1.5, kitchen: 2.0, curtain: 1.8 };
+  var ROOM_X = { kitchen: -1, living: -0.9, curtain: -0.2, hall: 0.3, bedroom: 1 };
+
+  function lerp(a, b, t) { return a + (b - a) * t; }
+  function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
+
+  function rngFrom(seed) {
+    var s = seed >>> 0 || 1;
+    return function () { s ^= s << 13; s >>>= 0; s ^= s >>> 17; s ^= s << 5; s >>>= 0; return (s % 100000) / 100000; };
+  }
+
+  function travelTime(from, to, run) {
+    if (from === to) return 0;
+    var t = (from === 'hall' || to === 'hall') ? LEG[from] + LEG[to] : LEG[from] + LEG[to];
+    t = Math.max(0.7, t * 0.6);
+    return run ? t * 0.6 : t;
+  }
+
+  function create(nightIdx, opts) {
+    opts = opts || {};
+    var N = NIGHTS[Math.min(nightIdx, 4)];
+    var custom = opts.custom; // {kumot:lv,...} for Panata night
+    var rnd = opts.rng || rngFrom(opts.seed || (Date.now() & 0xffffff));
+    var nightNo = nightIdx + 1;
+    var diff = Math.min(nightIdx, 4) / 4; // 0..1 across nights
+
+    var g = {
+      night: nightNo, time: 0, hourSec: N.hourSec, over: false, won: false, dead: null, deathRoom: null,
+      events: [],
+      p: { room: 'bedroom', travel: null, run: false, hidden: null, holdDoor: false, holdBreath: false, holdCurtain: false,
+           light: false, battery: 100, breath: 8, salt: 2, lastActT: -99 },
+      house: { door: false /* closed? */, tv: false, lights: false, curtain: false, power: true, cricketsOff: 0 },
+      noise: 0,
+      k: { st: 0, t: 0, tick: 0, cool: 3, held: 0, win: lerp(10, 5, diff), lift: false, grace: 0, rattle: 0, away: 0 },
+      m: { st: 0, t: 0, tick: 0, cool: 6, lock: 0, exposed: 0, hunt: 0, giggle: 0, win: lerp(8, 4, diff), darkT: 0 },
+      c: { st: 0, t: 0, tick: 0, cool: 8, grace: 0, win: lerp(6, 3, diff), sniff: 0 },
+      s: { st: 0, t: 0, tick: 0, cool: 10, flash: 0, held: 0, win: lerp(9, 6.5, diff), openT: 0, tap: 0 },
+      blackoutAt: [], heartbeat: false, msgs: []
+    };
+    // blackout schedule
+    for (var b = 0; b < N.blackouts; b++) g.blackoutAt.push(N.hourSec * (1.4 + b * 1.4 + rnd() * 0.8));
+    if (nightNo === 5) g.blackoutAt.push(N.hourSec * 5.0);
+
+    function emit(type, data) { g.events.push({ type: type, data: data || {}, t: g.time }); }
+    g.emit = emit;
+
+    g.hour = function () { return Math.min(6, Math.floor(g.time / g.hourSec)); };
+    g.clock = function () { var h = g.hour(); var m = Math.floor((g.time % g.hourSec) / g.hourSec * 60); if (h >= 6) { h = 6; m = 0; } return { h: h === 0 ? 12 : h, m: m }; };
+
+    function level(name) {
+      if (custom) return custom[name] || 0;
+      var r = N.lv[name]; if (!r[1]) return 0;
+      var h = g.hour(); var step = h >= 4 ? 1 : h >= 3 ? 0.66 : h >= 2 ? 0.33 : 0;
+      var lv = Math.round(lerp(r[0], r[1], step));
+      if (nightNo === 5 && h >= 5) lv += 2;
+      return lv;
+    }
+    g.level = level;
+    function roll(lv) { return lv > 0 && (rnd() * 20 + 1) <= lv; }
+
+    function fatalCount() {
+      var n = 0;
+      if (g.k.st >= 3) n++; if (g.m.st >= 1) n++; if (g.c.st >= 2) n++; if (g.s.st >= 4) n++;
+      return n;
+    }
+    var cap = nightNo <= 3 ? 1 : 2;
+    if (nightNo === 5) cap = 2;
+    function canEscalate() { return fatalCount() < cap; }
+
+    function here(room) { return !g.p.travel && g.p.room === room; }
+    function kill(who) { if (g.over) return; g.over = true; g.dead = who; g.deathRoom = g.p.room; emit('death', { who: who }); }
+
+    // ---------------------------------------------------------------- player actions
+    g.act = function (a, arg) {
+      if (g.over) return false;
+      var p = g.p, H = g.house;
+      if (a === 'go') {
+        if (p.travel || p.hidden || arg === p.room) return false;
+        var tt = travelTime(p.room, arg, p.run);
+        p.travel = { from: p.room, to: arg, t: tt, total: tt };
+        p.light = false; p.holdDoor = p.holdBreath = p.holdCurtain = false;
+        g.noise = clamp(g.noise + (p.run ? 35 : (arg === 'kitchen' ? 8 : 3)), 0, 100);
+        emit('travel', { from: p.room, to: arg, run: p.run, t: tt });
+        return true;
+      }
+      if (p.travel) return false;
+      p.lastActT = g.time;
+      var room = p.room;
+      if (a === 'run') { p.run = !p.run; return true; }
+      if (a === 'door' && room === 'bedroom' && !p.hidden) {
+        H.door = !H.door; p.holdDoor = false;
+        emit(H.door ? 'door_close' : 'door_open');
+        if (H.door && g.k.st === 3) g.noise = clamp(g.noise + 10, 0, 100);
+        return true;
+      }
+      if (a === 'hide') {
+        var spot = { bedroom: 'bed', kitchen: 'cabinet', living: 'sofa' }[room];
+        if (!spot) return false;
+        if (p.hidden) { p.hidden = null; p.holdBreath = false; emit('unhide', { spot: spot }); }
+        else { p.hidden = spot; p.light = false; emit('hide', { spot: spot }); }
+        if (spot === 'cabinet') g.noise = clamp(g.noise + 5, 0, 100);
+        if (spot === 'sofa') emit('crinkle');
+        return true;
+      }
+      if (a === 'tv' && room === 'living' && !p.hidden) {
+        if (!H.tv) return false;
+        H.tv = false; emit('tv_off');
+        if (g.m.st === 1) { g.m.st = 0; g.m.cool = 6; emit('malik_sleep'); }
+        return true;
+      }
+      if (a === 'lights' && room === 'living' && !p.hidden) {
+        if (!H.power) { emit('no_power'); return false; }
+        H.lights = !H.lights; emit('light_switch'); return true;
+      }
+      if (a === 'curtain' && room === 'curtain') {
+        H.curtain = !H.curtain; p.holdCurtain = false; p.light = p.light && H.curtain;
+        emit(H.curtain ? 'curtain_open' : 'curtain_close');
+        if (H.curtain && g.s.st >= 4 && !(g.s.grace > 0)) { kill('silip'); }
+        return true;
+      }
+      if (a === 'salt' && room === 'kitchen') {
+        if (p.salt <= 0) return false;
+        p.salt--; g.noise = clamp(g.noise + 5, 0, 100); emit('salt');
+        if (g.c.st >= 2) { g.c.st = 0; g.c.cool = 12; g.c.t = 0; emit('kal_retreat'); }
+        return true;
+      }
+      if (a === 'breaker' && room === 'kitchen' && !p.hidden) {
+        if (H.power) return false;
+        H.power = true; emit('breaker'); g.noise = clamp(g.noise + 15, 0, 100); return true;
+      }
+      return false;
+    };
+    g.hold = function (what, on) {
+      var p = g.p;
+      if (g.over || p.travel) { p.holdDoor = p.holdBreath = p.holdCurtain = p.light = false; return; }
+      if (what === 'door') p.holdDoor = !!on && p.room === 'bedroom' && g.house.door && !p.hidden;
+      if (what === 'breath') { if (on && p.breath < 1.5) return; p.holdBreath = !!on && !!p.hidden; if (!on && p.breath < 8) {} }
+      if (what === 'curtain') p.holdCurtain = !!on && p.room === 'curtain' && !g.house.curtain;
+      if (what === 'light') p.light = !!on && p.battery > 0 && !p.hidden;
+    };
+
+    // ---------------------------------------------------------------- per-frame update
+    g.update = function (dt) {
+      if (g.over) return;
+      dt = Math.min(dt, 0.25);
+      g.time += dt;
+      var p = g.p, H = g.house;
+
+      // clock / win
+      if (g.time >= g.hourSec * 6) { g.over = true; g.won = true; emit('win'); return; }
+      var hourNow = g.hour();
+      if (hourNow !== g._lastHour) { g._lastHour = hourNow; emit('hour', { h: hourNow }); }
+
+      // travel
+      if (p.travel) {
+        p.travel.t -= dt;
+        if (p.travel.t <= 0) { p.room = p.travel.to; p.travel = null; emit('arrive', { room: p.room }); onArrive(); }
+      }
+      // breath / battery / noise
+      if (p.holdBreath) { p.breath -= dt; if (p.breath <= 0) { p.breath = 0; p.holdBreath = false; emit('gasp'); g.noise = clamp(g.noise + 25, 0, 100); g._gasp = g.time; } }
+      else p.breath = Math.min(8, p.breath + dt * 1.6);
+      if (p.light) { p.battery -= dt * 1.4; if (p.battery <= 0) { p.battery = 0; p.light = false; emit('battery_dead'); } }
+      g.noise = Math.max(0, g.noise - dt * 6);
+
+      // blackouts
+      for (var i = 0; i < g.blackoutAt.length; i++) {
+        if (g.blackoutAt[i] && g.time >= g.blackoutAt[i]) {
+          g.blackoutAt[i] = 0;
+          if (H.power) { H.power = false; H.lights = false; if (H.tv && g.m.st < 2) { H.tv = false; if (g.m.st === 1) { g.m.st = 0; g.m.cool = 5; } } emit('blackout'); }
+        }
+      }
+      if (H.cricketsOff > 0) H.cricketsOff -= dt;
+
+      if (!g.quiet) { // quiet = the tutorial call on night 1: the house waits until Tita Cora hangs up
+        updateKumot(dt); if (g.over) return;
+        updateMalik(dt); if (g.over) return;
+        updateKal(dt); if (g.over) return;
+        updateSilip(dt); if (g.over) return;
+      }
+
+      var danger = (g.k.st >= 3 && (here('bedroom') || p.room === 'hall')) || (g.m.st === 2) || (g.c.st === 3 && here('kitchen')) || (g.s.st >= 4 && here('curtain'));
+      if (danger !== g.heartbeat) { g.heartbeat = danger; emit('heartbeat', { on: danger }); }
+    };
+
+    function onArrive() {
+      var p = g.p;
+      if (p.room === 'bedroom' && g.k.st === 4) g.k.grace = 1.6;
+      if (p.room === 'kitchen' && g.c.st === 3) g.c.grace = 1.8;
+      if (p.room === 'living' && g.m.st === 2) g.m.exposed = Math.max(g.m.exposed, 0);
+    }
+
+    // -------- KUMOT (Batibat): bedroom door, bed, breath
+    function updateKumot(dt) {
+      var k = g.k, p = g.p, H = g.house, lv = level('kumot');
+      if (!lv && k.st === 0) return;
+      if (k.cool > 0) k.cool -= dt;
+      if (k.st < 3) {
+        k.tick += dt;
+        if (k.tick >= 4.5) {
+          k.tick = 0;
+          if (k.cool <= 0 && roll(lv) && (k.st < 2 || canEscalate())) {
+            k.st++;
+            if (k.st === 1) emit('cue', { id: 'scuffs_far', room: 'hall', cap: 'cap_scuffs_far' });
+            if (k.st === 2) { emit('cue', { id: 'scuffs_near', room: 'hall', cap: 'cap_scuffs_near' }); emit('cue', { id: 'wheeze', room: 'hall', cap: 'cap_wheeze', delay: 2 }); }
+            if (k.st === 3) { k.t = k.win; k.held = 0; k.rattle = 0; emit('kumot_door'); emit('cue', { id: 'wheeze', room: 'bedroom', cap: 'cap_wheeze' }); }
+          }
+        }
+        return;
+      }
+      if (k.st === 3) {
+        k.t -= dt;
+        if (H.door) {
+          k.rattle -= dt;
+          if (k.rattle <= 0) { k.rattle = 1.7; emit('cue', { id: 'handle_rattle', room: 'bedroom', cap: 'cap_rattle' }); }
+          if (p.holdDoor && here('bedroom')) k.held += dt;
+          if (k.held >= k.win * 0.5) { k.st = 0; k.cool = lerp(10, 6, diff); emit('kumot_leave'); emit('cue', { id: 'scuffs_far', room: 'hall', cap: 'cap_scuffs_leave' }); return; }
+        }
+        if (k.t <= 0) {
+          if (H.door && k.held >= k.win * 0.5) { k.st = 0; k.cool = lerp(10, 6, diff); emit('kumot_leave'); emit('cue', { id: 'scuffs_far', room: 'hall', cap: 'cap_scuffs_leave' }); }
+          else { k.st = 4; k.t = 7; k.lift = false; k.warned = false; H.door = false; k.grace = 1.6; k.away = 0; emit('kumot_enter'); emit('door_open', { forced: true }); emit('cue', { id: 'lullaby_hum', room: 'bedroom', cap: 'cap_hum' }); }
+        }
+        return;
+      }
+      // st 4: inside the bedroom
+      if (here('bedroom')) {
+        if (p.hidden === 'bed') {
+          k.t -= dt;
+          if (k.t < 5.6 && !k.warned) { k.warned = true; emit('lift_warn'); emit('cue', { id: 'kulambo_rustle', room: 'bedroom', cap: 'cap_lift' }); }
+          var lifting = k.t < 4.2 && k.t > 1.6;
+          if (lifting && !k.lift) { k.lift = true; emit('lift'); }
+          if (lifting && !p.holdBreath) { kill('kumot'); return; }
+          if (lifting && g._gasp && g.time - g._gasp < 0.3) { kill('kumot'); return; }
+          if (k.t <= 0) { k.st = 0; k.cool = lerp(12, 7, diff); emit('kumot_leave'); emit('cue', { id: 'scuffs_far', room: 'hall', cap: 'cap_scuffs_leave' }); }
+        } else {
+          k.grace -= dt;
+          if (k.grace <= 0) kill('kumot');
+        }
+      } else {
+        k.away += dt;
+        if (k.away > 14) { k.st = 0; k.cool = 8; emit('kumot_leave'); }
+      }
+    }
+
+    // -------- MALIKMATA (Tiyanak): TV, lights, sofa
+    function updateMalik(dt) {
+      var m = g.m, p = g.p, H = g.house, lv = level('malik');
+      if (!lv && m.st === 0) return;
+      if (m.cool > 0) m.cool -= dt;
+      if (m.st === 0) {
+        if (!H.lights && !H.tv) m.darkT += dt; else m.darkT = 0;
+        m.tick += dt;
+        if (m.tick >= 5) {
+          m.tick = 0;
+          var bonus = m.darkT > 40 ? 3 : 0;
+          if (H.power && m.cool <= 0 && roll(lv + bonus) && canEscalate()) {
+            m.st = 1; m.t = m.win; H.tv = true;
+            emit('malik_static'); emit('cue', { id: 'static_swell', room: 'living', cap: 'cap_static', dur: m.win });
+            emit('cue', { id: 'baby_cry', room: 'living', cap: 'cap_cry' });
+          }
+        }
+        return;
+      }
+      if (m.st === 1) {
+        m.t -= dt;
+        if (m.t <= 0) { m.st = 2; m.t = 15; m.lock = 0; m.exposed = 0; m.hunt = 0; m.giggle = 0; emit('malik_out'); emit('cue', { id: 'vhs_glitch', room: 'living', cap: 'cap_vhs' }); }
+        return;
+      }
+      // st 2: out
+      m.t -= dt; m.giggle -= dt;
+      if (m.giggle <= 0) { m.giggle = 3.2; emit('cue', { id: 'giggle', room: here('living') ? 'living' : p.room, cap: 'cap_giggle', near: true }); }
+      if (here('living')) {
+        if (H.lights) { m.lock += dt; if (m.lock >= 3) { kill('malik'); return; } } else m.lock = Math.max(0, m.lock - dt);
+        if (p.hidden !== 'sofa') { m.exposed += dt; if (m.exposed >= 4) { kill('malik'); return; } }
+      } else if (!p.travel) {
+        m.hunt += dt;
+        if (m.hunt > 6 && !p.hidden) { m.exposed += dt; if (m.exposed >= 4.5) { kill('malik'); return; } }
+      }
+      if (m.t <= 0) { m.st = 0; m.cool = lerp(10, 6, diff); H.tv = false; emit('malik_return'); }
+    }
+
+    // -------- KALANSING (Aswang): noise, cabinet, asin
+    function updateKal(dt) {
+      var c = g.c, p = g.p, lv = level('kal');
+      if (!lv && c.st === 0) return;
+      if (c.cool > 0) c.cool -= dt;
+      if (c.st < 2) {
+        c.tick += dt;
+        if (c.tick >= 4) {
+          c.tick = 0;
+          var lvx = lv + g.noise / 12;
+          if (c.cool <= 0 && roll(lvx) && (c.st < 1 || canEscalate())) {
+            c.st++;
+            if (c.st === 1) emit('cue', { id: 'clinks', room: 'kitchen', cap: 'cap_clinks_far', vol: 0.5 });
+            if (c.st === 2) { c.t = c.win; emit('kal_near'); emit('cue', { id: 'clinks', room: 'kitchen', cap: 'cap_clinks_near' }); emit('cue', { id: 'sniff', room: 'kitchen', cap: 'cap_sniff', delay: 1.5 }); }
+          }
+        }
+        return;
+      }
+      if (c.st === 2) {
+        c.t -= dt;
+        if (c.t <= 0) { c.st = 3; c.t = 10; c.grace = 1.8; emit('kal_in'); if (here('kitchen')) emit('cue', { id: 'clinks', room: 'kitchen', cap: 'cap_kal_in' }); }
+        return;
+      }
+      // st 3: in the kitchen
+      c.t -= dt;
+      if (here('kitchen')) {
+        if (p.hidden === 'cabinet') {
+          c.sniff -= dt;
+          if (c.sniff <= 0) { c.sniff = 2.4; emit('cue', { id: 'knife_taps', room: 'kitchen', cap: 'cap_taps' }); }
+        } else {
+          c.grace -= dt;
+          if (c.grace <= 0) { kill('kal'); return; }
+        }
+      }
+      if (c.t <= 0) { c.st = 0; c.cool = lerp(12, 7, diff); emit('kal_leave'); }
+    }
+    // any tap while hidden in the cabinet with her there counts as moving
+    var _act = g.act;
+    g.act = function (a, arg) {
+      if (!g.over && g.c.st === 3 && here('kitchen') && g.p.hidden === 'cabinet' && a !== 'salt') { g.p.lastActT = g.time; kill('kal'); return false; }
+      return _act(a, arg);
+    };
+
+    // -------- SILIP (Manananggal): stages, curtain, flashlight
+    function updateSilip(dt) {
+      var s = g.s, p = g.p, H = g.house, lv = level('silip');
+      if (!lv && s.st === 0) return;
+      if (s.cool > 0) s.cool -= dt;
+      var lookingOut = here('curtain') && H.curtain;
+      if (lookingOut && !p.light) s.openT += dt; else s.openT = 0;
+      if (s.st < 4) {
+        s.tick += dt * (s.openT > 6 ? 2 : 1);
+        var every = lerp(7, 5.5, diff);
+        if (s.tick >= every) {
+          s.tick = 0;
+          if (s.cool <= 0 && roll(lv) && (s.st < 3 || canEscalate())) {
+            s.st++; H.cricketsOff = 5; emit('crickets_off', { stage: s.st });
+            if (s.st === 4) { s.t = s.win; s.held = 0; s.tap = 0; s.grace = 1.2; emit('silip_glass'); }
+          }
+        }
+        // flashlight pushes her back
+        if (lookingOut && p.light && s.st >= 1 && s.st <= 3) {
+          s.flash += dt;
+          if (s.flash >= 2) { s.flash = 0; s.st--; s.cool = 3; emit('silip_back', { stage: s.st }); }
+        } else s.flash = Math.max(0, s.flash - dt);
+        return;
+      }
+      if (s.st === 4) {
+        s.t -= dt; s.tap -= dt;
+        if (s.tap <= 0) { s.tap = 1.8; emit('cue', { id: 'nail_taps', room: 'curtain', cap: 'cap_nails' }); }
+        if (s.grace > 0) s.grace -= dt;
+        if (lookingOut && s.grace <= 0) { kill('silip'); return; }
+        if (here('curtain') && p.holdCurtain && !H.curtain) s.held += dt;
+        if (s.held >= s.win * 0.4) { s.st = 1; s.cool = lerp(10, 6, diff); emit('silip_back', { stage: 1 }); return; }
+        if (s.t <= 0) {
+          if (s.held >= s.win * 0.4) { s.st = 1; s.cool = lerp(10, 6, diff); emit('silip_back', { stage: 1 }); }
+          else { s.st = 5; kill('silip'); }
+        }
+      }
+    }
+
+    emit('start', { night: nightNo });
+    return g;
+  }
+
+  return { create: create, NIGHTS: NIGHTS, ROOMS: ROOMS, ROOM_X: ROOM_X, travelTime: travelTime, rngFrom: rngFrom };
+})();
+if (typeof module !== 'undefined') module.exports = AS;
+
+/* ALAS-SAIS — UI, audio, input and screens */
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  var IMG = ['ext_house', 'bedroom_empty', 'bedroom_closed', 'bedroom_kumot', 'bedroom_blackout', 'under_empty', 'under_kumot', 'hallway_empty', 'hallway_kumot',
+    'living_empty', 'living_lights', 'living_tvoff', 'living_lights_off_tv', 'living_malik', 'kitchen_empty', 'kitchen_kal', 'cabinet_empty', 'cabinet_kal',
+    'curtain_closed', 'curtain_open', 'curtain_s1', 'curtain_s2', 'curtain_silip', 'curtain_glass', 'scare_kumot', 'scare_malikmata', 'scare_kalansing', 'scare_silip',
+    'hero_kumot', 'hero_malikmata', 'hero_kalansing', 'hero_silip'];
+  var SFX = ['amb_house', 'amb_garden', 'amb_menu', 'rain_heavy', 'heartbeat', 'bell_6am', 'rooster_dawn', 'tuko_gecko', 'dog_howl', 'tricycle_far', 'distant_scream',
+    'fluorescent_hum', 'scuffs_far', 'scuffs_near', 'wheeze', 'lullaby_hum', 'handle_rattle', 'static_swell', 'vhs_glitch', 'giggle', 'baby_cry', 'clinks', 'sniff', 'knife_taps',
+    'nail_taps', 'steps_walk_wood', 'steps_run_wood', 'steps_walk_cement', 'breath_hold_gasp', 'door_creak', 'door_slam', 'cabinet_open', 'cabinet_close', 'curtain_rings',
+    'plastic_crinkle', 'kulambo_rustle', 'light_switch', 'flashlight_click', 'tv_static', 'power_down', 'breaker', 'phone_text',
+    'jumpscare_kumot', 'jumpscare_malikmata', 'jumpscare_kalansing', 'jumpscare_silip',
+    'door_open_slow', 'door_close_shut', 'door_push_strain', 'curtain_open_pull', 'curtain_close_pull', 'curtain_grip', 'hide_bed', 'unhide_bed',
+    'hide_cabinet', 'hide_sofa', 'turn_whoosh', 'run_pant', 'nervous_breath', 'floor_creak', 'steps_run_cement', 'flashlight_on', 'salt_throw', 'tv_click_off',
+    'ringtone', 'phone_pickup', 'phone_hangup', 'line_static'];
+  var VOICE = [];
+  if (typeof CALLS !== 'undefined') Object.keys(CALLS).forEach(function (n) { CALLS[n].forEach(function (_, i) { VOICE.push('n' + n + '_' + (i < 10 ? '0' : '') + i); }); });
+  var WHO_IMG = { kumot: 'scare_kumot', malik: 'scare_malikmata', kal: 'scare_kalansing', silip: 'scare_silip' };
+  var WHO_SFX = { kumot: 'jumpscare_kumot', malik: 'jumpscare_malikmata', kal: 'jumpscare_kalansing', silip: 'jumpscare_silip' };
+  var HERO = { kumot: 'hero_kumot', malik: 'hero_malikmata', kal: 'hero_kalansing', silip: 'hero_silip' };
+
+  // ------------------------------------------------------------ save / settings
+  var DEF = { lang: 'en', gfx: 'medium', vol: { master: 0.9, sfx: 1, amb: 0.8, music: 0.6 }, captions: true, reduced: false };
+  var save = { night: 1, done: false, set: JSON.parse(JSON.stringify(DEF)) };
+  function load() { try { var s = JSON.parse(localStorage.getItem('alassais') || 'null'); if (s && s.set) { save = s; save.set.vol = Object.assign({}, DEF.vol, s.set.vol); } } catch (e) {} }
+  function store() { try { localStorage.setItem('alassais', JSON.stringify(save)); } catch (e) {} }
+  load();
+  function L() { return STR[save.set.lang] || STR.en; }
+  function T(key, n) { var v = L()[key]; if (v === undefined) v = STR.en[key]; return typeof v === 'string' && n !== undefined ? v.replace('{n}', n) : v; }
+
+  // ------------------------------------------------------------ scaling
+  function fit() {
+    var w = window.innerWidth, h = window.innerHeight, s = Math.min(w / 1280, h / 720); stageScale = s;
+    var st = $('stage'); st.style.transform = 'scale(' + s + ')';
+    st.style.left = ((w - 1280 * s) / 2) + 'px'; st.style.top = ((h - 720 * s) / 2) + 'px';
+    var portrait = h > w * 1.1;
+    $('rotate').style.display = (portrait && game && !rotateDismissed) ? 'flex' : 'none';
+  }
+  var rotateDismissed = false;
+  window.addEventListener('resize', fit);
+  window.addEventListener('orientationchange', function () { setTimeout(fit, 200); });
+
+  // ------------------------------------------------------------ assets
+  var imgs = {};
+  var AC = null, BUS = {}, BUF = {}, rawAudio = {};
+  function loadAll(onProgress) {
+    var total = IMG.length + SFX.length + VOICE.length, done = 0;
+    function tick() { done++; onProgress(done / total); }
+    var jobs = [];
+    IMG.forEach(function (k) { jobs.push(new Promise(function (res) { var i = new Image(); i.onload = i.onerror = function () { tick(); res(); }; i.src = 'assets/img/' + k + '.jpg'; imgs[k] = i; })); });
+    SFX.forEach(function (k) { jobs.push(fetch('assets/sfx/' + k + '.mp3').then(function (r) { return r.ok ? r.arrayBuffer() : null; }).then(function (b) { rawAudio[k] = b; tick(); }).catch(function () { tick(); })); });
+    VOICE.forEach(function (k) { jobs.push(fetch('assets/voice/' + k + '.mp3').then(function (r) { return r.ok ? r.arrayBuffer() : null; }).then(function (b) { rawAudio['v_' + k] = b; tick(); }).catch(function () { tick(); })); });
+    return Promise.all(jobs);
+  }
+  function initAudio() {
+    if (AC) { if (AC.state === 'suspended') AC.resume(); return Promise.resolve(); }
+    var C = window.AudioContext || window.webkitAudioContext;
+    if (!C) return Promise.resolve();
+    AC = new C();
+    BUS.master = AC.createGain(); BUS.master.connect(AC.destination);
+    ['sfx', 'amb', 'music', 'voice'].forEach(function (b) { BUS[b] = AC.createGain(); BUS[b].connect(BUS.master); });
+    applyVolumes();
+    var jobs = Object.keys(rawAudio).map(function (k) {
+      var ab = rawAudio[k]; if (!ab) return Promise.resolve();
+      return new Promise(function (res) { try { AC.decodeAudioData(ab.slice(0), function (b) { BUF[k] = b; res(); }, function () { res(); }); } catch (e) { res(); } });
+    });
+    return Promise.all(jobs);
+  }
+  function applyVolumes() { if (!AC) return; var v = save.set.vol; BUS.master.gain.value = v.master; BUS.sfx.gain.value = v.sfx; BUS.amb.gain.value = v.amb; BUS.music.gain.value = v.music; }
+
+  // spatial: volume / filter / pan by where the sound is vs where the player is
+  function spatial(room) {
+    if (!room || !game) return { vol: 1, cut: 20000, pan: 0 };
+    var pr = game.p.travel ? 'hall' : game.p.room;
+    var X = AS.ROOM_X; var pan = Math.max(-0.8, Math.min(0.8, (X[room] - X[pr]) * 0.7));
+    if (room === pr) return { vol: 1, cut: 20000, pan: 0 };
+    if (room === 'hall' || pr === 'hall') return { vol: 0.6, cut: 2600, pan: pan };
+    return { vol: 0.32, cut: 1100, pan: pan };
+  }
+  function play(id, o) {
+    o = o || {};
+    if (!AC || !BUF[id]) return null;
+    var src = AC.createBufferSource(); src.buffer = BUF[id]; src.loop = !!o.loop;
+    var g = AC.createGain(); var sp = o.room ? spatial(o.room) : { vol: 1, cut: 20000, pan: 0 };
+    g.gain.value = (o.vol === undefined ? 1 : o.vol) * sp.vol;
+    var f = AC.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = sp.cut;
+    var node = src; node.connect(f); f.connect(g);
+    var out = g;
+    if (AC.createStereoPanner) { var p = AC.createStereoPanner(); p.pan.value = sp.pan; g.connect(p); out = p; }
+    out.connect(BUS[o.bus || 'sfx']);
+    try { src.start(AC.currentTime + (o.delay || 0), o.offset || 0); } catch (e) {}
+    var h = { src: src, gain: g, filter: f, room: o.room, base: (o.vol === undefined ? 1 : o.vol) };
+    if (o.loop) loops.push(h);
+    src.onended = function () { var i = loops.indexOf(h); if (i >= 0) loops.splice(i, 1); };
+    return h;
+  }
+  var loops = [];
+  function stop(h, fade) { if (!h) return; try { if (fade && AC) { h.gain.gain.setTargetAtTime(0, AC.currentTime, fade / 3); h.src.stop(AC.currentTime + fade); } else h.src.stop(); } catch (e) {} }
+  function stopAll() { loops.slice().forEach(function (h) { stop(h); }); loops = []; amb = {}; }
+  function setLoopVol(h, v, room) { if (!h || !AC) return; var sp = room ? spatial(room) : { vol: 1, cut: 20000 }; h.gain.gain.setTargetAtTime(v * sp.vol, AC.currentTime, 0.25); h.filter.frequency.setTargetAtTime(sp.cut, AC.currentTime, 0.2); }
+  var amb = {};
+
+  // ------------------------------------------------------------ screens
+  var game = null, raf = 0, lastT = 0, paused = false, nightIdx = 0, nightStart = 0, msgQ = [], msgT = 0, capT = 0, deathTimer = 0, introShown = false;
+  function show(id) { ['scr-load', 'scr-menu', 'scr-settings', 'scr-nights', 'scr-credits', 'scr-intro', 'scr-pause', 'scr-win', 'scr-over', 'scr-end', 'scr-exit'].forEach(function (s) { $(s).classList.toggle('show', s === id); }); }
+  var settingsFrom = 'scr-menu';
+
+  function renderTexts() {
+    document.documentElement.lang = save.set.lang === 'fil' ? 'fil' : 'en';
+    document.querySelectorAll('[data-t]').forEach(function (el) { el.textContent = T(el.getAttribute('data-t')); });
+    $('m-sub').textContent = T('title_sub');
+    $('m-cont').querySelector('small').textContent = save.night > 1 ? T('night_n', save.night) : '';
+    $('m-cont').disabled = save.night <= 1 && !save.done;
+    $('m-nights').querySelector('small').textContent = save.night + ' / 5';
+    $('credits-text').textContent = T('credits_text');
+    document.querySelectorAll('.langbtn').forEach(function (b) { b.classList.toggle('cur', b.getAttribute('data-lang') === save.set.lang); });
+    renderSettings(); renderNights();
+  }
+  function renderSettings() {
+    var s = save.set;
+    document.querySelectorAll('[data-gfx]').forEach(function (b) { b.classList.toggle('cur', b.getAttribute('data-gfx') === s.gfx); b.textContent = T(b.getAttribute('data-gfx')); });
+    ['master', 'sfx', 'amb', 'music'].forEach(function (k) { $('v-' + k).value = Math.round(s.vol[k] * 100); $('vl-' + k).textContent = Math.round(s.vol[k] * 100); });
+    $('t-cap').textContent = s.captions ? T('on') : T('off'); $('t-red').textContent = s.reduced ? T('on') : T('off');
+    applyGfx();
+  }
+  function renderNights() {
+    var box = $('night-list'); box.innerHTML = '';
+    for (var i = 1; i <= 5; i++) {
+      var b = document.createElement('button'); b.className = 'mi'; b.type = 'button';
+      var lock = i > save.night;
+      b.disabled = lock;
+      b.textContent = T('night_n', i) + ' ';
+      var sm = document.createElement('small'); sm.textContent = lock ? T('locked') : T('night_names')[i - 1]; b.appendChild(sm);
+      (function (n) { b.addEventListener('click', function () { startNight(n - 1); }); })(i);
+      box.appendChild(b);
+    }
+  }
+  function applyGfx() {
+    var g = save.set.gfx;
+    $('grain').style.opacity = g === 'low' ? 0 : g === 'medium' ? 0.22 : 0.32;
+    $('vig').style.display = g === 'low' ? 'none' : 'block';
+  }
+
+  // grain: one small noise tile, moved around (cheap on low-end phones)
+  function makeGrain() {
+    var c = document.createElement('canvas'); c.width = c.height = 160; var x = c.getContext('2d'); var d = x.createImageData(160, 160);
+    for (var i = 0; i < d.data.length; i += 4) { var v = Math.random() * 255; d.data[i] = d.data[i + 1] = d.data[i + 2] = v; d.data[i + 3] = 255; }
+    x.putImageData(d, 0, 0);
+    $('grain').style.backgroundImage = 'url(' + c.toDataURL() + ')';
+  }
+
+  // ------------------------------------------------------------ night flow
+  function startNight(idx) {
+    nightIdx = idx; if (call) endCall(true); stopAll();
+    if (raf) cancelAnimationFrame(raf);
+    game = null; paused = false;
+    var n = idx + 1;
+    $('intro-n').textContent = T('night_n', n);
+    $('intro-name').textContent = T('night_names')[idx];
+    var rules = $('intro-rules'); rules.innerHTML = '';
+    var list = idx === 4 ? [] : (STR.en.intro_rules[n] || []);
+    // remind earlier threats briefly on later nights
+    list.forEach(function (w) {
+      var d = document.createElement('div'); d.className = 'rule';
+      var im = document.createElement('img'); im.src = 'assets/img/' + HERO[w] + '.jpg'; im.alt = '';
+      var tx = document.createElement('div'); var b = document.createElement('b'); b.textContent = T('new_threat') + ': ' + T('who')[w];
+      var p = document.createElement('div'); p.textContent = T('hint')[w]; p.style.marginTop = '6px'; p.style.fontSize = '16px'; p.style.lineHeight = '1.45';
+      tx.appendChild(b); tx.appendChild(p); d.appendChild(im); d.appendChild(tx); rules.appendChild(d);
+    });
+    if (idx === 4) { var f = document.createElement('p'); f.className = 'sub'; f.textContent = T('final_night'); rules.appendChild(f); }
+    show('scr-intro');
+    play('dog_howl', { bus: 'amb', vol: 0.5 });
+  }
+  function beginNight() {
+    initAudio().then(function () {
+      show(null); fit();
+      game = AS.create(nightIdx, { seed: (Date.now() & 0xffffff) });
+      nightStart = performance.now(); paused = false; deathTimer = 0;
+      lastView = ''; hotSig = ''; viewLock = null; camClear(); black(0, 10); $('fx').innerHTML = '';
+      setView(true, true); renderHUD();
+      amb.house = play('amb_house', { bus: 'amb', loop: true, vol: 0.55 });
+      amb.garden = play('amb_garden', { bus: 'amb', loop: true, vol: 0.5, room: 'curtain' });
+      if (nightIdx === 4) amb.rain = play('rain_heavy', { bus: 'amb', loop: true, vol: 0.55 });
+      msgQ = []; msgT = 1.2;
+      if (window.__AS_NOCALL || !startCall(game.night)) { msgQ = (L().texts[game.night] || []).slice(); }
+      buildHot();
+      if (game.night === 1) setTimeout(function () { if (game && call && call.state === 'ring') hint(T('ph_answer') + ' ☎', 4); }, 2500);
+      lastT = performance.now(); raf = requestAnimationFrame(loop);
+      scheduleRandomAmb();
+    });
+  }
+  var ambTimer = 0;
+  function scheduleRandomAmb() { ambTimer = 18 + Math.random() * 25; }
+
+  function loop(now) {
+    raf = requestAnimationFrame(loop);
+    var dt = Math.min(0.1, (now - lastT) / 1000); lastT = now;
+    if (!game || paused) return;
+    if (game.over) { handleEvents(); return; }
+
+    if (!(call && call.state === 'ring')) game.update(dt * (window.__AS_SPEED || 1));
+    callTick(dt);
+    handleEvents();
+    if (!game) return;
+    // messages
+    if (msgQ.length) { msgT -= dt; if (msgT <= 0) { showMsg(msgQ.shift()); msgT = 5.5; } }
+    if (capT > 0) { capT -= dt; if (capT <= 0) $('cap').style.opacity = 0; }
+    ambTimer -= dt; if (ambTimer <= 0) { var pick = ['tuko_gecko', 'tricycle_far', 'tuko_gecko', 'distant_scream'][Math.floor(Math.random() * (game.night >= 3 ? 4 : 3))]; play(pick, { bus: 'amb', vol: 0.45, room: 'curtain' }); scheduleRandomAmb(); }
+    // ambience loops follow the player
+    setLoopVol(amb.garden, game.house.cricketsOff > 0 ? 0.0 : 0.5, 'curtain');
+    if (game.house.tv && !amb.tv) { amb.tv = play('tv_static', { bus: 'amb', loop: true, vol: 0.5, room: 'living' }); }
+    if (!game.house.tv && amb.tv) { stop(amb.tv, 0.3); amb.tv = null; }
+    if (amb.tv) setLoopVol(amb.tv, 0.5, 'living');
+    if (game.house.lights && !amb.hum) amb.hum = play('fluorescent_hum', { bus: 'amb', loop: true, vol: 0.4, room: 'living' });
+    if (!game.house.lights && amb.hum) { stop(amb.hum, 0.2); amb.hum = null; }
+    if (amb.hum) setLoopVol(amb.hum, 0.4, 'living');
+    setView(false); renderHUD();
+    var H = game.house, P = game.p;
+    var st = [P.room, !!P.travel, P.hidden, H.door, H.tv, H.lights, H.power, H.curtain, P.salt, !!call].join();
+    if (st !== loop._st) { loop._st = st; buildHot(); }
+    holdCam();
+  }
+
+  // ------------------------------------------------------------ events -> sound, captions, visuals
+  function cap(key) { if (!save.set.captions) return; var c = L().cap[key] || STR.en.cap[key]; if (!c) return; $('cap').textContent = c; $('cap').style.opacity = 1; capT = 3.6; }
+  function showMsg(text) { $('msg-text').textContent = text; $('msg').classList.add('show'); play('phone_text', { vol: 0.7 }); clearTimeout(showMsg._t); showMsg._t = setTimeout(function () { $('msg').classList.remove('show'); }, 5000); }
+  var breathH = null, holdH = null, holdHName = '', runH = null;
+  function handleEvents() {
+    var ev = game.events; game.events = [];
+    for (var i = 0; i < ev.length; i++) {
+      var e = ev[i], d = e.data;
+      switch (e.type) {
+        case 'cue': play(d.id, { room: d.room, vol: d.vol || 1, delay: d.delay || 0 }); if (d.cap) cap(d.cap); break;
+        case 'travel': onTravel(d); break;
+        case 'arrive': onArrive(d); break;
+        case 'door_open':
+          if (d.forced) { play('door_slam', { room: 'bedroom' }); play('door_creak', { room: 'bedroom', vol: 0.6, delay: 0.1 }); cap('kumot_enter'); if (here('bedroom')) doorAnim(false, 260); jolt(); }
+          else { play('door_open_slow', { room: 'bedroom' }); if (here('bedroom')) doorAnim(false, 950); }
+          break;
+        case 'door_close': play('door_close_shut', { room: 'bedroom', vol: 0.9 }); if (here('bedroom')) doorAnim(true, 420); break;
+        case 'hide': onHide(d.spot, true); break;
+        case 'unhide': onHide(d.spot, false); break;
+        case 'crinkle': break;
+        case 'tv_off': play('tv_click_off', { vol: 0.8 }); tvOffAnim(); break;
+        case 'light_switch': play('light_switch'); lightAnim(game.house.lights); break;
+        case 'curtain_open': play('curtain_open_pull', { room: 'curtain' }); if (here('curtain')) curtainAnim(true); break;
+        case 'curtain_close': play('curtain_close_pull', { room: 'curtain', vol: 0.9 }); if (here('curtain')) curtainAnim(false); break;
+        case 'salt': play('salt_throw', { vol: 0.9 }); saltAnim(); break;
+        case 'kal_retreat': play('sniff', { room: 'kitchen' }); cap('kal_retreat'); break;
+        case 'breaker': play('breaker'); cap('breaker'); flashWhite(); jolt(); break;
+        case 'blackout': play('power_down'); cap('blackout'); jolt(); break;
+        case 'no_power': cap('no_power'); hint(T('cap').no_power || ''); break;
+        case 'crickets_off': cap('crickets'); break;
+        case 'silip_back': cap('silip_back'); break;
+        case 'malik_return': cap('malik_return'); break;
+        case 'gasp': play('breath_hold_gasp', { offset: 8.0, vol: 1 }); cap('gasp'); stopBreath(); jolt(); break;
+        case 'battery_dead': cap('battery_dead'); break;
+        case 'heartbeat': if (d.on && !amb.heart) amb.heart = play('heartbeat', { loop: true, vol: 0.55 }); else if (!d.on && amb.heart) { stop(amb.heart, 0.6); amb.heart = null; } break;
+        case 'win': onWin(); break;
+        case 'death': onDeath(d.who); break;
+      }
+    }
+  }
+  function here(r) { return game && !game.p.travel && game.p.room === r; }
+  function lowFx() { return save.set.gfx === 'low' || save.set.reduced; }
+  function jolt() { if (lowFx()) return; var s = $('view'); s.classList.remove('shake'); void s.offsetWidth; s.classList.add('shake'); }
+  function stopBreath() { if (breathH) { stop(breathH, 0.2); breathH = null; } }
+  function hint(t, sec) { var h = $('hint'); if (!t) return; h.textContent = t; h.style.opacity = 1; clearTimeout(hint._t); hint._t = setTimeout(function () { h.style.opacity = 0; }, (sec || 3) * 1000); }
+  function speed() { return window.__AS_SPEED || 1; }
+
+  // ------------------------------------------------------------ camera rig (first-person moves, all from the still renders)
+  var cam = null, camA = null, busyUntil = 0, viewLock = null, walkPt = [50, 60];
+  function camAnim(frames, ms, origin, easing) {
+    cam = cam || $('cam');
+    if (camA) { try { camA.cancel(); } catch (e) {} camA = null; }
+    if (!cam.animate) return null;
+    cam.style.transformOrigin = origin ? origin[0] + '% ' + origin[1] + '%' : '50% 50%';
+    camA = cam.animate(frames, { duration: Math.max(60, ms), easing: easing || 'ease-in-out', fill: 'forwards' });
+    busyUntil = performance.now() + ms;
+    return camA;
+  }
+  function camClear() { if (camA) { try { camA.cancel(); } catch (e) {} camA = null; } }
+  function black(op, ms, delay) { var b = $('black'); b.style.transition = 'opacity ' + (ms || 200) + 'ms ease ' + (delay || 0) + 'ms'; b.style.opacity = op; }
+  // footsteps: n steps of head bob while pushing toward a point
+  function bobFrames(n, zoomTo, amp, roll, zoomFrom) {
+    var f = [], steps = n * 2;
+    for (var i = 0; i <= steps; i++) {
+      var k = i / steps, z = (zoomFrom || 1) + (zoomTo - (zoomFrom || 1)) * (k * k * 0.6 + k * 0.4);
+      var y = (i % 2 ? amp : -amp * 0.4), r = (i % 4 === 1 ? roll : i % 4 === 3 ? -roll : 0);
+      if (i === 0 || i === steps) { y = 0; r = 0; }
+      f.push({ transform: 'scale(' + z.toFixed(3) + ') translateY(' + y + 'px) rotate(' + r + 'deg)', offset: k });
+    }
+    return f;
+  }
+  function onTravel(d) {
+    var run = d.run, ms = d.t * 1000 / speed();
+    var surf = d.to === 'kitchen' || d.to === 'living' || d.from === 'kitchen' || d.from === 'living';
+    play('turn_whoosh', { vol: 0.5 });
+    play(run ? (surf ? 'steps_run_cement' : 'steps_run_wood') : (surf ? 'steps_walk_cement' : 'steps_walk_wood'), { vol: 0.85 });
+    if (run) { if (runH) stop(runH, 0.1); runH = play('run_pant', { vol: 0.5 }); }
+    releaseHolds(); buildHot();
+    if (lowFx()) { black(1, Math.min(250, ms * 0.5)); return; }
+    var n = Math.max(2, Math.round(ms / (run ? 230 : 330)));
+    camAnim(bobFrames(n, run ? 2.5 : 2.0, run ? 14 : 9, run ? 1.1 : 0.6), ms, walkPt, 'linear');
+    black(1, Math.min(260, ms * 0.35), Math.max(0, ms * 0.62));
+  }
+  function onArrive() {
+    if (runH) { stop(runH, 1.2); runH = null; }
+    camClear(); setView(true, true); buildHot();
+    if (Math.random() < 0.35) play('floor_creak', { vol: 0.4 });
+    black(0, 320);
+    if (lowFx()) return;
+    camAnim(bobFrames(2, 1, 7, 0.4, 1.28), 620, [50, 55], 'ease-out');
+    if (game && game.p.room === 'hall' && game.night === 1 && !onArrive._hallHint) { onArrive._hallHint = 1; hint(T('h_light'), 4); }
+  }
+  // swing the bedroom door: a cut-out of the closed door rotating on its hinge
+  var DOOR = { x: 516, y: 198, w: 169, h: 374 };
+  function doorAnim(closing, ms) {
+    var fx = $('fx'); fx.innerHTML = '';
+    if (lowFx()) { setView(true, true); return; }
+    var leaf = document.createElement('div'); leaf.className = 'leaf';
+    leaf.style.cssText = 'left:' + DOOR.x + 'px;top:' + DOOR.y + 'px;width:' + DOOR.w + 'px;height:' + DOOR.h + 'px;background-image:url(assets/img/bedroom_closed.jpg);background-position:-' + DOOR.x + 'px -' + DOOR.y + 'px';
+    fx.appendChild(leaf);
+    var open = 'rotateY(-78deg)', shut = 'rotateY(0deg)';
+    // the room behind the leaf is the "open" picture during the swing
+    viewLock = { key: closing ? 'bedroom_empty' : viewKeyRaw(), until: performance.now() + ms };
+    setView(true, true);
+    var a = leaf.animate([{ transform: closing ? open : shut }, { transform: closing ? shut : open }], { duration: ms, easing: closing ? 'cubic-bezier(.5,0,.9,.6)' : 'cubic-bezier(.2,.6,.3,1)', fill: 'forwards' });
+    a.onfinish = function () { viewLock = null; setView(true, true); fx.innerHTML = ''; if (closing) jolt(); };
+    if (closing) camAnim([{ transform: 'scale(1)' }, { transform: 'scale(1.06)' }, { transform: 'scale(1)' }], ms + 250, [47, 55]);
+  }
+  // red curtains slide apart / together (two halves of the closed-curtain render)
+  function curtainAnim(opening) {
+    var fx = $('fx'); fx.innerHTML = '';
+    if (lowFx()) { setView(true, true); return; }
+    var L = document.createElement('div'), R = document.createElement('div');
+    L.className = R.className = 'half';
+    L.style.cssText = 'left:0;background-image:url(assets/img/curtain_closed.jpg);background-position:0 0;transform-origin:0 50%';
+    R.style.cssText = 'right:0;background-image:url(assets/img/curtain_closed.jpg);background-position:-640px 0;transform-origin:100% 50%';
+    fx.appendChild(L); fx.appendChild(R);
+    var ms = opening ? 700 : 520;
+    var shutL = 'translateX(0) scaleX(1)', openL = 'translateX(0) scaleX(.3)', shutR = shutL, openR = openL;
+    viewLock = { key: opening ? viewKeyRaw() : lastKey, until: performance.now() + ms };
+    setView(true, true);
+    var ease = opening ? 'cubic-bezier(.3,.7,.3,1)' : 'cubic-bezier(.6,0,.8,.5)';
+    L.animate([{ transform: opening ? shutL : openL }, { transform: opening ? openL : shutL }], { duration: ms, easing: ease, fill: 'forwards' });
+    var a = R.animate([{ transform: opening ? shutR : openR }, { transform: opening ? openR : shutR }], { duration: ms, easing: ease, fill: 'forwards' });
+    a.onfinish = function () { viewLock = null; setView(true, true); fx.innerHTML = ''; };
+  }
+  // crouch / crawl into hiding spots
+  var HIDE_PT = { bed: [14, 86], cabinet: [32, 74], sofa: [14, 96] };
+  function onHide(spot, inside) {
+    var snd = { bed: inside ? 'hide_bed' : 'unhide_bed', cabinet: inside ? 'hide_cabinet' : 'cabinet_open', sofa: 'hide_sofa' }[spot];
+    play(snd, { vol: 0.9 });
+    releaseHolds();
+    if (lowFx()) { setView(true, true); buildHot(); return; }
+    var ms = spot === 'sofa' ? 380 : 520;
+    var key = lastKey;
+    viewLock = { key: key, until: performance.now() + ms };
+    var down = inside ? (spot === 'bed' ? 'scale(1.7) translateY(60px) rotate(-7deg)' : spot === 'cabinet' ? 'scale(2.3) translateY(20px)' : 'scale(1.3) translateY(70px) rotate(-3deg)')
+      : 'scale(1.25) translateY(-50px) rotate(4deg)';
+    camAnim([{ transform: 'scale(1)' }, { transform: down }], ms, inside ? HIDE_PT[spot] : [50, 30], 'cubic-bezier(.5,0,.8,.6)');
+    black(spot === 'sofa' ? 0.5 : 1, ms * 0.45, ms * 0.55);
+    setTimeout(function () {
+      viewLock = null; camClear(); setView(true, true); buildHot(); black(0, 380);
+      var from = inside ? (spot === 'bed' ? 'scale(1.3) translateY(-40px) rotate(5deg)' : 'scale(1.2)') : 'scale(1.2) translateY(60px) rotate(-3deg)';
+      camAnim([{ transform: from }, { transform: 'scale(1)' }], 600, [50, 50], 'ease-out');
+      if (inside && spot === 'bed' && game && game.night <= 2) hint(T('h_breath'), 4);
+    }, ms);
+  }
+  function tvOffAnim() {
+    if (!here('living') || lowFx()) return;
+    var fx = $('fx'), c = document.createElement('div'); c.className = 'crt';
+    c.style.cssText = 'left:494px;top:350px;width:174px;height:150px'; fx.appendChild(c);
+    var a = c.animate([{ transform: 'scale(1,1)', opacity: 0.9 }, { transform: 'scale(1,.03)', opacity: 1, offset: 0.45 }, { transform: 'scale(.02,.02)', opacity: 0 }], { duration: 300, easing: 'ease-in' });
+    a.onfinish = function () { c.remove(); };
+  }
+  function lightAnim(on) {
+    if (!here('living') || lowFx()) return;
+    var im = $(front);
+    if (on && im.animate) im.animate([{ filter: 'brightness(.3)' }, { filter: 'brightness(1.4)', offset: 0.15 }, { filter: 'brightness(.4)', offset: 0.3 }, { filter: 'brightness(1.2)', offset: 0.45 }, { filter: 'brightness(.6)', offset: 0.6 }, { filter: 'brightness(1.05)' }], { duration: 700 });
+  }
+  function saltAnim() {
+    if (lowFx()) return;
+    var fx = $('fx');
+    for (var i = 0; i < 26; i++) {
+      var g = document.createElement('div'); g.className = 'grainS'; g.style.left = (560 + Math.random() * 160) + 'px'; g.style.top = '700px'; fx.appendChild(g);
+      var dx = (Math.random() - 0.5) * 900, dy = -300 - Math.random() * 380;
+      (function (el) { var a = el.animate([{ transform: 'translate(0,0) scale(1)', opacity: 1 }, { transform: 'translate(' + dx + 'px,' + dy + 'px) scale(.4)', opacity: 0 }], { duration: 500 + Math.random() * 400, easing: 'cubic-bezier(.2,.8,.4,1)' }); a.onfinish = function () { el.remove(); }; })(g);
+    }
+    jolt();
+  }
+  function flashWhite() { var f = $('black'); f.style.transition = 'none'; f.style.background = '#fff'; f.style.opacity = 0.7; setTimeout(function () { f.style.transition = 'opacity .4s'; f.style.opacity = 0; setTimeout(function () { f.style.background = '#000'; }, 420); }, 70); }
+
+  // ------------------------------------------------------------ view (which pre-rendered image)
+  var lastView = '', lastKey = '', front = 'bgA';
+  function viewKeyRaw() {
+    var g = game, p = g.p, H = g.house;
+    if (p.travel) return lastKey || 'hallway_empty';
+    switch (p.room) {
+      case 'bedroom':
+        if (p.hidden === 'bed') return g.k.st === 4 ? 'under_kumot' : 'under_empty';
+        if (!H.power && (g.k.st >= 3 && !H.door)) return 'bedroom_blackout';
+        if (g.k.st === 4 || (g.k.st === 3 && !H.door)) return 'bedroom_kumot';
+        return H.door ? 'bedroom_closed' : 'bedroom_empty';
+      case 'hall': return g.k.st === 2 ? 'hallway_kumot' : 'hallway_empty';
+      case 'living':
+        if (g.m.st === 2) return 'living_malik';
+        if (H.tv) return H.lights ? 'living_lights' : 'living_empty';
+        return H.lights ? 'living_lights_off_tv' : 'living_tvoff';
+      case 'kitchen':
+        if (p.hidden === 'cabinet') return g.c.st === 3 ? 'cabinet_kal' : 'cabinet_empty';
+        return g.c.st >= 2 ? 'kitchen_kal' : 'kitchen_empty';
+      case 'curtain':
+        if (!H.curtain) return 'curtain_closed';
+        return ['curtain_open', 'curtain_s1', 'curtain_s2', 'curtain_silip', 'curtain_glass', 'curtain_glass'][g.s.st];
+    }
+    return 'hallway_empty';
+  }
+  function viewKey() { if (viewLock && performance.now() < viewLock.until) return viewLock.key; return viewKeyRaw(); }
+  function setView(force, instant) {
+    var g = game; if (!g) return;
+    var key = viewKey();
+    var dark = !g.house.power && g.p.room !== 'curtain';
+    var sofa = g.p.hidden === 'sofa' && !(viewLock && performance.now() < viewLock.until);
+    var sig = key + '|' + dark + '|' + sofa;
+    if (sig !== lastView || force) {
+      var back = front === 'bgA' ? 'bgB' : 'bgA';
+      var b = $(back), f = $(front);
+      b.classList.toggle('now', !!instant); f.classList.toggle('now', !!instant);
+      if (b.getAttribute('data-k') !== key) { b.src = 'assets/img/' + key + '.jpg'; b.setAttribute('data-k', key); }
+      b.style.filter = dark ? 'brightness(.32) saturate(.6)' : (sofa ? 'brightness(.55)' : 'brightness(1.05)');
+      b.style.transform = sofa ? 'scale(1.35) translateY(-6%)' : 'none';
+      b.style.opacity = 1; f.style.opacity = 0; front = back; lastView = sig; lastKey = key;
+    }
+    // flashlight beam follows the finger
+    var dk = $('dark'), lit = g.p.light;
+    var needDark = dark || (g.p.room === 'curtain' && g.house.curtain) || g.p.room === 'hall' && !g.house.power;
+    var bx = beam[0], by = beam[1];
+    if (needDark) {
+      dk.style.opacity = 1;
+      dk.style.background = lit ? 'radial-gradient(circle at ' + bx + 'px ' + by + 'px, rgba(255,244,220,.10) 0, rgba(0,0,0,0) 150px, rgba(0,0,0,.4) 250px, rgba(0,0,0,.92) 450px)' : (dark ? 'rgba(0,0,0,.55)' : 'rgba(0,0,0,.25)');
+    } else if (lit) { dk.style.opacity = 1; dk.style.background = 'radial-gradient(circle at ' + bx + 'px ' + by + 'px, rgba(255,240,210,.16) 0, rgba(255,240,210,.06) 170px, rgba(0,0,0,.25) 420px)'; }
+    else dk.style.opacity = 0;
+    $('fog').style.opacity = (g.p.room === 'curtain' && !g.house.curtain && g.s.st === 4 && !g.p.travel) ? 1 : 0;
+    $('grain').style.backgroundPosition = (Math.random() * 160 | 0) + 'px ' + (Math.random() * 160 | 0) + 'px';
+  }
+  var beam = [660, 340];
+
+  // ------------------------------------------------------------ HUD
+  function renderHUD() {
+    var g = game, c = g.clock();
+    var mm = c.m < 10 ? '0' + c.m : '' + c.m;
+    $('clock-t').textContent = c.h + ':' + mm + ' AM';
+    $('clock-n').textContent = T('night_n', g.night).toUpperCase() + ' · ' + T('rooms')[g.p.travel ? g.p.travel.to : g.p.room].toUpperCase();
+    $('batt-i').style.width = Math.max(0, g.p.battery) + '%';
+    $('salt').style.display = g.night >= 3 ? 'flex' : 'none';
+    $('salt-n').textContent = g.p.salt;
+    var rb = $('runBtn'), rt = g.p.run ? T('run_on') : T('run_off'); if (rb.textContent !== rt) rb.textContent = rt; rb.classList.toggle('cur', g.p.run);
+    var bm = $('breathMeter');
+    if (g.p.holdBreath) { bm.style.opacity = 1; var pct = g.p.breath / 8 * 100; bm.style.background = 'conic-gradient(#e9dfcb ' + pct + '%, rgba(255,255,255,.08) 0)'; bm.style.mask = bm.style.webkitMask = 'radial-gradient(circle, transparent 50px, #000 52px)'; }
+    else bm.style.opacity = 0;
+  }
+
+  // ------------------------------------------------------------ hotspots: tap things in the room itself
+  function doHold(name, on) {
+    if (!game) return;
+    var was = name === 'light' ? game.p.light : name === 'door' ? game.p.holdDoor : name === 'curtain' ? game.p.holdCurtain : game.p.holdBreath;
+    game.hold(name, on);
+    var now = name === 'light' ? game.p.light : name === 'door' ? game.p.holdDoor : name === 'curtain' ? game.p.holdCurtain : game.p.holdBreath;
+    if (name === 'breath') { if (now && !breathH) breathH = play('breath_hold_gasp', { vol: 0.8 }); if (!on) stopBreath(); }
+    if (name === 'light' && now !== was) play(now ? 'flashlight_on' : 'flashlight_click', { vol: 0.45 });
+    if (name === 'door' || name === 'curtain') {
+      if (now && !holdH) { holdH = play(name === 'door' ? 'door_push_strain' : 'curtain_grip', { loop: true, vol: 0.7 }); holdHName = name; }
+      if (!now && holdH && holdHName === name) { stop(holdH, 0.25); holdH = null; }
+    }
+  }
+  function act(a, arg) { if (!game || game.over || paused || (call && call.state === 'ring')) return; game.act(a, arg); handleEvents(); renderHUD(); }
+  function go(room, pt) { if (!game || game.p.travel || game.p.hidden) return; walkPt = pt || [50, 60]; act('go', room); }
+  var heldKeys = {};
+  var hotSig = '';
+  function releaseHolds() {
+    if (game) ['door', 'breath', 'curtain', 'light'].forEach(function (h) { game.hold(h, false); });
+    stopBreath(); if (holdH) { stop(holdH, 0.2); holdH = null; }
+    document.querySelectorAll('.spot.down').forEach(function (b) { b.classList.remove('down'); });
+  }
+  function lightAllowed() { var g = game, H = g.house, r = g.p.room; return !g.p.hidden && ((r === 'curtain' && H.curtain) || !H.power || r === 'hall'); }
+  function spots() {
+    var g = game, p = g.p, H = g.house, r = p.room, S = [];
+    var exit = { id: 'exit', x: 28, y: 86, w: 44, h: 14, cls: 'exit', label: '▼  ' + T('go_hall').toUpperCase(), tap: function () { go('hall', [50, 100]); } };
+    var out = { id: 'exit', x: 28, y: 86, w: 44, h: 14, cls: 'exit', label: '▲  ' + T('a_unhide').toUpperCase(), tap: function () { act('hide'); } };
+    if (r === 'bedroom') {
+      if (p.hidden) S.push(out);
+      else {
+        if (H.door) S.push({ id: 'door', x: 39, y: 26, w: 16, h: 56, cls: 'hold', label: T('a_hold_door'), hold: 'door', dbl: function () { act('door'); }, hintTap: 'h_door' });
+        else S.push({ id: 'door', x: 39, y: 26, w: 16, h: 56, label: T('a_door_close'), tap: function () { act('door'); } });
+        S.push({ id: 'bed', x: 0, y: 60, w: 30, h: 40, label: T('a_hide_bed'), tap: function () { act('hide'); } });
+        S.push(exit);
+      }
+    } else if (r === 'hall') {
+      S.push({ id: 'bedroom', x: 17, y: 12, w: 14, h: 72, label: '◀ ' + T('rooms').bedroom, tap: function () { go('bedroom', [24, 55]); } });
+      S.push({ id: 'kitchen', x: 43, y: 34, w: 14, h: 44, label: T('rooms').kitchen, tap: function () { go('kitchen', [50, 55]); } });
+      S.push({ id: 'living', x: 58, y: 24, w: 11, h: 56, label: T('rooms').living + ' ▶', tap: function () { go('living', [62, 52]); } });
+      S.push({ id: 'curtain', x: 80, y: 22, w: 19, h: 62, label: T('rooms').curtain + ' ▶', tap: function () { go('curtain', [88, 55]); } });
+    } else if (r === 'living') {
+      if (p.hidden) S.push(out);
+      else {
+        if (H.tv) S.push({ id: 'tv', x: 37, y: 46, w: 19, h: 27, label: T('a_tv'), tap: function () { act('tv'); } });
+        S.push({ id: 'switch', x: 55, y: 34, w: 11, h: 20, cls: H.power ? '' : 'off', label: T(H.lights ? 'a_lights_off' : 'a_lights_on'), tap: function () { act('lights'); } });
+        S.push({ id: 'sofa', x: 0, y: 70, w: 27, h: 30, label: T('a_hide_sofa'), tap: function () { act('hide'); } });
+        S.push(exit);
+      }
+    } else if (r === 'kitchen') {
+      if (p.hidden) {
+        if (g.night >= 3 && p.salt > 0) S.push({ id: 'salt', x: 38, y: 30, w: 24, h: 30, label: T('a_salt', p.salt), tap: function () { act('salt'); } });
+        S.push(out);
+      } else {
+        S.push({ id: 'cabinet', x: 9, y: 60, w: 46, h: 25, label: T('a_hide_cab'), tap: function () { act('hide'); } });
+        if (g.night >= 3) S.push({ id: 'salt', x: 24, y: 42, w: 11, h: 16, cls: p.salt > 0 ? '' : 'off', label: T('a_salt', p.salt), tap: function () { act('salt'); } });
+        if (!H.power) S.push({ id: 'breaker', x: 84, y: 20, w: 15, h: 20, cls: 'urgent', label: T('a_breaker'), tap: function () { act('breaker'); } });
+        S.push(exit);
+      }
+    } else if (r === 'curtain') {
+      if (!H.curtain) S.push({ id: 'curtain', x: 10, y: 6, w: 80, h: 76, cls: 'hold', label: T('a_hold_curtain'), hold: 'curtain', dbl: function () { act('curtain'); }, hintTap: 'h_curtain' });
+      else {
+        S.push({ id: 'cl', x: 0, y: 0, w: 17, h: 84, label: T('a_close_short'), tap: function () { act('curtain'); } });
+        S.push({ id: 'cr', x: 83, y: 0, w: 17, h: 84, label: T('a_close_short'), tap: function () { act('curtain'); } });
+      }
+      S.push(exit);
+    }
+    return S;
+  }
+  var stageScale = 1;
+  function toStage(e) { var r = $('stage').getBoundingClientRect(); return [(e.clientX - r.left) / stageScale, (e.clientY - r.top) / stageScale]; }
+  function bindSpot(el, s) {
+    var down = false, held = false, timer = 0;
+    el.addEventListener('pointerdown', function (e) {
+      e.preventDefault(); e.stopPropagation(); try { el.setPointerCapture(e.pointerId); } catch (x) {}
+      down = true; held = false;
+      if (s.hold) timer = setTimeout(function () { if (down) { held = true; el.classList.add('down'); doHold(s.hold, true); } }, 130);
+    });
+    var up = function () {
+      if (!down) return; down = false; clearTimeout(timer);
+      if (held) { held = false; el.classList.remove('down'); doHold(s.hold, false); return; }
+      if (s.tap) { s.tap(); return; }
+      if (s.dbl) { var now = performance.now(); if (now - (el._last || 0) < 400) { el._last = 0; s.dbl(); } else { el._last = now; if (s.hintTap) hint(T(s.hintTap)); } }
+    };
+    el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up); el.addEventListener('lostpointercapture', up);
+  }
+  function buildHot() {
+    var box = $('hot'), g = game;
+    if (!g || g.p.travel || g.over || (call && call.state === 'ring')) { if (hotSig !== 'none') { box.innerHTML = ''; hotSig = 'none'; } return; }
+    var S = spots(), p = g.p;
+    var sig = p.room + p.hidden + S.map(function (s) { return s.id + s.label + (s.cls || ''); }).join('|') + lightAllowed();
+    if (sig === hotSig) return;
+    hotSig = sig; releaseHolds(); box.innerHTML = '';
+    box.classList.toggle('dim', g.night >= 3);
+    // background: hold for flashlight (dark places) or breath (under the bed)
+    var bg = document.createElement('div'); bg.id = 'hotbg'; box.appendChild(bg);
+    var bgHold = p.hidden === 'bed' ? 'breath' : (lightAllowed() ? 'light' : null);
+    if (bgHold) {
+      var on = function (e) { e.preventDefault(); try { bg.setPointerCapture(e.pointerId); } catch (x) {} beam = toStage(e); doHold(bgHold, true); };
+      var mv = function (e) { if (game && game.p.light) beam = toStage(e); };
+      var off = function () { doHold(bgHold, false); };
+      bg.addEventListener('pointerdown', on); bg.addEventListener('pointermove', mv);
+      bg.addEventListener('pointerup', off); bg.addEventListener('pointercancel', off); bg.addEventListener('lostpointercapture', off);
+    }
+    S.forEach(function (s) {
+      var el = document.createElement('div'); el.className = 'spot ' + (s.cls || ''); el.setAttribute('data-spot', s.id);
+      el.style.left = s.x + '%'; el.style.top = s.y + '%'; el.style.width = s.w + '%'; el.style.height = s.h + '%';
+      el.innerHTML = '<i class="dot"></i><span class="lbl"></span>'; el.querySelector('.lbl').textContent = s.label;
+      if (call && call.focus === s.id) el.classList.add('focus');
+      bindSpot(el, s); box.appendChild(el);
+    });
+  }
+  // keep the camera alive while holding things
+  function holdCam() {
+    if (!game || lowFx() || (camA && performance.now() < busyUntil)) return;
+    if (camA && performance.now() >= busyUntil) camClear();
+    cam = cam || $('cam');
+    var p = game.p, t = performance.now() / 1000, tr = '';
+    if (p.holdDoor) { var j = game.k.st === 3 ? 4 : 1.2; cam.style.transformOrigin = '47% 54%'; tr = 'scale(1.14) translate(' + (Math.sin(t * 37) * j).toFixed(1) + 'px,' + (Math.cos(t * 29) * j).toFixed(1) + 'px)'; }
+    else if (p.holdCurtain) { var k = game.s.st >= 4 ? 3.5 : 1; cam.style.transformOrigin = '50% 45%'; tr = 'scale(1.08) translate(' + (Math.sin(t * 33) * k).toFixed(1) + 'px,' + (Math.cos(t * 41) * k).toFixed(1) + 'px)'; }
+    else if (p.holdBreath) { cam.style.transformOrigin = '50% 60%'; tr = 'scale(' + (1.04 + Math.sin(t * 1.4) * 0.01).toFixed(3) + ')'; }
+    else if (!p.travel) { tr = 'translate(' + (Math.sin(t * 0.35) * 3).toFixed(1) + 'px,' + (Math.sin(t * 0.5) * 2).toFixed(1) + 'px) scale(1.01)'; } // idle breathing sway
+    cam.style.transform = tr;
+  }
+
+  // ------------------------------------------------------------ Tita Cora's phone call (voice in Tagalog, subtitles in the chosen language)
+  var call = null;
+  function startCall(n) {
+    var lines = (typeof CALLS !== 'undefined') && CALLS[n];
+    if (!lines) { call = null; return false; }
+    call = { n: n, lines: lines, i: -1, state: 'ring', wait: 0, t: 0, focus: null };
+    call.ring = play('ringtone', { loop: true, vol: 0.75 });
+    var ph = $('phone'); ph.className = 'pe show ring';
+    $('ph-state').textContent = T('ph_calling'); $('ph-time').textContent = ''; $('ph-who').textContent = T('ph_who');
+    $('ph-ans').textContent = T('ph_answer'); $('ph-dec').textContent = T('ph_decline');
+    if (n === 1 && game) game.quiet = true;
+    buildHot();
+    return true;
+  }
+  function answerCall() {
+    if (!call || call.state !== 'ring') return;
+    stop(call.ring, 0.05); play('phone_pickup', { vol: 0.8 });
+    call.state = 'talk'; call.wait = 0.7; call.static = play('line_static', { loop: true, vol: 0.18 });
+    var ph = $('phone'); ph.className = 'pe show talk'; $('ph-state').textContent = T('ph_live'); $('ph-dec').textContent = T('ph_mute');
+    lastT = performance.now(); hotSig = ''; buildHot();
+  }
+  function endCall(silent) {
+    if (!call) return;
+    var c = call; call = null;
+    if (c.ring) stop(c.ring, 0.05); if (c.static) stop(c.static, 0.2); if (c.voice) stop(c.voice, 0.08);
+    if (!silent) play('phone_hangup', { vol: 0.6 });
+    $('sub').classList.remove('show');
+    var ph = $('phone'); $('ph-state').textContent = T('ph_ended');
+    setTimeout(function () { ph.className = 'pe'; }, silent ? 0 : 900);
+    if (game) { game.quiet = false; if (c.state === 'ring') { msgQ = (L().texts[game.night] || []).slice(); msgT = 2; } }
+    lastT = performance.now(); hotSig = ''; buildHot();
+    document.querySelectorAll('.spot.focus').forEach(function (s) { s.classList.remove('focus'); });
+  }
+  function callTick(dt) {
+    if (!call || call.state !== 'talk') return;
+    call.t += dt; var s = Math.floor(call.t); $('ph-time').textContent = '0' + Math.floor(s / 60) + ':' + (s % 60 < 10 ? '0' : '') + (s % 60);
+    if (call.speaking) return;
+    call.wait -= dt; if (call.wait > 0) return;
+    call.i++;
+    if (call.i >= call.lines.length) { endCall(); return; }
+    var ln = call.lines[call.i], id = 'v_n' + call.n + '_' + (call.i < 10 ? '0' : '') + call.i;
+    var txt = save.set.lang === 'fil' ? ln.fil : ln.en;
+    $('sub-t').textContent = txt; $('sub').classList.add('show');
+    call.focus = ln.focus || null;
+    document.querySelectorAll('.spot').forEach(function (el) { el.classList.toggle('focus', el.getAttribute('data-spot') === call.focus || (call.focus === 'curtain' && /^(cl|cr|curtain)$/.test(el.getAttribute('data-spot')))); });
+    if (BUF[id]) {
+      call.speaking = true; var me = call;
+      call.voice = play(id, { vol: 1.1, bus: 'voice' });
+      if (call.voice) call.voice.src.onended = function () { if (call === me) { me.speaking = false; me.wait = 0.45; } };
+      else { call.speaking = false; call.wait = 1.0 + txt.length * 0.06; }
+    } else { call.wait = 1.0 + txt.length * 0.062; }
+  }
+
+  // ------------------------------------------------------------ win / death
+  function cleanupScene() { endCall(true); releaseHolds(); camClear(); viewLock = null; $('fx').innerHTML = ''; $('hot').innerHTML = ''; hotSig = 'none'; black(0, 10); if (runH) { stop(runH); runH = null; } }
+  function onWin() {
+    cleanupScene(); stopBreath(); stopAll(); play('bell_6am', { bus: 'music', vol: 0.9 }); play('rooster_dawn', { bus: 'amb', vol: 0.6, delay: 2 });
+    var secs = Math.round((performance.now() - nightStart) / 1000);
+    $('win-n').textContent = T('night_n', game.night);
+    $('win-time').textContent = T('time_survived') + ': ' + Math.floor(secs / 60) + 'm ' + (secs % 60) + 's';
+    if (game.night >= save.night && game.night < 5) save.night = game.night + 1;
+    if (game.night === 5) save.done = true;
+    store(); renderTexts();
+    var n = game.night; game = null;
+    setTimeout(function () { show(n === 5 ? 'scr-end' : 'scr-win'); }, 300);
+  }
+  function onDeath(who) {
+    cleanupScene(); stopBreath(); stopAll();
+    var sc = $('scare'); var im = $('scare-img'); im.src = 'assets/img/' + WHO_IMG[who] + '.jpg';
+    sc.style.display = 'block'; sc.classList.remove('go', 'soft'); void sc.offsetWidth; sc.classList.add('go'); if (save.set.reduced) sc.classList.add('soft');
+    if (!save.set.reduced) { var fl = $('flash'); fl.style.transition = 'none'; fl.style.opacity = 0.85; setTimeout(function () { fl.style.transition = 'opacity .5s'; fl.style.opacity = 0; }, 90); }
+    play(WHO_SFX[who], { vol: save.set.reduced ? 0.45 : 1 });
+    if (navigator.vibrate && !save.set.reduced) try { navigator.vibrate([120, 40, 200]); } catch (e) {}
+    $('over-who').textContent = T('who')[who];
+    $('over-hint').textContent = T('hint')[who];
+    var c = game.clock(); $('over-time').textContent = T('night_n', game.night) + ' · ' + c.h + ':' + (c.m < 10 ? '0' : '') + c.m + ' AM';
+    $('over-bg').src = 'assets/img/' + WHO_IMG[who] + '.jpg';
+    game = null;
+    setTimeout(function () { sc.style.display = 'none'; show('scr-over'); play('amb_menu', { bus: 'music', loop: true, vol: 0.5 }); }, 1700);
+  }
+
+  // ------------------------------------------------------------ pause
+  function pause(on) {
+    if (!game) return;
+    paused = on;
+    if (on) { if (AC) AC.suspend(); releaseHolds(); show('scr-pause'); }
+    else { show(null); lastT = performance.now(); if (AC) AC.resume(); }
+  }
+  document.addEventListener('visibilitychange', function () { if (document.hidden && game && !paused) pause(true); });
+
+  // ------------------------------------------------------------ fullscreen
+  function goFull() {
+    var d = document.documentElement, f = d.requestFullscreen || d.webkitRequestFullscreen;
+    try { if (f && !document.fullscreenElement) { var r = f.call(d); if (r && r.then) r.then(function () { try { screen.orientation.lock('landscape').catch(function () {}); } catch (e) {} }).catch(function () {}); } } catch (e) {}
+  }
+
+  // ------------------------------------------------------------ wiring
+  function on(id, fn) { var el = $(id); if (el) el.addEventListener('click', function (e) { e.preventDefault(); play('flashlight_click', { vol: 0.3, bus: 'sfx' }); fn(e); }); }
+  function wire() {
+    on('load-go', function () { initAudio().then(function () { goFull(); show('scr-menu'); play('amb_menu', { bus: 'music', loop: true, vol: 0.6 }); }); });
+    on('m-new', function () { save.night = Math.max(save.night, 1); startNight(0); });
+    on('m-cont', function () { startNight(Math.min(4, save.night - 1)); });
+    on('m-nights', function () { show('scr-nights'); });
+    on('m-settings', function () { settingsFrom = 'scr-menu'; show('scr-settings'); });
+    on('m-credits', function () { show('scr-credits'); });
+    on('m-quit', function () { stopAll(); try { if (document.fullscreenElement) document.exitFullscreen(); } catch (e) {} show('scr-exit'); });
+    on('exit-back', function () { show('scr-menu'); play('amb_menu', { bus: 'music', loop: true, vol: 0.6 }); });
+    on('n-back', function () { show('scr-menu'); });
+    on('c-back', function () { show('scr-menu'); });
+    on('s-back', function () { store(); show(settingsFrom); });
+    on('intro-go', function () { stopAll(); goFull(); beginNight(); });
+    on('pauseBtn', function () { pause(true); });
+    on('p-resume', function () { pause(false); });
+    on('p-restart', function () { paused = false; if (AC) AC.resume(); startNight(nightIdx); });
+    on('p-settings', function () { settingsFrom = 'scr-pause'; show('scr-settings'); });
+    on('p-menu', function () { cleanupScene(); paused = false; if (AC) AC.resume(); stopAll(); game = null; if (raf) cancelAnimationFrame(raf); show('scr-menu'); play('amb_menu', { bus: 'music', loop: true, vol: 0.6 }); });
+    on('w-next', function () { startNight(Math.min(4, nightIdx + 1)); });
+    on('w-menu', function () { show('scr-menu'); play('amb_menu', { bus: 'music', loop: true, vol: 0.6 }); });
+    on('o-retry', function () { startNight(nightIdx); });
+    on('o-menu', function () { stopAll(); show('scr-menu'); play('amb_menu', { bus: 'music', loop: true, vol: 0.6 }); });
+    on('e-menu', function () { show('scr-credits'); });
+    on('s-full', function () { if (document.fullscreenElement) { try { document.exitFullscreen(); } catch (e) {} } else goFull(); });
+    on('t-cap', function () { save.set.captions = !save.set.captions; renderSettings(); store(); });
+    on('t-red', function () { save.set.reduced = !save.set.reduced; renderSettings(); store(); });
+    on('rot-ok', function () { rotateDismissed = true; fit(); });
+    document.querySelectorAll('.langbtn').forEach(function (b) { b.addEventListener('click', function () { save.set.lang = b.getAttribute('data-lang'); store(); renderTexts(); if (game) { hotSig = ''; buildHot(); } }); });
+    document.querySelectorAll('[data-gfx]').forEach(function (b) { b.addEventListener('click', function () { save.set.gfx = b.getAttribute('data-gfx'); store(); renderSettings(); }); });
+    ['master', 'sfx', 'amb', 'music'].forEach(function (k) { $('v-' + k).addEventListener('input', function (e) { save.set.vol[k] = e.target.value / 100; $('vl-' + k).textContent = e.target.value; applyVolumes(); }); $('v-' + k).addEventListener('change', store); });
+    // room map
+    $('ph-ans').addEventListener('click', function (e) { e.preventDefault(); answerCall(); });
+    $('ph-dec').addEventListener('click', function (e) { e.preventDefault(); endCall(); });
+    $('runBtn').addEventListener('click', function (e) { e.preventDefault(); act('run'); });
+    // keyboard
+    var keyRoom = { '1': 'bedroom', '2': 'hall', '3': 'living', '4': 'kitchen', '5': 'curtain' };
+    window.addEventListener('keydown', function (e) {
+      if (e.repeat) return;
+      if (e.key === 'Escape') { if (game) pause(!paused); return; }
+      if (!game || paused) return;
+      if (call && call.state === 'ring') { if (e.key === 'Enter' || e.key === ' ') answerCall(); return; }
+      if (keyRoom[e.key]) go(keyRoom[e.key]);
+      var k = e.key.toLowerCase();
+      if (k === 'r') act('run'); if (k === 'h') act('hide'); if (k === 'e') primary();
+      if (k === 't') act('tv'); if (k === 'l') act('lights'); if (k === 'q') act('salt'); if (k === 'b') act('breaker');
+      if (k === 'f') { heldKeys.f = true; doHold('light', true); }
+      if (k === ' ') { e.preventDefault(); var hn = holdName(); if (hn) doHold(hn, true); heldKeys.space = hn; }
+    });
+    window.addEventListener('keyup', function (e) {
+      if (!game) return; var k = e.key.toLowerCase();
+      if (k === 'f') { heldKeys.f = false; doHold('light', false); }
+      if (k === ' ' && heldKeys.space) { doHold(heldKeys.space, false); heldKeys.space = null; }
+    });
+    // stop all holds if the finger leaves the screen anywhere
+    var fingers = 0;
+    window.addEventListener('pointerdown', function () { fingers++; }, true);
+    var up = function () { fingers = Math.max(0, fingers - 1); if (fingers === 0 && game && !heldKeys.space) { var any = game.p.holdDoor || game.p.holdBreath || game.p.holdCurtain || (game.p.light && !heldKeys.f); if (any) { releaseHolds(); document.querySelectorAll('.btn.down').forEach(function (b) { b.classList.remove('down'); }); } } };
+    window.addEventListener('pointerup', up, true); window.addEventListener('pointercancel', up, true);
+    window.addEventListener('blur', function () { if (game) ['door', 'breath', 'curtain', 'light'].forEach(function (h) { game.hold(h, false); }); stopBreath(); });
+  }
+  function primary() { var g = game, r = g.p.room; if (r === 'bedroom') act('door'); else if (r === 'living') act(g.house.tv ? 'tv' : 'lights'); else if (r === 'curtain') act('curtain'); else if (r === 'kitchen') act(g.house.power ? 'hide' : 'breaker'); }
+  function holdName() { var g = game, r = g.p.room; if (g.p.hidden === 'bed') return 'breath'; if (r === 'bedroom' && g.house.door) return 'door'; if (r === 'curtain' && !g.house.curtain) return 'curtain'; return null; }
+
+  // ------------------------------------------------------------ boot
+  window.addEventListener('DOMContentLoaded', function () {
+    fit(); makeGrain(); wire(); renderTexts(); show('scr-load');
+    loadAll(function (p) { $('load-i').style.width = Math.round(p * 100) + '%'; }).then(function () {
+      $('load-go').style.visibility = 'visible'; $('load-msg').textContent = T('tap_start');
+    });
+    window.__AS_UI = { get game() { return game; }, get call() { return call; }, startNight: startNight, beginNight: beginNight, act: act, go: go, hold: doHold, show: show, answer: answerCall, hang: endCall };
+  });
+})();
+</script>
+</body>
+</html>

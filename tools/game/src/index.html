@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>ALAS-SAIS</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 16 16%27%3E%3Crect width=%2716%27 height=%2716%27 fill=%27%23000%27/%3E%3Ccircle cx=%278%27 cy=%278%27 r=%275%27 fill=%27none%27 stroke=%27%23b3261e%27 stroke-width=%272%27/%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;700&family=Special+Elite&family=Inter:wght@400;600&display=swap">
+<style>/*CSS*/</style>
+</head>
+<body>
+<div id="wrap"><div id="stage">
+
+  <div id="view" class="layer">
+    <div id="cam" class="layer">
+      <img id="bgA" class="bg" alt="">
+      <img id="bgB" class="bg" alt="" style="opacity:0">
+      <div id="fx" class="layer"></div>
+      <div id="fog" class="layer"><div class="hand" style="left:500px;top:230px"></div><div class="hand" style="left:690px;top:260px;transform:rotate(12deg)"></div></div>
+    </div>
+    <div id="dark" class="layer"></div>
+    <div id="black" class="layer"></div>
+  </div>
+  <div id="grain" class="layer"></div>
+  <div id="vig" class="layer"></div>
+  <div id="hot" class="layer"></div>
+
+  <div id="hud" class="layer">
+    <div id="clock"><b id="clock-t">12:00 AM</b><span id="clock-n">NIGHT 1</span></div>
+    <div id="topr">
+      <div class="chip" id="salt" style="display:none">ASIN <b id="salt-n">2</b></div>
+      <div class="chip"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#e9dfcb" stroke-width="2" aria-hidden="true"><path d="M8 3h8l-1 6H9z"/><rect x="9" y="9" width="6" height="12" rx="1"/></svg><div class="bar"><i id="batt-i"></i></div></div>
+      <button id="runBtn" class="pe chip" type="button">WALK</button>
+      <button id="pauseBtn" class="pe" type="button" aria-label="Pause">II</button>
+    </div>
+    <div id="msg"><small>TITA CORA</small><p id="msg-text"></p></div>
+    <div id="cap"></div>
+    <div id="breathMeter"></div>
+    <div id="hint"></div>
+    <div id="sub"><b>TITA CORA</b><span id="sub-t"></span></div>
+    <div id="phone" class="pe">
+      <div class="ph-top"><span id="ph-state">INCOMING CALL</span><span id="ph-time"></span></div>
+      <div class="ph-who"><div class="ph-av">C</div><b id="ph-who">Tita Cora</b></div>
+      <div class="ph-btns"><button type="button" id="ph-ans" class="ph-g">Answer</button><button type="button" id="ph-dec" class="ph-r">Decline</button></div>
+    </div>
+  </div>
+  <div id="flash" class="layer"></div>
+  <div id="scare"><img id="scare-img" alt=""></div>
+
+  <!-- screens -->
+  <div id="scr-load" class="scr"><div class="center">
+    <h1 class="logo">ALAS-SAIS</h1>
+    <div id="loadBar"><i id="load-i"></i></div>
+    <p class="sub" id="load-msg">Loading</p>
+    <button class="cta red" id="load-go" type="button" style="visibility:hidden">▶ PLAY</button>
+    <p class="note" data-t="headphones"></p>
+  </div></div>
+
+  <div id="scr-menu" class="scr" style="background:#000">
+    <img src="assets/img/ext_house.jpg" alt="" class="bg" style="opacity:.85">
+    <div class="lang"><button class="btn langbtn" data-lang="en" type="button">ENGLISH</button><button class="btn langbtn" data-lang="fil" type="button">FILIPINO</button></div>
+    <div style="position:absolute;left:90px;top:70px;display:flex;flex-direction:column;gap:22px">
+      <div><h1 class="logo">ALAS-SAIS</h1><p class="sub" id="m-sub"></p></div>
+      <div class="menu">
+        <button class="mi" id="m-new" type="button" data-t="new_game"></button>
+        <button class="mi" id="m-cont" type="button"><span data-t="cont"></span><small></small></button>
+        <button class="mi" id="m-nights" type="button"><span data-t="nights"></span><small></small></button>
+        <button class="mi" id="m-settings" type="button" data-t="settings"></button>
+        <button class="mi" id="m-credits" type="button" data-t="credits"></button>
+        <button class="mi" id="m-quit" type="button" data-t="quit"></button>
+      </div>
+    </div>
+    <p class="note" style="position:absolute;left:90px;bottom:26px" data-t="headphones"></p>
+  </div>
+
+  <div id="scr-nights" class="scr"><div class="panel">
+    <h2 data-t="nights"></h2><div class="menu" id="night-list"></div>
+    <div><button class="cta" id="n-back" type="button" data-t="back"></button></div>
+  </div></div>
+
+  <div id="scr-settings" class="scr"><div class="panel">
+    <h2 data-t="settings"></h2>
+    <div class="grid3">
+      <div style="display:flex;flex-direction:column;gap:18px">
+        <div class="field"><span data-t="language"></span><div class="seg"><button class="btn langbtn" data-lang="en" type="button">English</button><button class="btn langbtn" data-lang="fil" type="button">Filipino</button></div></div>
+        <div class="field"><span data-t="graphics"></span><div class="seg"><button class="btn" data-gfx="low" type="button"></button><button class="btn" data-gfx="medium" type="button"></button><button class="btn" data-gfx="high" type="button"></button></div></div>
+        <div class="field"><span data-t="fullscreen"></span><button class="btn" id="s-full" type="button" data-t="fullscreen"></button></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <label class="field"><span><span data-t="master"></span> <b id="vl-master"></b></span><input type="range" id="v-master" min="0" max="100"></label>
+        <label class="field"><span><span data-t="sfx"></span> <b id="vl-sfx"></b></span><input type="range" id="v-sfx" min="0" max="100"></label>
+        <label class="field"><span><span data-t="amb"></span> <b id="vl-amb"></b></span><input type="range" id="v-amb" min="0" max="100"></label>
+        <label class="field"><span><span data-t="music"></span> <b id="vl-music"></b></span><input type="range" id="v-music" min="0" max="100"></label>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:18px">
+        <div class="field tog"><span data-t="captions"></span><button class="btn" id="t-cap" type="button"></button></div>
+        <div class="field tog"><span data-t="reduced"></span><button class="btn" id="t-red" type="button"></button></div>
+        <p class="note">Keyboard: 1–5 rooms · R run · E action · H hide · SPACE hold · F flashlight · Q asin · Esc pause</p>
+      </div>
+    </div>
+    <div><button class="cta" id="s-back" type="button" data-t="back"></button></div>
+  </div></div>
+
+  <div id="scr-credits" class="scr"><div class="panel">
+    <h2 data-t="credits"></h2><p id="credits-text" style="white-space:pre-line;font-size:17px;line-height:1.6;margin:0"></p>
+    <div><button class="cta" id="c-back" type="button" data-t="back"></button></div>
+  </div></div>
+
+  <div id="scr-intro" class="scr"><div class="center">
+    <p class="sub">12:00 AM</p>
+    <h1 class="logo" id="intro-n" style="font-size:72px"></h1>
+    <p class="sub" id="intro-name"></p>
+    <div id="intro-rules" style="display:flex;flex-direction:column;gap:12px;align-items:center"></div>
+    <button class="cta red" id="intro-go" type="button" data-t="begin"></button>
+  </div></div>
+
+  <div id="scr-pause" class="scr" style="background:rgba(0,0,0,.82)"><div class="center">
+    <h1 class="logo" style="font-size:56px" data-t="paused"></h1>
+    <div class="menu" style="align-items:center">
+      <button class="mi" id="p-resume" type="button" data-t="resume"></button>
+      <button class="mi" id="p-restart" type="button" data-t="restart"></button>
+      <button class="mi" id="p-settings" type="button" data-t="settings"></button>
+      <button class="mi" id="p-menu" type="button" data-t="main_menu"></button>
+    </div>
+  </div></div>
+
+  <div id="scr-win" class="scr" style="background:radial-gradient(ellipse at 50% 30%,#3a2a18,#07080a 70%)"><div class="center">
+    <p class="sub" id="win-n"></p>
+    <h1 class="logo" style="font-size:110px">6:00 AM</h1>
+    <p class="sub" data-t="survived"></p>
+    <p class="note" id="win-time"></p>
+    <div class="row2"><button class="cta red" id="w-next" type="button" data-t="next"></button><button class="cta" id="w-menu" type="button" data-t="main_menu"></button></div>
+  </div></div>
+
+  <div id="scr-over" class="scr over">
+    <img id="over-bg" alt="" class="bg" style="opacity:.35;filter:saturate(.6)">
+    <div class="center">
+      <p class="sub" id="over-time" style="color:#d2553a"></p>
+      <h1><span id="over-who"></span></h1>
+      <p class="sub" data-t="caught"></p>
+      <div class="hintbox" id="over-hint"></div>
+      <div class="row2"><button class="cta red" id="o-retry" type="button" data-t="retry"></button><button class="cta" id="o-menu" type="button" data-t="main_menu"></button></div>
+    </div>
+  </div>
+
+  <div id="scr-end" class="scr" style="background:radial-gradient(ellipse at 50% 20%,#5a4a2a,#07080a 75%)"><div class="center">
+    <h1 class="logo" data-t="end_title"></h1>
+    <p class="sub" style="max-width:760px;line-height:1.6" data-t="end_text"></p>
+    <p class="note" data-t="thanks"></p>
+    <button class="cta red" id="e-menu" type="button" data-t="credits"></button>
+  </div></div>
+
+  <div id="scr-exit" class="scr"><div class="center">
+    <h1 class="logo" style="font-size:64px">ALAS-SAIS</h1><p class="sub" data-t="thanks"></p><p class="note" data-t="exit_text"></p>
+    <button class="cta" id="exit-back" type="button" data-t="main_menu"></button>
+  </div></div>
+
+</div></div>
+<div id="rotate"><div class="ph"></div><div data-t="rotate"></div><button class="cta" id="rot-ok" type="button" data-t="play_anyway"></button></div>
+<script>/*JS*/</script>
+</body>
+</html>

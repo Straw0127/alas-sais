@@ -1,0 +1,759 @@
+/* ALAS-SAIS — UI, audio, input and screens */
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  var IMG = ['ext_house', 'bedroom_empty', 'bedroom_closed', 'bedroom_kumot', 'bedroom_blackout', 'under_empty', 'under_kumot', 'hallway_empty', 'hallway_kumot',
+    'living_empty', 'living_lights', 'living_tvoff', 'living_lights_off_tv', 'living_malik', 'kitchen_empty', 'kitchen_kal', 'cabinet_empty', 'cabinet_kal',
+    'curtain_closed', 'curtain_open', 'curtain_s1', 'curtain_s2', 'curtain_silip', 'curtain_glass', 'scare_kumot', 'scare_malikmata', 'scare_kalansing', 'scare_silip',
+    'hero_kumot', 'hero_malikmata', 'hero_kalansing', 'hero_silip'];
+  var SFX = ['amb_house', 'amb_garden', 'amb_menu', 'rain_heavy', 'heartbeat', 'bell_6am', 'rooster_dawn', 'tuko_gecko', 'dog_howl', 'tricycle_far', 'distant_scream',
+    'fluorescent_hum', 'scuffs_far', 'scuffs_near', 'wheeze', 'lullaby_hum', 'handle_rattle', 'static_swell', 'vhs_glitch', 'giggle', 'baby_cry', 'clinks', 'sniff', 'knife_taps',
+    'nail_taps', 'steps_walk_wood', 'steps_run_wood', 'steps_walk_cement', 'breath_hold_gasp', 'door_creak', 'door_slam', 'cabinet_open', 'cabinet_close', 'curtain_rings',
+    'plastic_crinkle', 'kulambo_rustle', 'light_switch', 'flashlight_click', 'tv_static', 'power_down', 'breaker', 'phone_text',
+    'jumpscare_kumot', 'jumpscare_malikmata', 'jumpscare_kalansing', 'jumpscare_silip',
+    'door_open_slow', 'door_close_shut', 'door_push_strain', 'curtain_open_pull', 'curtain_close_pull', 'curtain_grip', 'hide_bed', 'unhide_bed',
+    'hide_cabinet', 'hide_sofa', 'turn_whoosh', 'run_pant', 'nervous_breath', 'floor_creak', 'steps_run_cement', 'flashlight_on', 'salt_throw', 'tv_click_off',
+    'ringtone', 'phone_pickup', 'phone_hangup', 'line_static'];
+  var VOICE = [];
+  if (typeof CALLS !== 'undefined') Object.keys(CALLS).forEach(function (n) { CALLS[n].forEach(function (_, i) { VOICE.push('n' + n + '_' + (i < 10 ? '0' : '') + i); }); });
+  var WHO_IMG = { kumot: 'scare_kumot', malik: 'scare_malikmata', kal: 'scare_kalansing', silip: 'scare_silip' };
+  var WHO_SFX = { kumot: 'jumpscare_kumot', malik: 'jumpscare_malikmata', kal: 'jumpscare_kalansing', silip: 'jumpscare_silip' };
+  var HERO = { kumot: 'hero_kumot', malik: 'hero_malikmata', kal: 'hero_kalansing', silip: 'hero_silip' };
+
+  // ------------------------------------------------------------ save / settings
+  var DEF = { lang: 'en', gfx: 'medium', vol: { master: 0.9, sfx: 1, amb: 0.8, music: 0.6 }, captions: true, reduced: false };
+  var save = { night: 1, done: false, set: JSON.parse(JSON.stringify(DEF)) };
+  function load() { try { var s = JSON.parse(localStorage.getItem('alassais') || 'null'); if (s && s.set) { save = s; save.set.vol = Object.assign({}, DEF.vol, s.set.vol); } } catch (e) {} }
+  function store() { try { localStorage.setItem('alassais', JSON.stringify(save)); } catch (e) {} }
+  load();
+  function L() { return STR[save.set.lang] || STR.en; }
+  function T(key, n) { var v = L()[key]; if (v === undefined) v = STR.en[key]; return typeof v === 'string' && n !== undefined ? v.replace('{n}', n) : v; }
+
+  // ------------------------------------------------------------ scaling
+  function fit() {
+    var w = window.innerWidth, h = window.innerHeight, s = Math.min(w / 1280, h / 720); stageScale = s;
+    var st = $('stage'); st.style.transform = 'scale(' + s + ')';
+    st.style.left = ((w - 1280 * s) / 2) + 'px'; st.style.top = ((h - 720 * s) / 2) + 'px';
+    var portrait = h > w * 1.1;
+    $('rotate').style.display = (portrait && game && !rotateDismissed) ? 'flex' : 'none';
+  }
+  var rotateDismissed = false;
+  window.addEventListener('resize', fit);
+  window.addEventListener('orientationchange', function () { setTimeout(fit, 200); });
+
+  // ------------------------------------------------------------ assets
+  var imgs = {};
+  var AC = null, BUS = {}, BUF = {}, rawAudio = {};
+  function loadAll(onProgress) {
+    var total = IMG.length + SFX.length + VOICE.length, done = 0;
+    function tick() { done++; onProgress(done / total); }
+    var jobs = [];
+    IMG.forEach(function (k) { jobs.push(new Promise(function (res) { var i = new Image(); i.onload = i.onerror = function () { tick(); res(); }; i.src = 'assets/img/' + k + '.jpg'; imgs[k] = i; })); });
+    SFX.forEach(function (k) { jobs.push(fetch('assets/sfx/' + k + '.mp3').then(function (r) { return r.ok ? r.arrayBuffer() : null; }).then(function (b) { rawAudio[k] = b; tick(); }).catch(function () { tick(); })); });
+    VOICE.forEach(function (k) { jobs.push(fetch('assets/voice/' + k + '.mp3').then(function (r) { return r.ok ? r.arrayBuffer() : null; }).then(function (b) { rawAudio['v_' + k] = b; tick(); }).catch(function () { tick(); })); });
+    return Promise.all(jobs);
+  }
+  function initAudio() {
+    if (AC) { if (AC.state === 'suspended') AC.resume(); return Promise.resolve(); }
+    var C = window.AudioContext || window.webkitAudioContext;
+    if (!C) return Promise.resolve();
+    AC = new C();
+    BUS.master = AC.createGain(); BUS.master.connect(AC.destination);
+    ['sfx', 'amb', 'music', 'voice'].forEach(function (b) { BUS[b] = AC.createGain(); BUS[b].connect(BUS.master); });
+    applyVolumes();
+    var jobs = Object.keys(rawAudio).map(function (k) {
+      var ab = rawAudio[k]; if (!ab) return Promise.resolve();
+      return new Promise(function (res) { try { AC.decodeAudioData(ab.slice(0), function (b) { BUF[k] = b; res(); }, function () { res(); }); } catch (e) { res(); } });
+    });
+    return Promise.all(jobs);
+  }
+  function applyVolumes() { if (!AC) return; var v = save.set.vol; BUS.master.gain.value = v.master; BUS.sfx.gain.value = v.sfx; BUS.amb.gain.value = v.amb; BUS.music.gain.value = v.music; }
+
+  // spatial: volume / filter / pan by where the sound is vs where the player is
+  function spatial(room) {
+    if (!room || !game) return { vol: 1, cut: 20000, pan: 0 };
+    var pr = game.p.travel ? 'hall' : game.p.room;
+    var X = AS.ROOM_X; var pan = Math.max(-0.8, Math.min(0.8, (X[room] - X[pr]) * 0.7));
+    if (room === pr) return { vol: 1, cut: 20000, pan: 0 };
+    if (room === 'hall' || pr === 'hall') return { vol: 0.6, cut: 2600, pan: pan };
+    return { vol: 0.32, cut: 1100, pan: pan };
+  }
+  function play(id, o) {
+    o = o || {};
+    if (!AC || !BUF[id]) return null;
+    var src = AC.createBufferSource(); src.buffer = BUF[id]; src.loop = !!o.loop;
+    var g = AC.createGain(); var sp = o.room ? spatial(o.room) : { vol: 1, cut: 20000, pan: 0 };
+    g.gain.value = (o.vol === undefined ? 1 : o.vol) * sp.vol;
+    var f = AC.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = sp.cut;
+    var node = src; node.connect(f); f.connect(g);
+    var out = g;
+    if (AC.createStereoPanner) { var p = AC.createStereoPanner(); p.pan.value = sp.pan; g.connect(p); out = p; }
+    out.connect(BUS[o.bus || 'sfx']);
+    try { src.start(AC.currentTime + (o.delay || 0), o.offset || 0); } catch (e) {}
+    var h = { src: src, gain: g, filter: f, room: o.room, base: (o.vol === undefined ? 1 : o.vol) };
+    if (o.loop) loops.push(h);
+    src.onended = function () { var i = loops.indexOf(h); if (i >= 0) loops.splice(i, 1); };
+    return h;
+  }
+  var loops = [];
+  function stop(h, fade) { if (!h) return; try { if (fade && AC) { h.gain.gain.setTargetAtTime(0, AC.currentTime, fade / 3); h.src.stop(AC.currentTime + fade); } else h.src.stop(); } catch (e) {} }
+  function stopAll() { loops.slice().forEach(function (h) { stop(h); }); loops = []; amb = {}; }
+  function setLoopVol(h, v, room) { if (!h || !AC) return; var sp = room ? spatial(room) : { vol: 1, cut: 20000 }; h.gain.gain.setTargetAtTime(v * sp.vol, AC.currentTime, 0.25); h.filter.frequency.setTargetAtTime(sp.cut, AC.currentTime, 0.2); }
+  var amb = {};
+
+  // ------------------------------------------------------------ screens
+  var game = null, raf = 0, lastT = 0, paused = false, nightIdx = 0, nightStart = 0, msgQ = [], msgT = 0, capT = 0, deathTimer = 0, introShown = false;
+  function show(id) { ['scr-load', 'scr-menu', 'scr-settings', 'scr-nights', 'scr-credits', 'scr-intro', 'scr-pause', 'scr-win', 'scr-over', 'scr-end', 'scr-exit'].forEach(function (s) { $(s).classList.toggle('show', s === id); }); }
+  var settingsFrom = 'scr-menu';
+
+  function renderTexts() {
+    document.documentElement.lang = save.set.lang === 'fil' ? 'fil' : 'en';
+    document.querySelectorAll('[data-t]').forEach(function (el) { el.textContent = T(el.getAttribute('data-t')); });
+    $('m-sub').textContent = T('title_sub');
+    $('m-cont').querySelector('small').textContent = save.night > 1 ? T('night_n', save.night) : '';
+    $('m-cont').disabled = save.night <= 1 && !save.done;
+    $('m-nights').querySelector('small').textContent = save.night + ' / 5';
+    $('credits-text').textContent = T('credits_text');
+    document.querySelectorAll('.langbtn').forEach(function (b) { b.classList.toggle('cur', b.getAttribute('data-lang') === save.set.lang); });
+    renderSettings(); renderNights();
+  }
+  function renderSettings() {
+    var s = save.set;
+    document.querySelectorAll('[data-gfx]').forEach(function (b) { b.classList.toggle('cur', b.getAttribute('data-gfx') === s.gfx); b.textContent = T(b.getAttribute('data-gfx')); });
+    ['master', 'sfx', 'amb', 'music'].forEach(function (k) { $('v-' + k).value = Math.round(s.vol[k] * 100); $('vl-' + k).textContent = Math.round(s.vol[k] * 100); });
+    $('t-cap').textContent = s.captions ? T('on') : T('off'); $('t-red').textContent = s.reduced ? T('on') : T('off');
+    applyGfx();
+  }
+  function renderNights() {
+    var box = $('night-list'); box.innerHTML = '';
+    for (var i = 1; i <= 5; i++) {
+      var b = document.createElement('button'); b.className = 'mi'; b.type = 'button';
+      var lock = i > save.night;
+      b.disabled = lock;
+      b.textContent = T('night_n', i) + ' ';
+      var sm = document.createElement('small'); sm.textContent = lock ? T('locked') : T('night_names')[i - 1]; b.appendChild(sm);
+      (function (n) { b.addEventListener('click', function () { startNight(n - 1); }); })(i);
+      box.appendChild(b);
+    }
+  }
+  function applyGfx() {
+    var g = save.set.gfx;
+    $('grain').style.opacity = g === 'low' ? 0 : g === 'medium' ? 0.22 : 0.32;
+    $('vig').style.display = g === 'low' ? 'none' : 'block';
+  }
+
+  // grain: one small noise tile, moved around (cheap on low-end phones)
+  function makeGrain() {
+    var c = document.createElement('canvas'); c.width = c.height = 160; var x = c.getContext('2d'); var d = x.createImageData(160, 160);
+    for (var i = 0; i < d.data.length; i += 4) { var v = Math.random() * 255; d.data[i] = d.data[i + 1] = d.data[i + 2] = v; d.data[i + 3] = 255; }
+    x.putImageData(d, 0, 0);
+    $('grain').style.backgroundImage = 'url(' + c.toDataURL() + ')';
+  }
+
+  // ------------------------------------------------------------ night flow
+  function startNight(idx) {
+    nightIdx = idx; if (call) endCall(true); stopAll();
+    if (raf) cancelAnimationFrame(raf);
+    game = null; paused = false;
+    var n = idx + 1;
+    $('intro-n').textContent = T('night_n', n);
+    $('intro-name').textContent = T('night_names')[idx];
+    var rules = $('intro-rules'); rules.innerHTML = '';
+    var list = idx === 4 ? [] : (STR.en.intro_rules[n] || []);
+    // remind earlier threats briefly on later nights
+    list.forEach(function (w) {
+      var d = document.createElement('div'); d.className = 'rule';
+      var im = document.createElement('img'); im.src = 'assets/img/' + HERO[w] + '.jpg'; im.alt = '';
+      var tx = document.createElement('div'); var b = document.createElement('b'); b.textContent = T('new_threat') + ': ' + T('who')[w];
+      var p = document.createElement('div'); p.textContent = T('hint')[w]; p.style.marginTop = '6px'; p.style.fontSize = '16px'; p.style.lineHeight = '1.45';
+      tx.appendChild(b); tx.appendChild(p); d.appendChild(im); d.appendChild(tx); rules.appendChild(d);
+    });
+    if (idx === 4) { var f = document.createElement('p'); f.className = 'sub'; f.textContent = T('final_night'); rules.appendChild(f); }
+    show('scr-intro');
+    play('dog_howl', { bus: 'amb', vol: 0.5 });
+  }
+  function beginNight() {
+    initAudio().then(function () {
+      show(null); fit();
+      game = AS.create(nightIdx, { seed: (Date.now() & 0xffffff) });
+      nightStart = performance.now(); paused = false; deathTimer = 0;
+      lastView = ''; hotSig = ''; viewLock = null; camClear(); black(0, 10); $('fx').innerHTML = '';
+      setView(true, true); renderHUD();
+      amb.house = play('amb_house', { bus: 'amb', loop: true, vol: 0.55 });
+      amb.garden = play('amb_garden', { bus: 'amb', loop: true, vol: 0.5, room: 'curtain' });
+      if (nightIdx === 4) amb.rain = play('rain_heavy', { bus: 'amb', loop: true, vol: 0.55 });
+      msgQ = []; msgT = 1.2;
+      if (window.__AS_NOCALL || !startCall(game.night)) { msgQ = (L().texts[game.night] || []).slice(); }
+      buildHot();
+      if (game.night === 1) setTimeout(function () { if (game && call && call.state === 'ring') hint(T('ph_answer') + ' ☎', 4); }, 2500);
+      lastT = performance.now(); raf = requestAnimationFrame(loop);
+      scheduleRandomAmb();
+    });
+  }
+  var ambTimer = 0;
+  function scheduleRandomAmb() { ambTimer = 18 + Math.random() * 25; }
+
+  function loop(now) {
+    raf = requestAnimationFrame(loop);
+    var dt = Math.min(0.1, (now - lastT) / 1000); lastT = now;
+    if (!game || paused) return;
+    if (game.over) { handleEvents(); return; }
+
+    if (!(call && call.state === 'ring')) game.update(dt * (window.__AS_SPEED || 1));
+    callTick(dt);
+    handleEvents();
+    if (!game) return;
+    // messages
+    if (msgQ.length) { msgT -= dt; if (msgT <= 0) { showMsg(msgQ.shift()); msgT = 5.5; } }
+    if (capT > 0) { capT -= dt; if (capT <= 0) $('cap').style.opacity = 0; }
+    ambTimer -= dt; if (ambTimer <= 0) { var pick = ['tuko_gecko', 'tricycle_far', 'tuko_gecko', 'distant_scream'][Math.floor(Math.random() * (game.night >= 3 ? 4 : 3))]; play(pick, { bus: 'amb', vol: 0.45, room: 'curtain' }); scheduleRandomAmb(); }
+    // ambience loops follow the player
+    setLoopVol(amb.garden, game.house.cricketsOff > 0 ? 0.0 : 0.5, 'curtain');
+    if (game.house.tv && !amb.tv) { amb.tv = play('tv_static', { bus: 'amb', loop: true, vol: 0.5, room: 'living' }); }
+    if (!game.house.tv && amb.tv) { stop(amb.tv, 0.3); amb.tv = null; }
+    if (amb.tv) setLoopVol(amb.tv, 0.5, 'living');
+    if (game.house.lights && !amb.hum) amb.hum = play('fluorescent_hum', { bus: 'amb', loop: true, vol: 0.4, room: 'living' });
+    if (!game.house.lights && amb.hum) { stop(amb.hum, 0.2); amb.hum = null; }
+    if (amb.hum) setLoopVol(amb.hum, 0.4, 'living');
+    setView(false); renderHUD();
+    var H = game.house, P = game.p;
+    var st = [P.room, !!P.travel, P.hidden, H.door, H.tv, H.lights, H.power, H.curtain, P.salt, !!call].join();
+    if (st !== loop._st) { loop._st = st; buildHot(); }
+    holdCam();
+  }
+
+  // ------------------------------------------------------------ events -> sound, captions, visuals
+  function cap(key) { if (!save.set.captions) return; var c = L().cap[key] || STR.en.cap[key]; if (!c) return; $('cap').textContent = c; $('cap').style.opacity = 1; capT = 3.6; }
+  function showMsg(text) { $('msg-text').textContent = text; $('msg').classList.add('show'); play('phone_text', { vol: 0.7 }); clearTimeout(showMsg._t); showMsg._t = setTimeout(function () { $('msg').classList.remove('show'); }, 5000); }
+  var breathH = null, holdH = null, holdHName = '', runH = null;
+  function handleEvents() {
+    var ev = game.events; game.events = [];
+    for (var i = 0; i < ev.length; i++) {
+      var e = ev[i], d = e.data;
+      switch (e.type) {
+        case 'cue': play(d.id, { room: d.room, vol: d.vol || 1, delay: d.delay || 0 }); if (d.cap) cap(d.cap); break;
+        case 'travel': onTravel(d); break;
+        case 'arrive': onArrive(d); break;
+        case 'door_open':
+          if (d.forced) { play('door_slam', { room: 'bedroom' }); play('door_creak', { room: 'bedroom', vol: 0.6, delay: 0.1 }); cap('kumot_enter'); if (here('bedroom')) doorAnim(false, 260); jolt(); }
+          else { play('door_open_slow', { room: 'bedroom' }); if (here('bedroom')) doorAnim(false, 950); }
+          break;
+        case 'door_close': play('door_close_shut', { room: 'bedroom', vol: 0.9 }); if (here('bedroom')) doorAnim(true, 420); break;
+        case 'hide': onHide(d.spot, true); break;
+        case 'unhide': onHide(d.spot, false); break;
+        case 'crinkle': break;
+        case 'tv_off': play('tv_click_off', { vol: 0.8 }); tvOffAnim(); break;
+        case 'light_switch': play('light_switch'); lightAnim(game.house.lights); break;
+        case 'curtain_open': play('curtain_open_pull', { room: 'curtain' }); if (here('curtain')) curtainAnim(true); break;
+        case 'curtain_close': play('curtain_close_pull', { room: 'curtain', vol: 0.9 }); if (here('curtain')) curtainAnim(false); break;
+        case 'salt': play('salt_throw', { vol: 0.9 }); saltAnim(); break;
+        case 'kal_retreat': play('sniff', { room: 'kitchen' }); cap('kal_retreat'); break;
+        case 'breaker': play('breaker'); cap('breaker'); flashWhite(); jolt(); break;
+        case 'blackout': play('power_down'); cap('blackout'); jolt(); break;
+        case 'no_power': cap('no_power'); hint(T('cap').no_power || ''); break;
+        case 'crickets_off': cap('crickets'); break;
+        case 'silip_back': cap('silip_back'); break;
+        case 'malik_return': cap('malik_return'); break;
+        case 'gasp': play('breath_hold_gasp', { offset: 8.0, vol: 1 }); cap('gasp'); stopBreath(); jolt(); break;
+        case 'battery_dead': cap('battery_dead'); break;
+        case 'heartbeat': if (d.on && !amb.heart) amb.heart = play('heartbeat', { loop: true, vol: 0.55 }); else if (!d.on && amb.heart) { stop(amb.heart, 0.6); amb.heart = null; } break;
+        case 'win': onWin(); break;
+        case 'death': onDeath(d.who); break;
+      }
+    }
+  }
+  function here(r) { return game && !game.p.travel && game.p.room === r; }
+  function lowFx() { return save.set.gfx === 'low' || save.set.reduced; }
+  function jolt() { if (lowFx()) return; var s = $('view'); s.classList.remove('shake'); void s.offsetWidth; s.classList.add('shake'); }
+  function stopBreath() { if (breathH) { stop(breathH, 0.2); breathH = null; } }
+  function hint(t, sec) { var h = $('hint'); if (!t) return; h.textContent = t; h.style.opacity = 1; clearTimeout(hint._t); hint._t = setTimeout(function () { h.style.opacity = 0; }, (sec || 3) * 1000); }
+  function speed() { return window.__AS_SPEED || 1; }
+
+  // ------------------------------------------------------------ camera rig (first-person moves, all from the still renders)
+  var cam = null, camA = null, busyUntil = 0, viewLock = null, walkPt = [50, 60];
+  function camAnim(frames, ms, origin, easing) {
+    cam = cam || $('cam');
+    if (camA) { try { camA.cancel(); } catch (e) {} camA = null; }
+    if (!cam.animate) return null;
+    cam.style.transformOrigin = origin ? origin[0] + '% ' + origin[1] + '%' : '50% 50%';
+    camA = cam.animate(frames, { duration: Math.max(60, ms), easing: easing || 'ease-in-out', fill: 'forwards' });
+    busyUntil = performance.now() + ms;
+    return camA;
+  }
+  function camClear() { if (camA) { try { camA.cancel(); } catch (e) {} camA = null; } }
+  function black(op, ms, delay) { var b = $('black'); b.style.transition = 'opacity ' + (ms || 200) + 'ms ease ' + (delay || 0) + 'ms'; b.style.opacity = op; }
+  // footsteps: n steps of head bob while pushing toward a point
+  function bobFrames(n, zoomTo, amp, roll, zoomFrom) {
+    var f = [], steps = n * 2;
+    for (var i = 0; i <= steps; i++) {
+      var k = i / steps, z = (zoomFrom || 1) + (zoomTo - (zoomFrom || 1)) * (k * k * 0.6 + k * 0.4);
+      var y = (i % 2 ? amp : -amp * 0.4), r = (i % 4 === 1 ? roll : i % 4 === 3 ? -roll : 0);
+      if (i === 0 || i === steps) { y = 0; r = 0; }
+      f.push({ transform: 'scale(' + z.toFixed(3) + ') translateY(' + y + 'px) rotate(' + r + 'deg)', offset: k });
+    }
+    return f;
+  }
+  function onTravel(d) {
+    var run = d.run, ms = d.t * 1000 / speed();
+    var surf = d.to === 'kitchen' || d.to === 'living' || d.from === 'kitchen' || d.from === 'living';
+    play('turn_whoosh', { vol: 0.5 });
+    play(run ? (surf ? 'steps_run_cement' : 'steps_run_wood') : (surf ? 'steps_walk_cement' : 'steps_walk_wood'), { vol: 0.85 });
+    if (run) { if (runH) stop(runH, 0.1); runH = play('run_pant', { vol: 0.5 }); }
+    releaseHolds(); buildHot();
+    if (lowFx()) { black(1, Math.min(250, ms * 0.5)); return; }
+    var n = Math.max(2, Math.round(ms / (run ? 230 : 330)));
+    camAnim(bobFrames(n, run ? 2.5 : 2.0, run ? 14 : 9, run ? 1.1 : 0.6), ms, walkPt, 'linear');
+    black(1, Math.min(260, ms * 0.35), Math.max(0, ms * 0.62));
+  }
+  function onArrive() {
+    if (runH) { stop(runH, 1.2); runH = null; }
+    camClear(); setView(true, true); buildHot();
+    if (Math.random() < 0.35) play('floor_creak', { vol: 0.4 });
+    black(0, 320);
+    if (lowFx()) return;
+    camAnim(bobFrames(2, 1, 7, 0.4, 1.28), 620, [50, 55], 'ease-out');
+    if (game && game.p.room === 'hall' && game.night === 1 && !onArrive._hallHint) { onArrive._hallHint = 1; hint(T('h_light'), 4); }
+  }
+  // swing the bedroom door: a cut-out of the closed door rotating on its hinge
+  var DOOR = { x: 516, y: 198, w: 169, h: 374 };
+  function doorAnim(closing, ms) {
+    var fx = $('fx'); fx.innerHTML = '';
+    if (lowFx()) { setView(true, true); return; }
+    var leaf = document.createElement('div'); leaf.className = 'leaf';
+    leaf.style.cssText = 'left:' + DOOR.x + 'px;top:' + DOOR.y + 'px;width:' + DOOR.w + 'px;height:' + DOOR.h + 'px;background-image:url(assets/img/bedroom_closed.jpg);background-position:-' + DOOR.x + 'px -' + DOOR.y + 'px';
+    fx.appendChild(leaf);
+    var open = 'rotateY(-78deg)', shut = 'rotateY(0deg)';
+    // the room behind the leaf is the "open" picture during the swing
+    viewLock = { key: closing ? 'bedroom_empty' : viewKeyRaw(), until: performance.now() + ms };
+    setView(true, true);
+    var a = leaf.animate([{ transform: closing ? open : shut }, { transform: closing ? shut : open }], { duration: ms, easing: closing ? 'cubic-bezier(.5,0,.9,.6)' : 'cubic-bezier(.2,.6,.3,1)', fill: 'forwards' });
+    a.onfinish = function () { viewLock = null; setView(true, true); fx.innerHTML = ''; if (closing) jolt(); };
+    if (closing) camAnim([{ transform: 'scale(1)' }, { transform: 'scale(1.06)' }, { transform: 'scale(1)' }], ms + 250, [47, 55]);
+  }
+  // red curtains slide apart / together (two halves of the closed-curtain render)
+  function curtainAnim(opening) {
+    var fx = $('fx'); fx.innerHTML = '';
+    if (lowFx()) { setView(true, true); return; }
+    var L = document.createElement('div'), R = document.createElement('div');
+    L.className = R.className = 'half';
+    L.style.cssText = 'left:0;background-image:url(assets/img/curtain_closed.jpg);background-position:0 0;transform-origin:0 50%';
+    R.style.cssText = 'right:0;background-image:url(assets/img/curtain_closed.jpg);background-position:-640px 0;transform-origin:100% 50%';
+    fx.appendChild(L); fx.appendChild(R);
+    var ms = opening ? 700 : 520;
+    var shutL = 'translateX(0) scaleX(1)', openL = 'translateX(0) scaleX(.3)', shutR = shutL, openR = openL;
+    viewLock = { key: opening ? viewKeyRaw() : lastKey, until: performance.now() + ms };
+    setView(true, true);
+    var ease = opening ? 'cubic-bezier(.3,.7,.3,1)' : 'cubic-bezier(.6,0,.8,.5)';
+    L.animate([{ transform: opening ? shutL : openL }, { transform: opening ? openL : shutL }], { duration: ms, easing: ease, fill: 'forwards' });
+    var a = R.animate([{ transform: opening ? shutR : openR }, { transform: opening ? openR : shutR }], { duration: ms, easing: ease, fill: 'forwards' });
+    a.onfinish = function () { viewLock = null; setView(true, true); fx.innerHTML = ''; };
+  }
+  // crouch / crawl into hiding spots
+  var HIDE_PT = { bed: [14, 86], cabinet: [32, 74], sofa: [14, 96] };
+  function onHide(spot, inside) {
+    var snd = { bed: inside ? 'hide_bed' : 'unhide_bed', cabinet: inside ? 'hide_cabinet' : 'cabinet_open', sofa: 'hide_sofa' }[spot];
+    play(snd, { vol: 0.9 });
+    releaseHolds();
+    if (lowFx()) { setView(true, true); buildHot(); return; }
+    var ms = spot === 'sofa' ? 380 : 520;
+    var key = lastKey;
+    viewLock = { key: key, until: performance.now() + ms };
+    var down = inside ? (spot === 'bed' ? 'scale(1.7) translateY(60px) rotate(-7deg)' : spot === 'cabinet' ? 'scale(2.3) translateY(20px)' : 'scale(1.3) translateY(70px) rotate(-3deg)')
+      : 'scale(1.25) translateY(-50px) rotate(4deg)';
+    camAnim([{ transform: 'scale(1)' }, { transform: down }], ms, inside ? HIDE_PT[spot] : [50, 30], 'cubic-bezier(.5,0,.8,.6)');
+    black(spot === 'sofa' ? 0.5 : 1, ms * 0.45, ms * 0.55);
+    setTimeout(function () {
+      viewLock = null; camClear(); setView(true, true); buildHot(); black(0, 380);
+      var from = inside ? (spot === 'bed' ? 'scale(1.3) translateY(-40px) rotate(5deg)' : 'scale(1.2)') : 'scale(1.2) translateY(60px) rotate(-3deg)';
+      camAnim([{ transform: from }, { transform: 'scale(1)' }], 600, [50, 50], 'ease-out');
+      if (inside && spot === 'bed' && game && game.night <= 2) hint(T('h_breath'), 4);
+    }, ms);
+  }
+  function tvOffAnim() {
+    if (!here('living') || lowFx()) return;
+    var fx = $('fx'), c = document.createElement('div'); c.className = 'crt';
+    c.style.cssText = 'left:494px;top:350px;width:174px;height:150px'; fx.appendChild(c);
+    var a = c.animate([{ transform: 'scale(1,1)', opacity: 0.9 }, { transform: 'scale(1,.03)', opacity: 1, offset: 0.45 }, { transform: 'scale(.02,.02)', opacity: 0 }], { duration: 300, easing: 'ease-in' });
+    a.onfinish = function () { c.remove(); };
+  }
+  function lightAnim(on) {
+    if (!here('living') || lowFx()) return;
+    var im = $(front);
+    if (on && im.animate) im.animate([{ filter: 'brightness(.3)' }, { filter: 'brightness(1.4)', offset: 0.15 }, { filter: 'brightness(.4)', offset: 0.3 }, { filter: 'brightness(1.2)', offset: 0.45 }, { filter: 'brightness(.6)', offset: 0.6 }, { filter: 'brightness(1.05)' }], { duration: 700 });
+  }
+  function saltAnim() {
+    if (lowFx()) return;
+    var fx = $('fx');
+    for (var i = 0; i < 26; i++) {
+      var g = document.createElement('div'); g.className = 'grainS'; g.style.left = (560 + Math.random() * 160) + 'px'; g.style.top = '700px'; fx.appendChild(g);
+      var dx = (Math.random() - 0.5) * 900, dy = -300 - Math.random() * 380;
+      (function (el) { var a = el.animate([{ transform: 'translate(0,0) scale(1)', opacity: 1 }, { transform: 'translate(' + dx + 'px,' + dy + 'px) scale(.4)', opacity: 0 }], { duration: 500 + Math.random() * 400, easing: 'cubic-bezier(.2,.8,.4,1)' }); a.onfinish = function () { el.remove(); }; })(g);
+    }
+    jolt();
+  }
+  function flashWhite() { var f = $('black'); f.style.transition = 'none'; f.style.background = '#fff'; f.style.opacity = 0.7; setTimeout(function () { f.style.transition = 'opacity .4s'; f.style.opacity = 0; setTimeout(function () { f.style.background = '#000'; }, 420); }, 70); }
+
+  // ------------------------------------------------------------ view (which pre-rendered image)
+  var lastView = '', lastKey = '', front = 'bgA';
+  function viewKeyRaw() {
+    var g = game, p = g.p, H = g.house;
+    if (p.travel) return lastKey || 'hallway_empty';
+    switch (p.room) {
+      case 'bedroom':
+        if (p.hidden === 'bed') return g.k.st === 4 ? 'under_kumot' : 'under_empty';
+        if (!H.power && (g.k.st >= 3 && !H.door)) return 'bedroom_blackout';
+        if (g.k.st === 4 || (g.k.st === 3 && !H.door)) return 'bedroom_kumot';
+        return H.door ? 'bedroom_closed' : 'bedroom_empty';
+      case 'hall': return g.k.st === 2 ? 'hallway_kumot' : 'hallway_empty';
+      case 'living':
+        if (g.m.st === 2) return 'living_malik';
+        if (H.tv) return H.lights ? 'living_lights' : 'living_empty';
+        return H.lights ? 'living_lights_off_tv' : 'living_tvoff';
+      case 'kitchen':
+        if (p.hidden === 'cabinet') return g.c.st === 3 ? 'cabinet_kal' : 'cabinet_empty';
+        return g.c.st >= 2 ? 'kitchen_kal' : 'kitchen_empty';
+      case 'curtain':
+        if (!H.curtain) return 'curtain_closed';
+        return ['curtain_open', 'curtain_s1', 'curtain_s2', 'curtain_silip', 'curtain_glass', 'curtain_glass'][g.s.st];
+    }
+    return 'hallway_empty';
+  }
+  function viewKey() { if (viewLock && performance.now() < viewLock.until) return viewLock.key; return viewKeyRaw(); }
+  function setView(force, instant) {
+    var g = game; if (!g) return;
+    var key = viewKey();
+    var dark = !g.house.power && g.p.room !== 'curtain';
+    var sofa = g.p.hidden === 'sofa' && !(viewLock && performance.now() < viewLock.until);
+    var sig = key + '|' + dark + '|' + sofa;
+    if (sig !== lastView || force) {
+      var back = front === 'bgA' ? 'bgB' : 'bgA';
+      var b = $(back), f = $(front);
+      b.classList.toggle('now', !!instant); f.classList.toggle('now', !!instant);
+      if (b.getAttribute('data-k') !== key) { b.src = 'assets/img/' + key + '.jpg'; b.setAttribute('data-k', key); }
+      b.style.filter = dark ? 'brightness(.32) saturate(.6)' : (sofa ? 'brightness(.55)' : 'brightness(1.05)');
+      b.style.transform = sofa ? 'scale(1.35) translateY(-6%)' : 'none';
+      b.style.opacity = 1; f.style.opacity = 0; front = back; lastView = sig; lastKey = key;
+    }
+    // flashlight beam follows the finger
+    var dk = $('dark'), lit = g.p.light;
+    var needDark = dark || (g.p.room === 'curtain' && g.house.curtain) || g.p.room === 'hall' && !g.house.power;
+    var bx = beam[0], by = beam[1];
+    if (needDark) {
+      dk.style.opacity = 1;
+      dk.style.background = lit ? 'radial-gradient(circle at ' + bx + 'px ' + by + 'px, rgba(255,244,220,.10) 0, rgba(0,0,0,0) 150px, rgba(0,0,0,.4) 250px, rgba(0,0,0,.92) 450px)' : (dark ? 'rgba(0,0,0,.55)' : 'rgba(0,0,0,.25)');
+    } else if (lit) { dk.style.opacity = 1; dk.style.background = 'radial-gradient(circle at ' + bx + 'px ' + by + 'px, rgba(255,240,210,.16) 0, rgba(255,240,210,.06) 170px, rgba(0,0,0,.25) 420px)'; }
+    else dk.style.opacity = 0;
+    $('fog').style.opacity = (g.p.room === 'curtain' && !g.house.curtain && g.s.st === 4 && !g.p.travel) ? 1 : 0;
+    $('grain').style.backgroundPosition = (Math.random() * 160 | 0) + 'px ' + (Math.random() * 160 | 0) + 'px';
+  }
+  var beam = [660, 340];
+
+  // ------------------------------------------------------------ HUD
+  function renderHUD() {
+    var g = game, c = g.clock();
+    var mm = c.m < 10 ? '0' + c.m : '' + c.m;
+    $('clock-t').textContent = c.h + ':' + mm + ' AM';
+    $('clock-n').textContent = T('night_n', g.night).toUpperCase() + ' · ' + T('rooms')[g.p.travel ? g.p.travel.to : g.p.room].toUpperCase();
+    $('batt-i').style.width = Math.max(0, g.p.battery) + '%';
+    $('salt').style.display = g.night >= 3 ? 'flex' : 'none';
+    $('salt-n').textContent = g.p.salt;
+    var rb = $('runBtn'), rt = g.p.run ? T('run_on') : T('run_off'); if (rb.textContent !== rt) rb.textContent = rt; rb.classList.toggle('cur', g.p.run);
+    var bm = $('breathMeter');
+    if (g.p.holdBreath) { bm.style.opacity = 1; var pct = g.p.breath / 8 * 100; bm.style.background = 'conic-gradient(#e9dfcb ' + pct + '%, rgba(255,255,255,.08) 0)'; bm.style.mask = bm.style.webkitMask = 'radial-gradient(circle, transparent 50px, #000 52px)'; }
+    else bm.style.opacity = 0;
+  }
+
+  // ------------------------------------------------------------ hotspots: tap things in the room itself
+  function doHold(name, on) {
+    if (!game) return;
+    var was = name === 'light' ? game.p.light : name === 'door' ? game.p.holdDoor : name === 'curtain' ? game.p.holdCurtain : game.p.holdBreath;
+    game.hold(name, on);
+    var now = name === 'light' ? game.p.light : name === 'door' ? game.p.holdDoor : name === 'curtain' ? game.p.holdCurtain : game.p.holdBreath;
+    if (name === 'breath') { if (now && !breathH) breathH = play('breath_hold_gasp', { vol: 0.8 }); if (!on) stopBreath(); }
+    if (name === 'light' && now !== was) play(now ? 'flashlight_on' : 'flashlight_click', { vol: 0.45 });
+    if (name === 'door' || name === 'curtain') {
+      if (now && !holdH) { holdH = play(name === 'door' ? 'door_push_strain' : 'curtain_grip', { loop: true, vol: 0.7 }); holdHName = name; }
+      if (!now && holdH && holdHName === name) { stop(holdH, 0.25); holdH = null; }
+    }
+  }
+  function act(a, arg) { if (!game || game.over || paused || (call && call.state === 'ring')) return; game.act(a, arg); handleEvents(); renderHUD(); }
+  function go(room, pt) { if (!game || game.p.travel || game.p.hidden) return; walkPt = pt || [50, 60]; act('go', room); }
+  var heldKeys = {};
+  var hotSig = '';
+  function releaseHolds() {
+    if (game) ['door', 'breath', 'curtain', 'light'].forEach(function (h) { game.hold(h, false); });
+    stopBreath(); if (holdH) { stop(holdH, 0.2); holdH = null; }
+    document.querySelectorAll('.spot.down').forEach(function (b) { b.classList.remove('down'); });
+  }
+  function lightAllowed() { var g = game, H = g.house, r = g.p.room; return !g.p.hidden && ((r === 'curtain' && H.curtain) || !H.power || r === 'hall'); }
+  function spots() {
+    var g = game, p = g.p, H = g.house, r = p.room, S = [];
+    var exit = { id: 'exit', x: 28, y: 86, w: 44, h: 14, cls: 'exit', label: '▼  ' + T('go_hall').toUpperCase(), tap: function () { go('hall', [50, 100]); } };
+    var out = { id: 'exit', x: 28, y: 86, w: 44, h: 14, cls: 'exit', label: '▲  ' + T('a_unhide').toUpperCase(), tap: function () { act('hide'); } };
+    if (r === 'bedroom') {
+      if (p.hidden) S.push(out);
+      else {
+        if (H.door) S.push({ id: 'door', x: 39, y: 26, w: 16, h: 56, cls: 'hold', label: T('a_hold_door'), hold: 'door', dbl: function () { act('door'); }, hintTap: 'h_door' });
+        else S.push({ id: 'door', x: 39, y: 26, w: 16, h: 56, label: T('a_door_close'), tap: function () { act('door'); } });
+        S.push({ id: 'bed', x: 0, y: 60, w: 30, h: 40, label: T('a_hide_bed'), tap: function () { act('hide'); } });
+        S.push(exit);
+      }
+    } else if (r === 'hall') {
+      S.push({ id: 'bedroom', x: 17, y: 12, w: 14, h: 72, label: '◀ ' + T('rooms').bedroom, tap: function () { go('bedroom', [24, 55]); } });
+      S.push({ id: 'kitchen', x: 43, y: 34, w: 14, h: 44, label: T('rooms').kitchen, tap: function () { go('kitchen', [50, 55]); } });
+      S.push({ id: 'living', x: 58, y: 24, w: 11, h: 56, label: T('rooms').living + ' ▶', tap: function () { go('living', [62, 52]); } });
+      S.push({ id: 'curtain', x: 80, y: 22, w: 19, h: 62, label: T('rooms').curtain + ' ▶', tap: function () { go('curtain', [88, 55]); } });
+    } else if (r === 'living') {
+      if (p.hidden) S.push(out);
+      else {
+        if (H.tv) S.push({ id: 'tv', x: 37, y: 46, w: 19, h: 27, label: T('a_tv'), tap: function () { act('tv'); } });
+        S.push({ id: 'switch', x: 55, y: 34, w: 11, h: 20, cls: H.power ? '' : 'off', label: T(H.lights ? 'a_lights_off' : 'a_lights_on'), tap: function () { act('lights'); } });
+        S.push({ id: 'sofa', x: 0, y: 70, w: 27, h: 30, label: T('a_hide_sofa'), tap: function () { act('hide'); } });
+        S.push(exit);
+      }
+    } else if (r === 'kitchen') {
+      if (p.hidden) {
+        if (g.night >= 3 && p.salt > 0) S.push({ id: 'salt', x: 38, y: 30, w: 24, h: 30, label: T('a_salt', p.salt), tap: function () { act('salt'); } });
+        S.push(out);
+      } else {
+        S.push({ id: 'cabinet', x: 9, y: 60, w: 46, h: 25, label: T('a_hide_cab'), tap: function () { act('hide'); } });
+        if (g.night >= 3) S.push({ id: 'salt', x: 24, y: 42, w: 11, h: 16, cls: p.salt > 0 ? '' : 'off', label: T('a_salt', p.salt), tap: function () { act('salt'); } });
+        if (!H.power) S.push({ id: 'breaker', x: 84, y: 20, w: 15, h: 20, cls: 'urgent', label: T('a_breaker'), tap: function () { act('breaker'); } });
+        S.push(exit);
+      }
+    } else if (r === 'curtain') {
+      if (!H.curtain) S.push({ id: 'curtain', x: 10, y: 6, w: 80, h: 76, cls: 'hold', label: T('a_hold_curtain'), hold: 'curtain', dbl: function () { act('curtain'); }, hintTap: 'h_curtain' });
+      else {
+        S.push({ id: 'cl', x: 0, y: 0, w: 17, h: 84, label: T('a_close_short'), tap: function () { act('curtain'); } });
+        S.push({ id: 'cr', x: 83, y: 0, w: 17, h: 84, label: T('a_close_short'), tap: function () { act('curtain'); } });
+      }
+      S.push(exit);
+    }
+    return S;
+  }
+  var stageScale = 1;
+  function toStage(e) { var r = $('stage').getBoundingClientRect(); return [(e.clientX - r.left) / stageScale, (e.clientY - r.top) / stageScale]; }
+  function bindSpot(el, s) {
+    var down = false, held = false, timer = 0;
+    el.addEventListener('pointerdown', function (e) {
+      e.preventDefault(); e.stopPropagation(); try { el.setPointerCapture(e.pointerId); } catch (x) {}
+      down = true; held = false;
+      if (s.hold) timer = setTimeout(function () { if (down) { held = true; el.classList.add('down'); doHold(s.hold, true); } }, 130);
+    });
+    var up = function () {
+      if (!down) return; down = false; clearTimeout(timer);
+      if (held) { held = false; el.classList.remove('down'); doHold(s.hold, false); return; }
+      if (s.tap) { s.tap(); return; }
+      if (s.dbl) { var now = performance.now(); if (now - (el._last || 0) < 400) { el._last = 0; s.dbl(); } else { el._last = now; if (s.hintTap) hint(T(s.hintTap)); } }
+    };
+    el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up); el.addEventListener('lostpointercapture', up);
+  }
+  function buildHot() {
+    var box = $('hot'), g = game;
+    if (!g || g.p.travel || g.over || (call && call.state === 'ring')) { if (hotSig !== 'none') { box.innerHTML = ''; hotSig = 'none'; } return; }
+    var S = spots(), p = g.p;
+    var sig = p.room + p.hidden + S.map(function (s) { return s.id + s.label + (s.cls || ''); }).join('|') + lightAllowed();
+    if (sig === hotSig) return;
+    hotSig = sig; releaseHolds(); box.innerHTML = '';
+    box.classList.toggle('dim', g.night >= 3);
+    // background: hold for flashlight (dark places) or breath (under the bed)
+    var bg = document.createElement('div'); bg.id = 'hotbg'; box.appendChild(bg);
+    var bgHold = p.hidden === 'bed' ? 'breath' : (lightAllowed() ? 'light' : null);
+    if (bgHold) {
+      var on = function (e) { e.preventDefault(); try { bg.setPointerCapture(e.pointerId); } catch (x) {} beam = toStage(e); doHold(bgHold, true); };
+      var mv = function (e) { if (game && game.p.light) beam = toStage(e); };
+      var off = function () { doHold(bgHold, false); };
+      bg.addEventListener('pointerdown', on); bg.addEventListener('pointermove', mv);
+      bg.addEventListener('pointerup', off); bg.addEventListener('pointercancel', off); bg.addEventListener('lostpointercapture', off);
+    }
+    S.forEach(function (s) {
+      var el = document.createElement('div'); el.className = 'spot ' + (s.cls || ''); el.setAttribute('data-spot', s.id);
+      el.style.left = s.x + '%'; el.style.top = s.y + '%'; el.style.width = s.w + '%'; el.style.height = s.h + '%';
+      el.innerHTML = '<i class="dot"></i><span class="lbl"></span>'; el.querySelector('.lbl').textContent = s.label;
+      if (call && call.focus === s.id) el.classList.add('focus');
+      bindSpot(el, s); box.appendChild(el);
+    });
+  }
+  // keep the camera alive while holding things
+  function holdCam() {
+    if (!game || lowFx() || (camA && performance.now() < busyUntil)) return;
+    if (camA && performance.now() >= busyUntil) camClear();
+    cam = cam || $('cam');
+    var p = game.p, t = performance.now() / 1000, tr = '';
+    if (p.holdDoor) { var j = game.k.st === 3 ? 4 : 1.2; cam.style.transformOrigin = '47% 54%'; tr = 'scale(1.14) translate(' + (Math.sin(t * 37) * j).toFixed(1) + 'px,' + (Math.cos(t * 29) * j).toFixed(1) + 'px)'; }
+    else if (p.holdCurtain) { var k = game.s.st >= 4 ? 3.5 : 1; cam.style.transformOrigin = '50% 45%'; tr = 'scale(1.08) translate(' + (Math.sin(t * 33) * k).toFixed(1) + 'px,' + (Math.cos(t * 41) * k).toFixed(1) + 'px)'; }
+    else if (p.holdBreath) { cam.style.transformOrigin = '50% 60%'; tr = 'scale(' + (1.04 + Math.sin(t * 1.4) * 0.01).toFixed(3) + ')'; }
+    else if (!p.travel) { tr = 'translate(' + (Math.sin(t * 0.35) * 3).toFixed(1) + 'px,' + (Math.sin(t * 0.5) * 2).toFixed(1) + 'px) scale(1.01)'; } // idle breathing sway
+    cam.style.transform = tr;
+  }
+
+  // ------------------------------------------------------------ Tita Cora's phone call (voice in Tagalog, subtitles in the chosen language)
+  var call = null;
+  function startCall(n) {
+    var lines = (typeof CALLS !== 'undefined') && CALLS[n];
+    if (!lines) { call = null; return false; }
+    call = { n: n, lines: lines, i: -1, state: 'ring', wait: 0, t: 0, focus: null };
+    call.ring = play('ringtone', { loop: true, vol: 0.75 });
+    var ph = $('phone'); ph.className = 'pe show ring';
+    $('ph-state').textContent = T('ph_calling'); $('ph-time').textContent = ''; $('ph-who').textContent = T('ph_who');
+    $('ph-ans').textContent = T('ph_answer'); $('ph-dec').textContent = T('ph_decline');
+    if (n === 1 && game) game.quiet = true;
+    buildHot();
+    return true;
+  }
+  function answerCall() {
+    if (!call || call.state !== 'ring') return;
+    stop(call.ring, 0.05); play('phone_pickup', { vol: 0.8 });
+    call.state = 'talk'; call.wait = 0.7; call.static = play('line_static', { loop: true, vol: 0.18 });
+    var ph = $('phone'); ph.className = 'pe show talk'; $('ph-state').textContent = T('ph_live'); $('ph-dec').textContent = T('ph_mute');
+    lastT = performance.now(); hotSig = ''; buildHot();
+  }
+  function endCall(silent) {
+    if (!call) return;
+    var c = call; call = null;
+    if (c.ring) stop(c.ring, 0.05); if (c.static) stop(c.static, 0.2); if (c.voice) stop(c.voice, 0.08);
+    if (!silent) play('phone_hangup', { vol: 0.6 });
+    $('sub').classList.remove('show');
+    var ph = $('phone'); $('ph-state').textContent = T('ph_ended');
+    setTimeout(function () { ph.className = 'pe'; }, silent ? 0 : 900);
+    if (game) { game.quiet = false; if (c.state === 'ring') { msgQ = (L().texts[game.night] || []).slice(); msgT = 2; } }
+    lastT = performance.now(); hotSig = ''; buildHot();
+    document.querySelectorAll('.spot.focus').forEach(function (s) { s.classList.remove('focus'); });
+  }
+  function callTick(dt) {
+    if (!call || call.state !== 'talk') return;
+    call.t += dt; var s = Math.floor(call.t); $('ph-time').textContent = '0' + Math.floor(s / 60) + ':' + (s % 60 < 10 ? '0' : '') + (s % 60);
+    if (call.speaking) return;
+    call.wait -= dt; if (call.wait > 0) return;
+    call.i++;
+    if (call.i >= call.lines.length) { endCall(); return; }
+    var ln = call.lines[call.i], id = 'v_n' + call.n + '_' + (call.i < 10 ? '0' : '') + call.i;
+    var txt = save.set.lang === 'fil' ? ln.fil : ln.en;
+    $('sub-t').textContent = txt; $('sub').classList.add('show');
+    call.focus = ln.focus || null;
+    document.querySelectorAll('.spot').forEach(function (el) { el.classList.toggle('focus', el.getAttribute('data-spot') === call.focus || (call.focus === 'curtain' && /^(cl|cr|curtain)$/.test(el.getAttribute('data-spot')))); });
+    if (BUF[id]) {
+      call.speaking = true; var me = call;
+      call.voice = play(id, { vol: 1.1, bus: 'voice' });
+      if (call.voice) call.voice.src.onended = function () { if (call === me) { me.speaking = false; me.wait = 0.45; } };
+      else { call.speaking = false; call.wait = 1.0 + txt.length * 0.06; }
+    } else { call.wait = 1.0 + txt.length * 0.062; }
+  }
+
+  // ------------------------------------------------------------ win / death
+  function cleanupScene() { endCall(true); releaseHolds(); camClear(); viewLock = null; $('fx').innerHTML = ''; $('hot').innerHTML = ''; hotSig = 'none'; black(0, 10); if (runH) { stop(runH); runH = null; } }
+  function onWin() {
+    cleanupScene(); stopBreath(); stopAll(); play('bell_6am', { bus: 'music', vol: 0.9 }); play('rooster_dawn', { bus: 'amb', vol: 0.6, delay: 2 });
+    var secs = Math.round((performance.now() - nightStart) / 1000);
+    $('win-n').textContent = T('night_n', game.night);
+    $('win-time').textContent = T('time_survived') + ': ' + Math.floor(secs / 60) + 'm ' + (secs % 60) + 's';
+    if (game.night >= save.night && game.night < 5) save.night = game.night + 1;
+    if (game.night === 5) save.done = true;
+    store(); renderTexts();
+    var n = game.night; game = null;
+    setTimeout(function () { show(n === 5 ? 'scr-end' : 'scr-win'); }, 300);
+  }
+  function onDeath(who) {
+    cleanupScene(); stopBreath(); stopAll();
+    var sc = $('scare'); var im = $('scare-img'); im.src = 'assets/img/' + WHO_IMG[who] + '.jpg';
+    sc.style.display = 'block'; sc.classList.remove('go', 'soft'); void sc.offsetWidth; sc.classList.add('go'); if (save.set.reduced) sc.classList.add('soft');
+    if (!save.set.reduced) { var fl = $('flash'); fl.style.transition = 'none'; fl.style.opacity = 0.85; setTimeout(function () { fl.style.transition = 'opacity .5s'; fl.style.opacity = 0; }, 90); }
+    play(WHO_SFX[who], { vol: save.set.reduced ? 0.45 : 1 });
+    if (navigator.vibrate && !save.set.reduced) try { navigator.vibrate([120, 40, 200]); } catch (e) {}
+    $('over-who').textContent = T('who')[who];
+    $('over-hint').textContent = T('hint')[who];
+    var c = game.clock(); $('over-time').textContent = T('night_n', game.night) + ' · ' + c.h + ':' + (c.m < 10 ? '0' : '') + c.m + ' AM';
+    $('over-bg').src = 'assets/img/' + WHO_IMG[who] + '.jpg';
+    game = null;
+    setTimeout(function () { sc.style.display = 'none'; show('scr-over'); play('amb_menu', { bus: 'music', loop: true, vol: 0.5 }); }, 1700);
+  }
+
+  // ------------------------------------------------------------ pause
+  function pause(on) {
+    if (!game) return;
+    paused = on;
+    if (on) { if (AC) AC.suspend(); releaseHolds(); show('scr-pause'); }
+    else { show(null); lastT = performance.now(); if (AC) AC.resume(); }
+  }
+  document.addEventListener('visibilitychange', function () { if (document.hidden && game && !paused) pause(true); });
+
+  // ------------------------------------------------------------ fullscreen
+  function goFull() {
+    var d = document.documentElement, f = d.requestFullscreen || d.webkitRequestFullscreen;
+    try { if (f && !document.fullscreenElement) { var r = f.call(d); if (r && r.then) r.then(function () { try { screen.orientation.lock('landscape').catch(function () {}); } catch (e) {} }).catch(function () {}); } } catch (e) {}
+  }
+
+  // ------------------------------------------------------------ wiring
+  function on(id, fn) { var el = $(id); if (el) el.addEventListener('click', function (e) { e.preventDefault(); play('flashlight_click', { vol: 0.3, bus: 'sfx' }); fn(e); }); }
+  function wire() {
+    on('load-go', function () { initAudio().then(function () { goFull(); show('scr-menu'); play('amb_menu', { bus: 'music', loop: true, vol: 0.6 }); }); });
+    on('m-new', function () { save.night = Math.max(save.night, 1); startNight(0); });
+    on('m-cont', function () { startNight(Math.min(4, save.night - 1)); });
+    on('m-nights', function () { show('scr-nights'); });
+    on('m-settings', function () { settingsFrom = 'scr-menu'; show('scr-settings'); });
+    on('m-credits', function () { show('scr-credits'); });
+    on('m-quit', function () { stopAll(); try { if (document.fullscreenElement) document.exitFullscreen(); } catch (e) {} show('scr-exit'); });
+    on('exit-back', function () { show('scr-menu'); play('amb_menu', { bus: 'music', loop: true, vol: 0.6 }); });
+    on('n-back', function () { show('scr-menu'); });
+    on('c-back', function () { show('scr-menu'); });
+    on('s-back', function () { store(); show(settingsFrom); });
+    on('intro-go', function () { stopAll(); goFull(); beginNight(); });
+    on('pauseBtn', function () { pause(true); });
+    on('p-resume', function () { pause(false); });
+    on('p-restart', function () { paused = false; if (AC) AC.resume(); startNight(nightIdx); });
+    on('p-settings', function () { settingsFrom = 'scr-pause'; show('scr-settings'); });
+    on('p-menu', function () { cleanupScene(); paused = false; if (AC) AC.resume(); stopAll(); game = null; if (raf) cancelAnimationFrame(raf); show('scr-menu'); play('amb_menu', { bus: 'music', loop: true, vol: 0.6 }); });
+    on('w-next', function () { startNight(Math.min(4, nightIdx + 1)); });
+    on('w-menu', function () { show('scr-menu'); play('amb_menu', { bus: 'music', loop: true, vol: 0.6 }); });
+    on('o-retry', function () { startNight(nightIdx); });
+    on('o-menu', function () { stopAll(); show('scr-menu'); play('amb_menu', { bus: 'music', loop: true, vol: 0.6 }); });
+    on('e-menu', function () { show('scr-credits'); });
+    on('s-full', function () { if (document.fullscreenElement) { try { document.exitFullscreen(); } catch (e) {} } else goFull(); });
+    on('t-cap', function () { save.set.captions = !save.set.captions; renderSettings(); store(); });
+    on('t-red', function () { save.set.reduced = !save.set.reduced; renderSettings(); store(); });
+    on('rot-ok', function () { rotateDismissed = true; fit(); });
+    document.querySelectorAll('.langbtn').forEach(function (b) { b.addEventListener('click', function () { save.set.lang = b.getAttribute('data-lang'); store(); renderTexts(); if (game) { hotSig = ''; buildHot(); } }); });
+    document.querySelectorAll('[data-gfx]').forEach(function (b) { b.addEventListener('click', function () { save.set.gfx = b.getAttribute('data-gfx'); store(); renderSettings(); }); });
+    ['master', 'sfx', 'amb', 'music'].forEach(function (k) { $('v-' + k).addEventListener('input', function (e) { save.set.vol[k] = e.target.value / 100; $('vl-' + k).textContent = e.target.value; applyVolumes(); }); $('v-' + k).addEventListener('change', store); });
+    // room map
+    $('ph-ans').addEventListener('click', function (e) { e.preventDefault(); answerCall(); });
+    $('ph-dec').addEventListener('click', function (e) { e.preventDefault(); endCall(); });
+    $('runBtn').addEventListener('click', function (e) { e.preventDefault(); act('run'); });
+    // keyboard
+    var keyRoom = { '1': 'bedroom', '2': 'hall', '3': 'living', '4': 'kitchen', '5': 'curtain' };
+    window.addEventListener('keydown', function (e) {
+      if (e.repeat) return;
+      if (e.key === 'Escape') { if (game) pause(!paused); return; }
+      if (!game || paused) return;
+      if (call && call.state === 'ring') { if (e.key === 'Enter' || e.key === ' ') answerCall(); return; }
+      if (keyRoom[e.key]) go(keyRoom[e.key]);
+      var k = e.key.toLowerCase();
+      if (k === 'r') act('run'); if (k === 'h') act('hide'); if (k === 'e') primary();
+      if (k === 't') act('tv'); if (k === 'l') act('lights'); if (k === 'q') act('salt'); if (k === 'b') act('breaker');
+      if (k === 'f') { heldKeys.f = true; doHold('light', true); }
+      if (k === ' ') { e.preventDefault(); var hn = holdName(); if (hn) doHold(hn, true); heldKeys.space = hn; }
+    });
+    window.addEventListener('keyup', function (e) {
+      if (!game) return; var k = e.key.toLowerCase();
+      if (k === 'f') { heldKeys.f = false; doHold('light', false); }
+      if (k === ' ' && heldKeys.space) { doHold(heldKeys.space, false); heldKeys.space = null; }
+    });
+    // stop all holds if the finger leaves the screen anywhere
+    var fingers = 0;
+    window.addEventListener('pointerdown', function () { fingers++; }, true);
+    var up = function () { fingers = Math.max(0, fingers - 1); if (fingers === 0 && game && !heldKeys.space) { var any = game.p.holdDoor || game.p.holdBreath || game.p.holdCurtain || (game.p.light && !heldKeys.f); if (any) { releaseHolds(); document.querySelectorAll('.btn.down').forEach(function (b) { b.classList.remove('down'); }); } } };
+    window.addEventListener('pointerup', up, true); window.addEventListener('pointercancel', up, true);
+    window.addEventListener('blur', function () { if (game) ['door', 'breath', 'curtain', 'light'].forEach(function (h) { game.hold(h, false); }); stopBreath(); });
+  }
+  function primary() { var g = game, r = g.p.room; if (r === 'bedroom') act('door'); else if (r === 'living') act(g.house.tv ? 'tv' : 'lights'); else if (r === 'curtain') act('curtain'); else if (r === 'kitchen') act(g.house.power ? 'hide' : 'breaker'); }
+  function holdName() { var g = game, r = g.p.room; if (g.p.hidden === 'bed') return 'breath'; if (r === 'bedroom' && g.house.door) return 'door'; if (r === 'curtain' && !g.house.curtain) return 'curtain'; return null; }
+
+  // ------------------------------------------------------------ boot
+  window.addEventListener('DOMContentLoaded', function () {
+    fit(); makeGrain(); wire(); renderTexts(); show('scr-load');
+    loadAll(function (p) { $('load-i').style.width = Math.round(p * 100) + '%'; }).then(function () {
+      $('load-go').style.visibility = 'visible'; $('load-msg').textContent = T('tap_start');
+    });
+    window.__AS_UI = { get game() { return game; }, get call() { return call; }, startNight: startNight, beginNight: beginNight, act: act, go: go, hold: doHold, show: show, answer: answerCall, hang: endCall };
+  });
+})();
