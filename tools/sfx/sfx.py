@@ -401,6 +401,19 @@ def kulambo_rustle():
     y = bp(noise(1.0), 1500, 7000) * env(int(SR), 0.1, 0.5) * (0.5 + 0.5 * np.sin(np.linspace(0, 12, SR)) ** 2)
     return y * 0.5
 
+def baby_cry(d=3.2):
+    """Tiyanak lure: a baby's cry, slightly wrong (pitch wobble, bit-crushed through TV static)."""
+    y = np.zeros(int(d * SR)); at = 0.1
+    for k in range(3):
+        L = rng.uniform(0.7, 0.95); t = t_(L)
+        f = 430 + 120 * np.sin(np.pi * t / L) + 25 * np.sin(2 * np.pi * 9 * t)
+        ph = 2 * np.pi * np.cumsum(f) / SR
+        v = (signal.sawtooth(ph) * 0.6 + np.sin(2 * ph) * 0.3) * env(len(t), 0.05, 0.25)
+        v = reso(v, 1100, 4) + reso(v, 2400, 5) * 0.6 + reso(v, 3600, 6) * 0.3
+        place(y, v, at); at += L + rng.uniform(0.15, 0.3)
+    y = crush(lp(y, 4500) * 0.7, 6, 3) + hp(noise(d), 1500) * 0.03
+    return reverb(y, 1.0, 0.35)
+
 if __name__ == '__main__':
     jobs = {
         'amb_house': (amb_house, 0.7), 'amb_garden': (amb_garden, 0.6), 'amb_menu': (amb_menu, 0.7),
@@ -419,7 +432,7 @@ if __name__ == '__main__':
         'fluorescent_hum': (fluorescent, 0.5), 'clock_tick': (clock_tick, 0.6), 'power_down': (power_down, 0.85),
         'breaker': (breaker, 0.85), 'cabinet_open': (lambda: cabinet_door(True), 0.75), 'cabinet_close': (lambda: cabinet_door(False), 0.8),
         'plastic_crinkle': (plastic_crinkle, 0.6), 'breath_hold_gasp': (breath_hold, 0.85), 'distant_scream': (distant_scream, 0.6),
-        'rain_heavy': (rain_heavy, 0.75), 'kulambo_rustle': (kulambo_rustle, 0.6),
+        'rain_heavy': (rain_heavy, 0.75), 'kulambo_rustle': (kulambo_rustle, 0.6), 'baby_cry': (baby_cry, 0.6),
     }
     import sys as _s
     if len(_s.argv) > 1:

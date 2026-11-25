@@ -6,6 +6,7 @@ out = a[0] if a else '/home/claude/render/out/living.png'
 sc.cycles.samples = int(a[1]) if len(a) > 1 else 40
 MALIK = '--malik' in a
 LIGHTS = '--lights' in a
+TVOFF = '--tvoff' in a
 
 W, D, H = 5.0, 4.6, 2.8
 from pinoy import *
@@ -27,10 +28,10 @@ nt.links.new(tc.outputs['Object'], nz.inputs['Vector'])
 cr = nt.nodes.new('ShaderNodeValToRGB'); cr.color_ramp.elements[0].color = (0.05, 0.12, 0.14, 1); cr.color_ramp.elements[1].color = (0.75, 1.0, 1.0, 1)
 cr.color_ramp.elements[0].position = 0.4; cr.color_ramp.elements[1].position = 0.6
 nt.links.new(nz.outputs['Fac'], cr.inputs['Fac']); nt.links.new(cr.outputs['Color'], em.inputs['Color'])
-em.inputs['Strength'].default_value = 1.1
+em.inputs['Strength'].default_value = 0.0 if TVOFF else 1.1
 nt.links.new(em.outputs[0], nt.nodes['Material Output'].inputs['Surface'])
 scr = box('screen', (0.58, 0.01, 0.44), (0, D - 0.605, 0.9), m, bevel=0.03)
-area('tvLight', (0, D - 0.7, 0.9), (math.radians(90), 0, 0), 40, size=(0.55, 0.42), color=(0.55, 0.9, 1.0))
+area('tvLight', (0, D - 0.7, 0.9), (math.radians(90), 0, 0), 0 if TVOFF else 40, size=(0.55, 0.42), color=(0.55, 0.9, 1.0))
 knob = mat_basic('knob', (0.2, 0.2, 0.19), 0.4, metal=0.5)
 for i, z in enumerate((1.02, 0.9)):
     cyl('knob%d' % i, 0.03, 0.03, (0.33, D - 0.61, z), knob, rot=(math.radians(90), 0, 0))
