@@ -310,7 +310,7 @@ if PEEK > 0:   # what the flashlight finds down the hallway
 if KUMOT:
     from entities import build_kumot_batibat
     if VIEW == 'under': build_kumot_batibat(-0.45, 1.9)   # standing right beside the bed, searching
-    else: build_kumot_batibat(-0.2, 3.45)
+    else: build_kumot_batibat(-0.75, 3.15)
 
 if 'morning' in OPT:   # 6:00 AM: bulb off, sun through the open window, the yard bright
     for n_ in ('bulbLight', 'fill', 'hallGlow', 'roomSpill'): bpy.data.objects[n_].data.energy = 0
