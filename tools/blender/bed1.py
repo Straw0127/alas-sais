@@ -55,26 +55,48 @@ gl = mat_basic('hbulb', (1, 0.85, 0.6), 0.1, emit=(1.0, 0.6, 0.3), emit_str=6)
 hb = sphere('hallBulb', 0.045, (HXP(1.0), CY, 2.3), gl); hb.visible_shadow = False
 point('hallBulbL', (HXP(1.0), CY, 2.28), 10, color=(1.0, 0.6, 0.3), radius=0.04)
 wire_run([(XB, HY1 - 0.02, 2.68), (XK, HY1 - 0.02, 2.68)])
-# the kitchen at the end: hollow blocks, cold light
-box('kitBack', (0.1, 3.0, 2.7), (XK - 1.5, CY, 1.35), mat_hollowblock('hbKit'))
-box('kitFloor', (3.0, 3.0, 0.1), (XK - 1.0, CY, -0.05), mat_cement('kitCem'))
-point('kitLight', (XK - 1.0, CY + 0.6, 2.2), 26, color=(0.6, 0.8, 1.0), radius=0.2)
-box('kitShelf', (0.3, 0.9, 0.04), (XK - 1.42, CY - 0.2, 1.4), frame)
-for k_ in range(4): cyl('kitJar%d' % k_, 0.05, 0.14, (XK - 1.42, CY - 0.5 + k_ * 0.2, 1.49), mat_basic('kj%d' % k_, (0.5, 0.45, 0.35), 0.3), verts=12)
-# the sala through its door: dark, the TV on
-SALA = OPT.get('sala', 'tv')
+# the kitchen at the end, dark at night: the green tiles, the counter with the sink and stove, the fridge; only faint moonlight
+KB = XK - 2.4
+kitW = mat_sawali('kitSaw')
+box('kitBack', (0.1, 3.4, 2.7), (KB, CY, 1.35), kitW)
+box('kitSideA', (KB - XK, 0.1, 2.7), ((KB + XK) / 2, CY - 1.7, 1.35), kitW); box('kitSideB', (KB - XK, 0.1, 2.7), ((KB + XK) / 2, CY + 1.7, 1.35), kitW)
+box('kitFloor', (XK - KB, 3.4, 0.1), ((KB + XK) / 2, CY, -0.05), mat_cement('kitCem'))
+box('kitCeil', (XK - KB, 3.4, 0.1), ((KB + XK) / 2, CY, 2.7), mat_plywood('kitPly'))
+ktile = mat_planks('kitTile', (0.32, 0.38, 0.33), (0.36, 0.42, 0.36), mortar=(0.12, 0.12, 0.1), scale=2.2, rough=0.15)
+box('kitTiles', (0.02, 2.8, 0.7), (KB + 0.06, CY, 1.25), ktile)
+kwood = mat_planks('kitCab', (0.12, 0.07, 0.03), (0.16, 0.09, 0.04), scale=3, rough=0.5)
+box('kitLower', (0.6, 2.6, 0.85), (KB + 0.35, CY - 0.1, 0.425), kwood, bevel=0.01)
+box('kitCounter', (0.65, 2.7, 0.05), (KB + 0.37, CY - 0.1, 0.875), mat_noise('kitCnt', (0.25, 0.25, 0.23), (0.35, 0.35, 0.32), scale=12, rough=0.4))
+box('kitSink', (0.45, 0.6, 0.06), (KB + 0.37, CY + 0.3, 0.88), mat_basic('kitSinkM', (0.5, 0.5, 0.5), 0.2, metal=1))
+box('kitStove', (0.45, 0.6, 0.1), (KB + 0.37, CY - 0.8, 0.95), mat_basic('kitIron', (0.06, 0.06, 0.06), 0.5, metal=0.6), bevel=0.01)
+cyl('kitPot', 0.13, 0.12, (KB + 0.37, CY - 0.8, 1.06), mat_basic('kitPotM', (0.35, 0.33, 0.3), 0.3, metal=0.9))
+box('kitRail', (0.02, 1.4, 0.02), (KB + 0.08, CY, 1.75), mat_basic('kitRailM', (0.4, 0.4, 0.4), 0.3, metal=1))
+box('kitFridge', (0.7, 0.7, 1.6), (XK - 0.5, CY + 1.25, 0.8), mat_noise('kitFr', (0.25, 0.3, 0.25), (0.4, 0.45, 0.38), scale=6, rough=0.4), bevel=0.04)
+point('kitDim', (KB + 1.0, CY, 2.0), 10, color=(0.5, 0.65, 1.0), radius=0.3)
+area('kitMoon', (KB + 1.2, CY - 1.6, 2.2), (math.radians(-60), 0, 0), 45, size=(1.0, 0.6), color=(0.45, 0.6, 1.0))
+# the sala through its door, the same room as the living room: hollow blocks, the CRT on its cabinet, the clock, the santo shelf.
+# Dark in Chapter 1; --sala=tv lights the TV (seen from the bedroom door in Chapter 3), --sala=lights turns on the tube light
+SALA = OPT.get('sala', 'dark')
 SX0, SX1, SY0, SY1 = LX - 2.6, LX + 1.6, HY1 + 0.1, HY1 + 3.6
-salaW = mat_noise('salaWall', (0.16, 0.15, 0.13), (0.24, 0.22, 0.19), scale=3, bump=0.05)
-box('salaFloor', (SX1 - SX0, SY1 - SY0, 0.1), ((SX0 + SX1) / 2, (SY0 + SY1) / 2, -0.05), mat_planks('salaFl', (0.12, 0.08, 0.05), (0.16, 0.11, 0.07), scale=1.5))
+salaW = mat_hollowblock('salaHB')
+box('salaFloor', (SX1 - SX0, SY1 - SY0, 0.1), ((SX0 + SX1) / 2, (SY0 + SY1) / 2, -0.05), mat_cement('salaCem'))
 box('salaBack', (SX1 - SX0, 0.1, 2.7), ((SX0 + SX1) / 2, SY1, 1.35), salaW)
 box('salaL', (0.1, SY1 - SY0, 2.7), (SX0, (SY0 + SY1) / 2, 1.35), salaW); box('salaR', (0.1, SY1 - SY0, 2.7), (SX1, (SY0 + SY1) / 2, 1.35), salaW)
 box('salaCeil', (SX1 - SX0, SY1 - SY0, 0.1), ((SX0 + SX1) / 2, (SY0 + SY1) / 2, 2.7), mat_plywood('salaPly'))
-box('tvCab', (1.1, 0.45, 0.55), (LX - 1.0, SY1 - 0.3, 0.28), frame)
-box('tvBox', (0.6, 0.45, 0.48), (LX - 1.0, SY1 - 0.32, 0.8), mat_basic('tvShell', (0.04, 0.04, 0.04), 0.5))
-box('tvScr', (0.48, 0.02, 0.36), (LX - 1.0, SY1 - 0.56, 0.8), emission('tvScrE', (0.5, 0.78, 1.0), 2.6 if SALA == 'tv' else 0.02))
-if SALA == 'tv': point('tvGlow', (LX - 0.5, HY1 + 1.0, 1.0), 45, color=(0.45, 0.7, 1.0), radius=0.5)
+TVX = LX - 0.3
+box('tvCab', (1.3, 0.5, 0.6), (TVX, SY1 - 0.3, 0.3), frame, bevel=0.01)
+box('tvBox', (0.74, 0.55, 0.56), (TVX, SY1 - 0.33, 0.88), mat_basic('tvShell', (0.04, 0.035, 0.03), 0.45), bevel=0.04)
+box('tvScr', (0.56, 0.02, 0.42), (TVX, SY1 - 0.62, 0.9), emission('tvScrE', (0.55, 0.85, 1.0), 3.0) if SALA == 'tv' else mat_basic('tvDead', (0.02, 0.025, 0.025), 0.15))
+for s_ in (-1, 1): cyl('ant%d' % s_, 0.005, 0.6, (TVX + s_ * 0.12, SY1 - 0.33, 1.38), mat_basic('antM', (0.5, 0.5, 0.5), 0.3, metal=1), rot=(0, math.radians(s_ * 30), 0), verts=8)
+cyl('salaClock', 0.17, 0.05, (TVX + 1.2, SY1 - 0.03, 2.0), frame, rot=(math.radians(90), 0, 0))
+cyl('salaClockF', 0.14, 0.01, (TVX + 1.2, SY1 - 0.06, 2.0), mat_basic('clkF', (0.75, 0.7, 0.6), 0.6), rot=(math.radians(90), 0, 0))
+box('salaShelf', (0.9, 0.4, 1.9), (TVX - 1.6, SY1 - 0.25, 0.95), frame, bevel=0.01)
 sofaM = mat_noise('sofaM', (0.08, 0.05, 0.04), (0.14, 0.09, 0.06), scale=8)
-box('sofaSeat', (1.8, 0.8, 0.42), (LX + 0.3, SY0 + 1.2, 0.21), sofaM, bevel=0.04)
+box('sofaSeat', (1.8, 0.8, 0.42), (TVX + 0.2, SY0 + 1.0, 0.21), sofaM, bevel=0.04)
+area('salaMoon', (SX1 - 0.2, (SY0 + SY1) / 2, 2.0), (0, math.radians(-75), 0), 10, size=(1.2, 1.0), color=(0.4, 0.55, 1.0))
+if SALA == 'tv':
+    area('tvGlow', (TVX, SY1 - 0.75, 0.9), (math.radians(-90), 0, 0), 70, size=(0.56, 0.42), color=(0.5, 0.8, 1.0))
+    point('tvSpill', (LX, HY1 + 0.6, 1.0), 12, color=(0.5, 0.8, 1.0), radius=0.3)
 if SALA == 'lights':
     box('salaTube', (1.2, 0.05, 0.04), ((SX0 + SX1) / 2, (SY0 + SY1) / 2, 2.64), emission('tubeE', (0.9, 1.0, 0.95), 8))
     area('salaTubeL', ((SX0 + SX1) / 2, (SY0 + SY1) / 2, 2.6), (0, 0, 0), 260, size=(1.2, 0.2), color=(0.85, 1.0, 0.92))
@@ -99,7 +121,7 @@ parts.append(decal('scratchesDoor', scr, (dx + 0.1, D - 0.076, 1.25), (0.3, 0.6)
 for p in parts: p.parent = hinge; p.matrix_parent_inverse = hinge.matrix_world.inverted()
 PEEK = int(OPT.get('peek', -1))
 if PEEK >= 0: DOOR = 'peek'
-hinge.rotation_euler = (0, 0, math.radians({'ajar': 84, 'gap': 84, 'peek': 84, 'open': 92, 'closed': 0}[DOOR]))
+hinge.rotation_euler = (0, 0, math.radians(int(DOOR[2:]) if DOOR.startswith('sw') else {'ajar': 84, 'gap': 84, 'peek': 84, 'open': 92, 'closed': 0}[DOOR]))
 sw = mat_basic('sw', (0.75, 0.7, 0.6), 0.5)
 box('switch', (0.08, 0.02, 0.12), (dx + 0.75, D - 0.01, 1.3), sw, bevel=0.005)
 
@@ -351,7 +373,7 @@ if KUMOT:
     else: build_kumot_batibat(-0.6, 3.1)
 
 if 'morning' in OPT:   # 6:00 AM: bulb off, sun through the open window, the yard bright
-    for n_ in ('bulbLight', 'fill', 'hallGlow', 'roomSpill', 'tvGlow'):
+    for n_ in ('bulbLight', 'fill', 'hallGlow', 'roomSpill', 'tvGlow', 'tvSpill'):
         if n_ in bpy.data.objects: bpy.data.objects[n_].data.energy = 0
     bpy.data.objects['bulb'].active_material.node_tree.nodes['Principled BSDF'].inputs['Emission Strength'].default_value = 0
     sun = bpy.data.objects['moonSun']; sun.data.energy = 4.5; sun.data.color = (1.0, 0.82, 0.6); sun.rotation_euler = (math.radians(70), 0, math.radians(95))
@@ -369,14 +391,13 @@ if VIEW == 'hub':
     camera((0.25, -0.15, 1.6), (0.75, 4.4, 1.28), lens=17)
 elif VIEW == 'door':
     # standing beside the door frame, looking diagonally to the left into the hallway (FNAF4's left door)
-    if DOOR == 'closed':   # pulled back inside, both hands on the shut door
-        camera((dx + 0.35, D - 0.55, 1.56), (dx - 0.55, D + 0.05, 1.3), lens=22)
+    if DOOR == 'closed' or DOOR.startswith('sw'):   # pulled back inside, both hands on the shut door
+        camera((dx - 0.1, D - 1.5, 1.52), (dx - 0.35, D + 1.2, 1.42), lens=24)   # same spot for every frame of the swing
     else:                  # leaning out of the doorway, head tilted (FNAF4): the hall to the kitchen, the sala door at an angle
         import mathutils
         cpos = mathutils.Vector((dx + 0.12, D + 0.3, 1.5)); ctg = mathutils.Vector((HXP(4.3), D + 1.0, 1.32))
         cam_ = camera(tuple(cpos), tuple(ctg), lens=22)
         fwd_ = (ctg - cpos).normalized()
-        cam_.rotation_euler = (mathutils.Quaternion(fwd_, math.radians(-17)) @ fwd_.to_track_quat('-Z', 'Y')).to_euler()
     if PEEK >= 0:
         import mathutils
         src_ = mathutils.Vector((dx + 0.05, D + 0.25, 1.4)); tg_ = mathutils.Vector((HXP(3.0), D + 0.75, 1.1))

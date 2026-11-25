@@ -5,6 +5,8 @@ sc = reset()
 a = sys.argv[sys.argv.index('--') + 1:]
 out = a[0]; sc.cycles.samples = int(a[1]) if len(a) > 1 else 32
 WHO = a[2] if len(a) > 2 else ''
+SALATV = '--salatv' in a
+if SALATV: a = [x for x in a if x != '--salatv']; WHO = a[2] if len(a) > 2 else ''
 
 # narrow hallway, camera at the bedroom end looking toward the living room
 W, D, H = 1.3, 6.5, 2.7
@@ -15,7 +17,11 @@ wood = mat_planks('frame', (0.07, 0.035, 0.015), (0.1, 0.05, 0.02), scale=3, rou
 # side doorways (dark) and a doorway at the end
 for side, y in ((-1, 2.2), (1, 3.6)):
     c = box('c', (0.4, 0.85, 2.05), (side * W / 2, y, 1.02)); cut(bpy.data.objects['WallL' if side < 0 else 'WallR'], c)
-    box('beyond%d' % side, (0.1, 1.2, 2.6), (side * (W / 2 + 0.6), y, 1.3), mat_basic('void', (0.005, 0.005, 0.005), 0.9))
+    box('beyond%d' % side, (0.1, 1.2, 2.6), (side * (W / 2 + 0.6), y, 1.3), mat_basic('void', (0.005, 0.005, 0.005), 0.9) if not (SALATV and side > 0) else mat_hollowblock('salaHB'))
+if SALATV:   # the TV in the living room has been switched on: its flicker spills out of the right doorway
+    box('salaFl', (1.2, 1.4, 0.1), (W / 2 + 0.6, 3.6, -0.05), mat_cement('salaCem'))
+    area('tvGlow', (W / 2 + 0.55, 3.75, 0.95), (0, math.radians(90), 0), 220, size=(0.56, 0.42), color=(0.5, 0.8, 1.0))
+    point('tvSpill', (W / 2 + 0.25, 3.6, 1.0), 30, color=(0.5, 0.8, 1.0), radius=0.3)
 c = box('c', (0.85, 0.5, 2.05), (0, D, 1.02)); cut(bpy.data.objects['WallBack'], c)
 # the back door near the start of the hall, with the same red floral curtain as the bedroom window
 cut(bpy.data.objects['WallR'], box('cbd', (0.4, 0.85, 2.05), (W / 2, 1.0, 1.02)))
