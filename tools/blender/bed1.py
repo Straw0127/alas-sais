@@ -402,12 +402,12 @@ elif VIEW == 'door':
     if SWING is not None:
         bpy.context.view_layer.update()
         bpy.ops.object.empty_add(location=(0, 0, 0)); sh_ = bpy.context.active_object
-        sh_.parent = cam_; sh_.location = (0.47, 0.0, -0.5); sh_.rotation_euler = (0, math.radians(SWING), math.radians(17))   # undo the head tilt: the door stays upright in the world
+        sh_.parent = cam_; sh_.location = (0.5, 0.0, -0.75); sh_.rotation_euler = (0, -math.radians(SWING), math.radians(17))   # undo the head tilt: the door stays upright in the world
         swm_ = mat_noise('swWood', (0.2, 0.1, 0.045), (0.26, 0.14, 0.065), scale=5, rough=0.5)
-        sp_ = [box('swPanel', (0.9, 2.06, 0.045), (-0.45, 0, 0), swm_, bevel=0.005)]
-        for i_, yy in enumerate((0.4, -0.55)): sp_.append(box('swInset%d' % i_, (0.62, 0.7, 0.02), (-0.44, yy, 0.03), wood_dark, bevel=0.01))
-        sp_.append(sphere('swKnob', 0.03, (-0.78, -0.1, 0.05), brass))
-        sp_.append(decal('swScr', scr, (-0.35, 0.25, 0.031), (0.3, 0.6), 'z'))
+        sp_ = [box('swPanel', (1.3, 2.06, 0.045), (-0.65, 0, 0), swm_, bevel=0.005)]
+        for i_, yy in enumerate((0.4, -0.55)): sp_.append(box('swInset%d' % i_, (0.9, 0.7, 0.02), (-0.65, yy, 0.03), wood_dark, bevel=0.01))
+        sp_.append(sphere('swKnob', 0.035, (-1.15, -0.1, 0.05), brass))
+        sp_.append(decal('swScr', scr, (-0.45, 0.25, 0.031), (0.3, 0.6), 'z'))
         for o_ in sp_: o_.parent = sh_
         fl_ = point('swFill', (0, 0, 0), 12, color=(1.0, 0.65, 0.35), radius=0.15); fl_ = fl_ or bpy.data.objects['swFill']; fl_.parent = cam_; fl_.location = (-0.05, 0.3, 0.05)
     if PEEK >= 0:
