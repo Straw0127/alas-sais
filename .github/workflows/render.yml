@@ -4,6 +4,9 @@ on:
     inputs:
       samples: { description: 'Cycles samples', default: '64' }
       only: { description: 'Comma list of job names (empty = all)', default: '' }
+permissions:
+  contents: write
+  actions: read
 jobs:
   render:
     runs-on: ubuntu-latest
@@ -37,3 +40,20 @@ jobs:
       - if: steps.sel.outputs.skip != '1'
         uses: actions/upload-artifact@v4
         with: { name: '${{ matrix.name }}', path: 'out/${{ matrix.name }}*', retention-days: 7 }
+  collect:
+    needs: render
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 1 }
+      - uses: actions/download-artifact@v4
+        with: { path: dl }
+      - name: Push PNGs to the renders branch
+        run: |
+          git config user.name alas-sais-bot; git config user.email actions@users.noreply.github.com
+          mkdir -p /tmp/raw; find dl -name '*.png' -exec cp {} /tmp/raw/ \; ; find dl -name '*.json' -exec cp {} /tmp/raw/ \;
+          if git ls-remote --exit-code origin renders >/dev/null; then git fetch --depth 1 origin renders; git checkout -B renders FETCH_HEAD; else git checkout --orphan renders; git rm -rf -q .; fi
+          mkdir -p raw; cp /tmp/raw/* raw/ 2>/dev/null || true; git add raw
+          git commit -m "renders from run ${{ github.run_id }} [skip ci]" || echo nothing
+          for i in 1 2 3; do git push origin renders && break; git fetch --depth 1 origin renders && git rebase FETCH_HEAD || true; sleep 5; done
