@@ -3,7 +3,7 @@ import math, bpy
 from lib import *
 from pinoy import *
 
-def build_kitchen(KAL=False, LIT=False):
+def build_kitchen(KAL=False, LIT=False, KALIN=False):
     """Built at the origin exactly as the old standalone scene; house.py places it."""
     W = D = H = None
     W, D, H = 4.4, 4.0, 2.7
@@ -89,7 +89,9 @@ def build_kitchen(KAL=False, LIT=False):
 
     grime(W, D, H, seed=7, n=11, color=(0.04, 0.035, 0.02))
     from entities import build_kalansing, add_aswang_tongue
-    if KAL:
+    if KALIN:   # inside the kitchen, searching beside the table (seen from the hiding cabinet)
+        build_kalansing(-0.6, 1.9); add_aswang_tongue(-0.6, 1.9)
+    elif KAL:   # in the doorway from the hall
         build_kalansing(1.3, D + 0.45); add_aswang_tongue(1.3, D + 0.45)
         point('kalRim', (1.3, D - 0.4, 1.7), 45, color=(0.7, 0.8, 0.7), radius=0.2)
 

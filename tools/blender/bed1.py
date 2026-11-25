@@ -29,8 +29,8 @@ def _built(fn, prefix, **kw):
     for o in objs:
         if o.parent is None: o.parent = e; o.matrix_parent_inverse = e.matrix_world.inverted()
     return e, dims
-KIT, KDIM = _built(build_kitchen, 'k_', KAL='kal' in OPT, LIT=HOUSE_LIT)
-LIV, LDIM = _built(build_living, 'l_', MALIK='malik' in OPT, LIGHTS=SALA == 'lights', TVOFF=SALA != 'tv', LIT=HOUSE_LIT)
+KIT, KDIM = _built(build_kitchen, 'k_', KAL='kal' in OPT, LIT=HOUSE_LIT, KALIN='kalin' in OPT)
+LIV, LDIM = _built(build_living, 'l_', MALIK='malik' in OPT, LIGHTS=SALA == 'lights' or 'lights' in OPT, TVOFF=not (SALA == 'tv' or 'tv' in OPT), LIT=HOUSE_LIT)
 bpy.data.objects.remove(bpy.data.objects['l_WallFront'], do_unlink=True)      # the hallway wall is the living room's front wall
 bpy.data.objects['l_WallL'].location.x += 0.1                                  # back to back with the kitchen wall, not overlapping
 bpy.data.objects['k_WallFront'].location.y = -0.05
@@ -82,6 +82,9 @@ KIT.rotation_euler = (0, 0, math.radians(-90)); KIT.location = (XK - KDIM[1] - 0
 LIV.location = (LX - 0.4, HY1 + 0.1, 0)
 # the back door with the same red floral curtain as the bedroom window (behind you when you lean out)
 bcm = mat_floral('backCurtain', (0.45, 0.12, 0.14), (0.6, 0.45, 0.3), (0.3, 0.05, 0.08), scale=10)
+_bn = bcm.node_tree; _bt = _bn.nodes.new('ShaderNodeBsdfTranslucent'); _bt.inputs['Color'].default_value = (0.55, 0.2, 0.18, 1)   # same see-through cloth as the bedroom curtain
+_bm = _bn.nodes.new('ShaderNodeMixShader'); _bm.inputs['Fac'].default_value = 0.72
+_bn.links.new(_bn.nodes['Principled BSDF'].outputs[0], _bm.inputs[1]); _bn.links.new(_bt.outputs[0], _bm.inputs[2]); _bn.links.new(_bm.outputs[0], _bn.nodes['Material Output'].inputs['Surface'])
 for s_ in (-1, 1):
     bpy.ops.mesh.primitive_grid_add(x_subdivisions=40, y_subdivisions=6, size=1, location=(0, 0, 0))
     cc = bpy.context.active_object; cc.scale = (0.46, 1.9, 1); bpy.ops.object.transform_apply(scale=True)
@@ -89,6 +92,19 @@ for s_ in (-1, 1):
     dmm = cc.modifiers.new('d', 'DISPLACE'); dmm.texture = tt; dmm.strength = 0.05; dmm.texture_coords = 'OBJECT'
     cc.modifiers.new('s', 'SOLIDIFY').thickness = 0.004; cc.data.materials.append(bcm)
     cc.rotation_euler = (math.radians(90), 0, 0); cc.location = (CX + s_ * 0.21, HY1 - 0.02, 1.02)
+    if OPT.get('hcurtain', 'closed') == 'open': cc.scale = (0.45, 1, 1); cc.location.x = CX + s_ * 0.52   # drawn aside
+# the back door itself: a jalousie-glass door, shut; beyond it the back yard (Chapter 2: Silip comes from there)
+jal_ = mat_basic('bdJal', (0.7, 0.75, 0.75), 0.05, trans=0.85)
+bdf_ = mat_planks('bdFrame', (0.18, 0.12, 0.07), (0.22, 0.15, 0.09), scale=3)
+for sx_ in (-1, 1): box('bdStile%d' % sx_, (0.07, 0.05, 2.04), (CX + sx_ * 0.39, HY1 + 0.08, 1.02), bdf_)
+box('bdRailT', (0.85, 0.05, 0.08), (CX, HY1 + 0.08, 2.0), bdf_); box('bdRailB', (0.85, 0.05, 0.5), (CX, HY1 + 0.08, 0.25), bdf_)
+for j_ in range(11): box('bdSlat%d' % j_, (0.72, 0.012, 0.12), (CX, HY1 + 0.08, 0.6 + j_ * 0.125), jal_, rot=(math.radians(-20), 0, 0))
+box('yard', (16, 14, 0.1), (CX + 1.0, HY1 + 7.2, -0.08), mat_noise('yardDirt', (0.05, 0.045, 0.035), (0.09, 0.08, 0.06), scale=4, bump=0.3))
+bam_ = mat_planks('bakod', (0.18, 0.15, 0.08), (0.24, 0.2, 0.11), scale=6)
+box('bakod', (16, 0.06, 1.7), (CX + 1.0, HY1 + 9.5, 0.85), bam_)
+cyl('yardTrunk', 0.18, 4.2, (CX - 2.2, HY1 + 7.0, 2.1), mat_noise('yTrunk', (0.05, 0.04, 0.03), (0.09, 0.07, 0.05), scale=6), verts=12)
+sphere('yardCanopy', 1.8, (CX - 2.2, HY1 + 7.0, 4.6), mat_noise('yLeaves', (0.02, 0.04, 0.02), (0.04, 0.07, 0.03), scale=3), scale=(1.3, 1.1, 0.8))
+area('yardMoon', (CX + 3.5, HY1 + 6.0, 5.0), (math.radians(-40), 0, math.radians(235)), 45, size=(4, 4), color=(0.45, 0.58, 1.0))
 door_mat = mat_planks('door', (0.2, 0.1, 0.045), (0.24, 0.13, 0.06), scale=2.5, rough=0.5)
 bpy.ops.object.empty_add(location=(dx + 0.45, D - 0.05, 0)); hinge = bpy.context.active_object
 parts = [box('doorPanel', (0.88, 0.045, 2.06), (dx + 0.01, D - 0.05, 1.03), door_mat, bevel=0.005)]
@@ -334,6 +350,12 @@ def silip_at(loc, rotz, wing):
             try: b.inputs['Subsurface Weight'].default_value = 0.05
             except Exception: pass
     return group_at(before, loc, rotz)
+HS = int(OPT.get('hsilip', 0))
+if HS:
+    hp_ = {1: ((CX + 0.6, HY1 + 9.2, 2.3), 1.0), 2: ((CX - 0.9, HY1 + 5.2, 1.7), 1.0), 3: ((CX + 0.25, HY1 + 2.3, 1.45), 1.0), 4: ((CX + 0.05, HY1 + 0.45, 1.25), 0.8)}[HS]
+    silip_at(hp_[0], 0.0, hp_[1])
+    if OPT.get('hcurtain', 'closed') == 'open': point('hsKey', (hp_[0][0] + 0.5, hp_[0][1] - 0.9 if HS < 4 else HY1 + 0.15, hp_[0][2] + 0.6), 5 if HS < 4 else 2, color=(0.6, 0.7, 1.0), radius=0.3)
+    elif HS >= 3: area('hsBack', (CX, hp_[0][1] + 1.4, 1.5), (math.radians(-90), 0, 0), 220, size=(0.6, 0.6), color=(0.55, 0.65, 1.0))   # her shadow on the curtain
 if SIL == 1:     # far: hovering above the fence line
     silip_at((W / 2 + 5.0, WY + 0.7, 1.65), math.radians(-90), 1.0)
     point('silKey1', (W / 2 + 4.0, WY + 0.2, 2.2), 4, color=(0.6, 0.7, 1.0), radius=0.3)
@@ -379,6 +401,8 @@ elif VIEW == 'kitchen':     # in the kitchen doorway area looking at the counter
     camera(KW(-0.2, 0.15, 1.55), KW(0.1, KDIM[1], 1.05), lens=21)
 elif VIEW == 'kitchen_hide':   # inside the low cabinet on the kitchen's side wall: the hall door is on the left
     camera(KW(-2.0, 0.9, 0.45), KW(1.3, 2.4, 0.7), lens=20)
+elif VIEW == 'curtain':     # facing the back door at the start of the hall
+    camera((CX + 0.02, D + 0.12, 1.5), (CX - 0.03, HY1 + 4.0, 1.4), lens=19)
 elif VIEW == 'living':
     camera(LW(-0.35, 1.0, 1.55), LW(0.25, LDIM[1], 1.1), lens=22)
 elif VIEW == 'plan':   # debug: the whole house from above, cut at ceiling height
