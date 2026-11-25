@@ -15,6 +15,21 @@ for k in $(python3 -c "import re;s=open('src/ui.js').read();m=re.search(r\"var S
 done
 rm -f dist/assets/voice/*.mp3; cp /home/claude/alas-sais/assets/voice/*.mp3 dist/assets/voice/ 2>/dev/null || echo 'no voice files yet'
 python3 lift.py > /tmp/lift.log
+# Lettering and the phone, rendered in Blender (render/words.py, render/phone.py): trimmed, transparent WebP
+mkdir -p dist/assets/ui dist/assets/fonts; cp -u fonts/*.woff2 dist/assets/fonts/
+python3 - <<'PY'
+import os
+from PIL import Image
+W = '/home/claude/render/out/words'; D = 'dist/assets/ui'
+for f in os.listdir(W):
+    if not f.endswith('.png') or f == 't_menu.png': continue
+    b = os.path.join(D, f[:-4] + '.webp'); a = os.path.join(W, f)
+    if os.path.exists(b) and os.path.getmtime(b) > os.path.getmtime(a): continue
+    im = Image.open(a); im = im.crop(im.getbbox()); im.save(b, 'WEBP', quality=88, method=6)
+a = '/home/claude/render/out/final/ui_phone.png'; b = os.path.join(D, 'phone.webp')
+if os.path.exists(a) and (not os.path.exists(b) or os.path.getmtime(b) < os.path.getmtime(a)):
+    Image.open(a).save(b, 'WEBP', quality=90, method=6)
+PY
 # Low graphics: half-size copies of every picture (faster on old phones, and visibly softer)
 python3 - <<'PY'
 import os

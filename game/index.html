@@ -8,7 +8,6 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>ALAS-SAIS</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 16 16%27%3E%3Crect width=%2716%27 height=%2716%27 fill=%27%23000%27/%3E%3Ccircle cx=%278%27 cy=%278%27 r=%275%27 fill=%27none%27 stroke=%27%23b3261e%27 stroke-width=%272%27/%3E%3C/svg%3E">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;700&family=Special+Elite&family=Inter:wght@400;600&display=swap">
 <style>*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;height:100%;background:#000;overflow:hidden;overscroll-behavior:none;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 body{font-family:Inter,system-ui,sans-serif;color:#e9dfcb}
@@ -221,6 +220,68 @@ input[type=range]{width:100%;accent-color:#b3261e;height:30px}
 #scare.hit .redout{opacity:1}
 /* settings: Back sits beside the title so it never falls off short phone screens */
 #scr-settings #s-back{position:absolute;top:30px;right:34px;margin:0}
+/* FNAF-style hotspots: no text. A faint arrow marks each place; its name only shows while you press it (or hover, or for a
+   moment when you arrive). Views you stand at (door, window, aparador) take gestures anywhere: double-tap = light, hold = shut. */
+.spot .lbl{opacity:0;transition:opacity .25s;pointer-events:none}
+.spot:hover .lbl,.spot.press .lbl,.spot.down .lbl,.spot.focus .lbl,#hot.reveal .spot .lbl{opacity:.92}
+#hot.reveal .spot .lbl{transition:opacity 1.2s}
+.spot .dot{width:34px;height:34px;margin:-17px 0 0 -17px;border:none;border-radius:0;box-shadow:none;background:none;animation:arrowb 2.6s ease-in-out infinite}
+.spot .dot::after{inset:9px 9px 13px;border-radius:0;background:none;border-left:3px solid rgba(233,223,203,.55);border-top:3px solid rgba(233,223,203,.55);transform:rotate(45deg);filter:drop-shadow(0 0 6px rgba(0,0,0,.8))}
+@keyframes arrowb{0%,100%{opacity:.28;transform:translateY(0)}50%{opacity:.6;transform:translateY(-5px)}}
+.spot.press .dot,.spot:hover .dot{opacity:1;animation:none}
+.spot.hold .dot::after{border-color:rgba(224,90,60,.8)}
+.spot.down .dot{transform:scale(1.3);background:none}
+.spot.exit{background:linear-gradient(to top,rgba(0,0,0,.45),transparent)}
+.spot.exit .dot{display:block;top:auto;bottom:8px;margin-top:0}
+.spot.exit .dot::after{transform:rotate(225deg)}
+.spot.exit.up .dot::after{transform:rotate(45deg)}
+.spot.gesture .dot,.spot.gesture .lbl{display:none}
+.spot.gesture{cursor:crosshair}
+.spot.focus .dot{animation:focus .7s ease-in-out infinite;opacity:1}
+
+/* the game's own fonts, shipped with it */
+@font-face{font-family:Oswald;font-weight:400;src:url(assets/fonts/oswald-latin-400-normal.woff2) format('woff2');font-display:swap}
+@font-face{font-family:Oswald;font-weight:500;src:url(assets/fonts/oswald-latin-500-normal.woff2) format('woff2');font-display:swap}
+@font-face{font-family:Oswald;font-weight:700;src:url(assets/fonts/oswald-latin-700-normal.woff2) format('woff2');font-display:swap}
+@font-face{font-family:'Special Elite';src:url(assets/fonts/special-elite-latin-400-normal.woff2) format('woff2');font-display:swap}
+@font-face{font-family:Inter;font-weight:400;src:url(assets/fonts/inter-latin-400-normal.woff2) format('woff2');font-display:swap}
+@font-face{font-family:Inter;font-weight:600;src:url(assets/fonts/inter-latin-600-normal.woff2) format('woff2');font-display:swap}
+/* Blender lettering */
+img.wlogo{display:block;height:96px;width:auto;filter:drop-shadow(0 6px 18px rgba(0,0,0,.9))}
+img.w6am{display:block;height:120px;width:auto;margin:0 auto;filter:drop-shadow(0 6px 22px rgba(0,0,0,.9))}
+.mi img.wm{height:34px;width:auto;display:block;filter:drop-shadow(0 3px 6px rgba(0,0,0,.85));opacity:.86;transition:opacity .15s,transform .15s}
+.mi:hover img.wm,.mi:focus-visible img.wm{opacity:1;transform:translateX(6px)}
+.mi:disabled img.wm{opacity:.32}
+.mi{align-items:center}
+/* the phone: a Blender-rendered handset, the call screen drawn on its glass */
+.pp-phone,#phone{background:url(assets/ui/phone.webp) center/100% 100% no-repeat !important;border:0 !important;border-radius:0 !important;box-shadow:none !important}
+.pp-phone{position:relative;width:300px;height:600px;padding:38px 30px !important;filter:drop-shadow(0 30px 40px rgba(0,0,0,.9))}
+.pp-phone::before,#phone::before{content:"";position:absolute;left:10%;top:6.33%;width:80%;height:87.33%;border-radius:17px;background:linear-gradient(180deg,#16241a 0%,#0c140e 45%,#050806 100%);z-index:0}
+.pp-phone>*,#phone>*{position:relative;z-index:1}
+.pp-scr{background:none !important;padding:26px 8px 0 !important}
+.pp-top{font:500 12px Inter,sans-serif !important;letter-spacing:.5px !important;color:#cfd8cc !important}
+.pp-av{background:radial-gradient(circle at 40% 35%,#4a3a2a,#1e1812) !important;box-shadow:0 0 0 3px rgba(224,162,74,.25)}
+.pp-who{font:600 30px Inter,sans-serif !important;letter-spacing:0 !important;color:#f3efe6}
+.pp-btns{padding:0 18px 26px !important;justify-content:center}
+.pp-btns button{flex:0 0 auto !important;width:76px;min-height:76px !important;border-radius:50% !important;font:600 0px Inter,sans-serif !important;position:relative;box-shadow:0 0 0 8px rgba(46,125,50,.18),0 0 0 16px rgba(46,125,50,.08);animation:ansp 1.4s ease-in-out infinite}
+.pp-btns button::after{content:"";position:absolute;inset:0;background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='white' d='M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1A17 17 0 0 1 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1l-2.3 2.2z'/></svg>") center/34px no-repeat}
+@keyframes ansp{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+#phone{width:220px !important;height:440px;padding:30px 24px !important;left:30px !important;bottom:-150px !important;transform:translateY(130%) rotate(-5deg);filter:drop-shadow(0 20px 30px rgba(0,0,0,.9))}
+#phone.show{transform:translateY(0) rotate(-5deg)}
+#phone.talk{width:220px !important;padding:30px 24px !important}
+#phone .ph-top{background:none !important;padding:4px 2px !important;font:500 11px Inter,sans-serif !important;color:#cfd8cc !important;letter-spacing:.5px !important}
+#phone .ph-who{flex-direction:column;gap:8px;margin:18px 0 !important}
+#phone .ph-av{width:64px;height:64px;font-size:30px}
+#phone .ph-who b{font:600 22px Inter,sans-serif !important;color:#f3efe6}
+#phone .ph-btns{gap:22px;justify-content:center}
+#phone .ph-btns button{flex:0 0 auto !important;width:58px;min-height:58px !important;height:58px;border-radius:50% !important;font-size:0 !important;position:relative}
+#phone .ph-btns button::after{content:"";position:absolute;inset:0;background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='white' d='M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1A17 17 0 0 1 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1l-2.3 2.2z'/></svg>") center/26px no-repeat}
+#phone .ph-btns .ph-r::after{transform:rotate(135deg)}
+#phone.talk .ph-btns .ph-r{width:52px;height:52px;min-height:52px !important}
+
+.spot.left .dot::after{transform:rotate(-45deg)}
+.spot.right .dot::after{transform:rotate(135deg)}
+.spot.downarrow .dot::after{transform:rotate(225deg)}
 </style>
 </head>
 <body>
@@ -279,7 +340,7 @@ input[type=range]{width:100%;accent-color:#b3261e;height:30px}
     <div id="mbg"><img id="mbg-on" alt=""><img id="mbg-off" alt=""><img id="mbg-lit" alt=""><div id="mbg-fog"></div><div id="mbg-shade"></div></div>
     <div class="lang"><button class="btn langbtn" data-lang="en" type="button">ENGLISH</button><button class="btn langbtn" data-lang="fil" type="button">FILIPINO</button></div>
     <div style="position:absolute;left:90px;top:70px;display:flex;flex-direction:column;gap:22px">
-      <div><h1 class="logo">ALAS-SAIS</h1><p class="sub" id="m-sub"></p></div>
+      <div><h1 class="logo"><img class="wlogo" src="assets/ui/logo.webp" alt="ALAS-SAIS"></h1><p class="sub" id="m-sub"></p></div>
       <div class="menu">
         <button class="mi" id="m-cont" type="button"><span data-t="cont"></span><small></small></button>
         <button class="mi" id="m-new" type="button" data-t="new_game"></button>
@@ -374,7 +435,7 @@ input[type=range]{width:100%;accent-color:#b3261e;height:30px}
 
   <div id="scr-win" class="scr" style="background:radial-gradient(ellipse at 50% 30%,#3a2a18,#07080a 70%)"><div class="center">
     <p class="sub" id="win-n"></p>
-    <h1 class="logo" style="font-size:110px">6:00 AM</h1>
+    <h1 class="logo"><img class="w6am" src="assets/ui/t_6am.webp" alt="6:00 AM"></h1>
     <p class="sub" data-t="survived"></p>
     <p class="note" id="win-time"></p>
     <div class="row2"><button class="cta red" id="w-next" type="button" data-t="next"></button><button class="cta" id="w-menu" type="button" data-t="main_menu"></button></div>
@@ -424,7 +485,7 @@ var STR = {
     a_close_short: 'Close', a_lights: 'Light switch', a_salt_jar: 'Asin', a_door: 'Door',
     c1_all: 'The door, the curtain, the aparador. All three are awake tonight.', c1_final: 'The power goes out at 4:00 AM. Save your flashlight.',
     c1_end: 'The bell rings over San Lucio. Sunlight comes through the window bars. Your phone buzzes: "You made it, anak. Tonight you sleep in the sala. Lock the bedroom."',
-    h_door1: 'Press and HOLD the door to keep it shut',
+    h_door1: 'Double-tap: flashlight · Press and HOLD anywhere: keep the door shut',
     chapters: 'Chapters', custom_night: 'Custom Night', soon: 'Coming soon', ch_n: 'Chapter {n}',
     ch_names: { 1: "Lola's Bedroom", 2: 'The Hallway', 3: 'The Whole House' },
     ch_desc: { 1: 'Five nights. You never leave the bedroom.', 2: 'Five nights. The hallway, the living room and the kitchen. The bedroom is locked.', 3: 'Seven nights. Every room is open now.' },
@@ -449,9 +510,9 @@ var STR = {
     made_desc: 'A current student who created an original survival horror game inspired by Five Nights at Freddy\'s 4.',
     attributions: 'Scenes rendered in Blender (Cycles) · Sound effects and music synthesized for this game · Tita Cora\'s voice: Microsoft neural text-to-speech (fil-PH Blessica) · Fonts: Oswald, Special Elite, Inter (SIL Open Font License) · Entities inspired by Filipino folklore: Batibat, Manananggal, Mambabarang, Tiyanak, Aswang.',
     c1_hint: {
-      kumot: 'The door never closes on its own. Listen at it. Tap to shine your light down the hallway and see where she is. When she is close, HOLD the door shut for about five seconds. Never shine the light when she is breathing right behind it. If she gets in, hide under the bed and keep holding your breath until she leaves.',
-      silip: 'The curtain stays closed. Open it to check where she is. When she is close or at the window, close it and HOLD it until she flies away. If she reaches the window and nobody holds the curtain, she tears through.',
-      barang: 'Check the aparador. When you hear crawling or the door creaks, hold your flashlight on it until it shuts again.'
+      kumot: 'The door never closes on its own. Listen at it. Double-tap anywhere to switch your flashlight on down the hallway (double-tap again to switch it off). When she is close, HOLD the door shut for about five seconds. Never shine the light when she is breathing right behind it. If she gets in, hide under the bed and keep holding your breath until she leaves.',
+      silip: 'The curtain stays closed. Double-tap to open it and check where she is. When she is close or at the window, press and HOLD anywhere to pull it shut until she flies away. If she reaches the window and nobody holds the curtain, she tears through.',
+      barang: 'Check the aparador. When you hear crawling or the door creaks, double-tap to keep your flashlight on it until it shuts again.'
     },
     rooms: { bedroom: 'Bedroom', hall: 'Hallway', living: 'Living room', kitchen: 'Kitchen', curtain: 'Curtain' },
     run: 'Run', walk: 'Walk',
@@ -506,7 +567,7 @@ var STR = {
     a_close_short: 'Isara', a_lights: 'Switch ng ilaw', a_salt_jar: 'Asin', a_door: 'Pinto',
     c1_all: 'Ang pinto, ang kurtina, ang aparador. Gising silang tatlo ngayong gabi.', c1_final: 'Mamamatay ang kuryente pagsapit ng alas-kuwatro. Tipirin ang flashlight.',
     c1_end: 'Tumunog ang kampana sa San Lucio. Pumasok ang araw sa rehas ng bintana. Nag-text si Tita: "Nakaraos ka, anak. Mamayang gabi, sa sala ka na matulog. I-lock mo ang kwarto."',
-    h_door1: 'Pindutin at HAWAKAN ang pinto para manatiling sarado',
+    h_door1: 'Double-tap: flashlight · Pindutin nang MATAGAL kahit saan: isara ang pinto',
     chapters: 'Mga Kabanata', custom_night: 'Custom Night', soon: 'Malapit na', ch_n: 'Kabanata {n}',
     ch_names: { 1: 'Ang Kwarto ni Lola', 2: 'Ang Pasilyo', 3: 'Ang Buong Bahay' },
     ch_desc: { 1: 'Limang gabi. Hindi ka lalabas ng kwarto.', 2: 'Limang gabi. Pasilyo, sala at kusina. Naka-lock ang kwarto.', 3: 'Pitong gabi. Bukas na ang lahat ng kwarto.' },
@@ -531,9 +592,9 @@ var STR = {
     made_desc: 'Isang estudyante na gumawa ng orihinal na survival horror game na hango sa Five Nights at Freddy\'s 4.',
     attributions: 'Mga eksenang ni-render sa Blender (Cycles) · Mga sound effect at musikang ginawa para sa larong ito · Boses ni Tita Cora: Microsoft neural text-to-speech (fil-PH Blessica) · Fonts: Oswald, Special Elite, Inter (SIL Open Font License) · Mga nilalang na hango sa alamat ng Pilipinas: Batibat, Manananggal, Mambabarang, Tiyanak, Aswang.',
     c1_hint: {
-      kumot: 'Hindi kusang sumasara ang pinto. Pakinggan mo. I-tap para ilawan ang pasilyo at makita kung nasaan siya. Kapag malapit na, HAWAKAN ang pinto nang mga limang segundo. Huwag mong iilawan kapag humihinga na siya sa likod nito. Kapag nakapasok, magtago sa ilalim ng kama at pigilan ang hininga hanggang umalis siya.',
-      silip: 'Laging sarado ang kurtina. Buksan mo para silipin kung nasaan siya. Kapag malapit na o nasa bintana na, isara at HAWAKAN hanggang lumipad siya palayo. Kapag umabot siya sa bintana at walang humahawak, pupunitin niya ang kurtina.',
-      barang: 'Bantayan ang aparador. Kapag may gumagapang o lumangitngit ang pinto nito, ilawan nang matagal hanggang sumara ulit.'
+      kumot: 'Hindi kusang sumasara ang pinto. Pakinggan mo. I-double-tap kahit saan para buksan ang flashlight sa pasilyo (i-double-tap ulit para patayin). Kapag malapit na, HAWAKAN ang pinto nang mga limang segundo. Huwag mong iilawan kapag humihinga na siya sa likod nito. Kapag nakapasok, magtago sa ilalim ng kama at pigilan ang hininga hanggang umalis siya.',
+      silip: 'Laging sarado ang kurtina. I-double-tap para buksan at silipin kung nasaan siya. Kapag malapit na o nasa bintana na, pindutin nang MATAGAL kahit saan para isara at hawakan hanggang lumipad siya palayo. Kapag umabot siya sa bintana at walang humahawak, pupunitin niya ang kurtina.',
+      barang: 'Bantayan ang aparador. Kapag may gumagapang o lumangitngit ang pinto nito, i-double-tap para ilawan ito hanggang sumara ulit.'
     },
     rooms: { bedroom: 'Kwarto', hall: 'Pasilyo', living: 'Sala', kitchen: 'Kusina', curtain: 'Kurtina' },
     run: 'Takbo', walk: 'Lakad',
@@ -1073,15 +1134,17 @@ var C1 = (function () {
           if (g.house.curtain) { g.house.curtain = false; emit('curtain_close'); if (g.s.phase === 'seen') { g.s.phase = ''; emit('silip_grip'); } }
           else { g.house.curtain = true; emit('curtain_open'); if (g.s.st === 3) seen(); }
           return true;
-        case 'peek':   // shine the light through the gap in the door
-          if (p.pos !== 'door' || p.holdDoor || p.battery <= 0) return false;
-          p.peek = 1.4; p.battery = Math.max(0, p.battery - 3); emit('peek', { st: g.k.on ? Math.min(3, g.k.st) : 0 });
+        case 'peek':   // flashlight down the hall through the gap: on until you switch it off (double-tap again)
+          if (p.pos !== 'door') return false;
+          if (p.peek > 0) { p.peek = 0; emit('peek_off'); return true; }
+          if (p.holdDoor || p.battery <= 0) return false;
+          p.peek = 1; p.peekSt = g.k.on ? Math.min(3, g.k.st) : 0; p.battery = Math.max(0, p.battery - 1); emit('peek', { st: p.peekSt });
           if (g.k.st === 3) { g.k.win = Math.min(g.k.win, 1.1); emit('kumot_startled'); }   // she was right there: she shoves
           return true;
       }
       return false;
     };
-    function releaseAll() { var p = g.p; if (p.holdDoor) { p.holdDoor = false; emit('door_release'); } p.holdCurtain = false; p.holdBreath = false; if (p.light) { p.light = false; emit('light', { on: false }); } }
+    function releaseAll() { var p = g.p; if (p.peek > 0) { p.peek = 0; emit('peek_off'); } if (p.holdDoor) { p.holdDoor = false; emit('door_release'); } p.holdCurtain = false; p.holdBreath = false; if (p.light) { p.light = false; emit('light', { on: false }); } }
     g.hold = function (what, on) {
       var p = g.p; if (g.over || p.travel) { if (!on) { p.holdDoor = p.holdCurtain = p.holdBreath = false; p.light = false; } return; }
       if (what === 'door') {
@@ -1185,7 +1248,11 @@ var C1 = (function () {
         if (p.travel.left <= 0) { var to = p.travel.to, fr = p.travel.from; p.travel = null; p.pos = to; emit('arrive', { to: to, from: fr }); if (to === 'bed') emit('hide'); if (fr === 'bed') emit('unhide'); }
       }
       if (p.light) { p.battery -= dt * (g.house.power ? 2.0 : 1.6); if (p.battery <= 0) { p.battery = 0; p.light = false; emit('light', { on: false }); emit('battery_dead'); } }
-      if (p.peek > 0) p.peek = Math.max(0, p.peek - dt);
+      if (p.peek > 0) {   // the light is on down the hall: it drains, and shows her wherever she moves to
+        p.battery -= dt * 2.2;
+        if (p.battery <= 0) { p.battery = 0; p.peek = 0; emit('peek_off'); emit('battery_dead'); }
+        else { var ps = g.k.on ? Math.min(3, g.k.st) : 0; if (ps !== p.peekSt) { p.peekSt = ps; emit('peek', { st: ps, moved: true }); } }
+      }
       if (p.holdBreath) { p.breath -= dt; if (p.breath <= 0) { p.breath = 0; p.holdBreath = false; emit('gasp'); } }
       else p.breath = Math.min(p.breathMax, p.breath + dt * 2.2);
       if (g.blackoutAt && g.house.power && g.hour() >= g.blackoutAt) { g.house.power = false; emit('blackout'); }
@@ -1230,6 +1297,8 @@ if (typeof module !== 'undefined') module.exports = C1;
   if (typeof PROLOGUE !== 'undefined') Object.keys(PROLOGUE).forEach(function (n) { PROLOGUE[n].forEach(function (_, i) { VOICE.push('pro_' + n + '_' + pad2(i)); }); });
   var WHO_IMG = { kumot: 'scare_kumot', malik: 'scare_malikmata', kal: 'scare_kalansing', silip: 'scare_silip', barang: 'c1_scare_barang' };
   var WHO_SFX = { kumot: 'jumpscare_kumot', malik: 'jumpscare_malikmata', kal: 'jumpscare_kalansing', silip: 'jumpscare_silip', barang: 'jumpscare_barang' };
+  var WORDS = ['cont', 'new_game', 'chapters', 'custom_night', 'settings', 'credits', 'quit', 'resume', 'restart', 'main_menu'];
+  var lightLatch = false;   // a flashlight switched on by double-tap stays on after the finger lifts
   var JS = { kumot: 'kumot', malik: 'malikmata', kal: 'kalansing', silip: 'silip', barang: 'barang' }, scareTimers = [];
   function preloadScares() { Object.keys(JS).forEach(function (w) { for (var f = 0; f < 8; f++) { var k = 'js_' + JS[w] + '_' + f; if (!imgs[k + IMGDIR()]) { var i = new Image(); i.src = IMGDIR() + k + '.jpg'; imgs[k + IMGDIR()] = i; } } }); }
   var HERO = { kumot: 'hero_kumot', malik: 'hero_malikmata', kal: 'hero_kalansing', silip: 'hero_silip', barang: 'hero_barang' };
@@ -1348,6 +1417,13 @@ if (typeof module !== 'undefined') module.exports = C1;
   function renderTexts() {
     document.documentElement.lang = save.set.lang === 'fil' ? 'fil' : 'en';
     document.querySelectorAll('[data-t]').forEach(function (el) { el.textContent = T(el.getAttribute('data-t')); });
+    // menu words are Blender-rendered lettering (the text stays as the image's alt for screen readers)
+    document.querySelectorAll('.mi [data-t], .mi[data-t]').forEach(function (el) {
+      var k = el.getAttribute('data-t'); if (WORDS.indexOf(k) < 0) return;
+      var im = document.createElement('img'); im.className = 'wm'; im.alt = T(k); im.src = 'assets/ui/w_' + (save.set.lang === 'fil' ? 'fil' : 'en') + '_' + k + '.webp';
+      im.onerror = function () { el.textContent = T(k); };
+      el.textContent = ''; el.appendChild(im);
+    });
     $('m-sub').textContent = T('title_sub');
     var cur = save.cur;
     $('m-cont').querySelector('small').textContent = T('ch_n', cur.ch) + ' · ' + T('night_n', cur.n);
@@ -1853,6 +1929,7 @@ if (typeof module !== 'undefined') module.exports = C1;
   var heldKeys = {};
   var hotSig = '';
   function releaseHolds() {
+    lightLatch = false;
     if (game) ['door', 'breath', 'curtain', 'light'].forEach(function (h) { game.hold(h, false); });
     stopBreath(); if (holdH) { stop(holdH, 0.2); holdH = null; }
     document.querySelectorAll('.spot.down').forEach(function (b) { b.classList.remove('down'); });
@@ -1922,10 +1999,12 @@ if (typeof module !== 'undefined') module.exports = C1;
     var down = false, held = false, timer = 0;
     el.addEventListener('pointerdown', function (e) {
       e.preventDefault(); e.stopPropagation(); try { el.setPointerCapture(e.pointerId); } catch (x) {}
-      down = true; held = false;
-      if (s.hold) timer = setTimeout(function () { if (down) { held = true; el.classList.add('down'); doHold(s.hold, true); } }, 130);
+      down = true; held = false; el.classList.add('press');
+      if (s.gesture) beam = toStage(e);
+      if (s.hold) timer = setTimeout(function () { if (down) { held = true; el.classList.add('down'); if (s.preHold) s.preHold(); doHold(s.hold, true); } }, s.gesture ? 210 : 130);
     });
     var up = function () {
+      el.classList.remove('press');
       if (!down) return; down = false; clearTimeout(timer);
       if (held) { held = false; el.classList.remove('down'); doHold(s.hold, false); return; }
       if (s.tap) { s.tap(); return; }
@@ -1940,6 +2019,7 @@ if (typeof module !== 'undefined') module.exports = C1;
     var sig = (p.room || p.pos) + p.hidden + S.map(function (s) { return s.id + s.label + (s.cls || ''); }).join('|') + lightAllowed();
     if (sig === hotSig) return;
     hotSig = sig; releaseHolds(); box.innerHTML = '';
+    box.classList.add('reveal'); clearTimeout(box._rv); box._rv = setTimeout(function () { box.classList.remove('reveal'); }, 1400);
     box.classList.toggle('dim', g.night >= 3);
     // background: hold for flashlight (dark places) or breath (under the bed)
     var bg = document.createElement('div'); bg.id = 'hotbg'; box.appendChild(bg);
@@ -1952,7 +2032,8 @@ if (typeof module !== 'undefined') module.exports = C1;
       bg.addEventListener('pointerup', off); bg.addEventListener('pointercancel', off); bg.addEventListener('lostpointercapture', off);
     }
     S.forEach(function (s) {
-      var el = document.createElement('div'); el.className = 'spot ' + (s.cls || ''); el.setAttribute('data-spot', s.id);
+      var dir = /^\s*◀/.test(s.label || '') ? ' left' : /▶\s*$/.test(s.label || '') ? ' right' : /^\s*▼/.test(s.label || '') ? ' downarrow' : '';
+      var el = document.createElement('div'); el.className = 'spot ' + (s.cls || '') + dir; el.setAttribute('data-spot', s.id); el.setAttribute('aria-label', (s.label || '').replace(/[◀▶▼▲]/g, '').trim());
       el.style.left = s.x + '%'; el.style.top = s.y + '%'; el.style.width = s.w + '%'; el.style.height = s.h + '%';
       el.innerHTML = '<i class="dot"></i><span class="lbl"></span>'; el.querySelector('.lbl').textContent = s.label;
       if (call && call.focus === s.id) el.classList.add('focus');
@@ -2029,7 +2110,8 @@ if (typeof module !== 'undefined') module.exports = C1;
   }
   function c1Spots() {
     var g = game, p = g.p, H = g.house, S = [];
-    var back = { id: 'back', x: 28, y: 86, w: 44, h: 14, cls: 'exit', label: '▼  ' + T('s_back').toUpperCase(), tap: function () { c1Go('center'); } };
+    var back = { id: 'back', x: 36, y: 86, w: 28, h: 14, cls: 'exit', label: T('s_back').toUpperCase(), tap: function () { c1Go('center'); } };
+    var lightToggle = function () { if (!game) return; var on = !game.p.light; doHold('light', on); lightLatch = on && game.p.light; };
     switch (p.pos) {
       case 'center':
         S.push({ id: 'door', x: 31, y: 35, w: 12, h: 42, label: T('s_door'), tap: function () { c1Go('door'); } });
@@ -2037,17 +2119,17 @@ if (typeof module !== 'undefined') module.exports = C1;
         S.push({ id: 'curtain', x: 68, y: 16, w: 27, h: 62, label: T('s_window'), tap: function () { c1Go('window'); } });
         S.push({ id: 'bed', x: 0, y: 66, w: 25, h: 34, label: T('s_bed'), tap: function () { act('hide'); } });
         break;
-      case 'door':
-        S.push({ id: 'door', x: 18, y: 4, w: 64, h: 80, cls: 'hold', label: T('s_door_use'), hold: 'door', tap: function () { act('peek'); } });
+      case 'door':     // anywhere: double-tap = flashlight down the hall (again = off), hold = shut the door and keep it shut
+        S.push({ id: 'door', x: 0, y: 0, w: 100, h: 85, cls: 'gesture', gesture: true, label: '', hold: 'door', dbl: function () { act('peek'); } });
         S.push(back); break;
-      case 'window':
-        if (!H.curtain) S.push({ id: 'curtain', x: 26, y: 6, w: 48, h: 74, cls: 'hold', label: T('s_curtain_use'), hold: 'curtain', tap: function () { act('curtain'); } });
-        else S.push({ id: 'curtain', x: 4, y: 6, w: 92, h: 74, label: T('s_curtain_close'), tap: function () { act('curtain'); } });
+      case 'window':   // double-tap = open / close the curtain to look, hold = pull it shut and hold it
+        S.push({ id: 'curtain', x: 0, y: 0, w: 100, h: 85, cls: 'gesture', gesture: true, label: '', hold: 'curtain', preHold: function () { if (game && game.house.curtain) act('curtain'); }, dbl: function () { act('curtain'); } });
         S.push(back); break;
-      case 'cabinet':
+      case 'cabinet':  // double-tap = flashlight on the aparador (again = off)
+        S.push({ id: 'cabinet', x: 0, y: 0, w: 100, h: 85, cls: 'gesture', gesture: true, label: '', dbl: lightToggle });
         S.push(back); break;
       case 'bed':
-        S.push({ id: 'out', x: 28, y: 86, w: 44, h: 14, cls: 'exit', label: '▲  ' + T('s_out').toUpperCase(), tap: function () { act('unhide'); } });
+        S.push({ id: 'out', x: 36, y: 86, w: 28, h: 14, cls: 'exit up', label: T('s_out').toUpperCase(), tap: function () { act('unhide'); } });
         break;
     }
     return S;
@@ -2087,7 +2169,13 @@ if (typeof module !== 'undefined') module.exports = C1;
       case 'travel': c1Travel(d); break;
       case 'arrive': if (d.to !== 'bed' && d.from !== 'bed') c1Arrive(d); break;
       case 'door_shut': if (isC1()) { c1Swing(true); break; } play('door_close_shut', { vol: 0.85 }); setView(true, true); jolt(); break;
-      case 'peek': peekSt = d.st >= 2 ? d.st : 0;   /* Chapter 1 has two sightings: down the hall (2) and at the door (3) */ play('flashlight_on', { vol: 0.5 }); play('door_creak', { vol: 0.3 }); setView(true, true); if (d.st === 3) { play('wheeze', { vol: 1 }); jolt(); flashRed(); } break;
+      case 'peek':   /* Chapter 1 has two sightings: down the hall (2) and at the door (3); the light stays on until switched off */
+        peekSt = d.st >= 2 ? d.st : 0;
+        if (!d.moved) { play('flashlight_on', { vol: 0.5 }); play('door_creak', { vol: 0.3 }); }
+        setView(true, !d.moved);
+        if (d.st === 3) { play('wheeze', { vol: 1 }); jolt(); flashRed(); }
+        break;
+      case 'peek_off': play('flashlight_click', { vol: 0.45 }); setView(true, true); break;
       case 'kumot_startled': play('door_slam', { vol: 0.5, delay: 0.3 }); break;
       case 'silip_tear': play('curtain_open_pull', { vol: 1 }); break;
       case 'door_release': if (isC1()) { c1Swing(false); break; } play('door_creak', { vol: 0.35 }); setView(true, true); break;
@@ -2525,7 +2613,7 @@ if (typeof module !== 'undefined') module.exports = C1;
     // stop all holds if the finger leaves the screen anywhere
     var fingers = 0;
     window.addEventListener('pointerdown', function () { fingers++; }, true);
-    var up = function () { fingers = Math.max(0, fingers - 1); if (fingers === 0 && game && !heldKeys.space) { var any = game.p.holdDoor || game.p.holdBreath || game.p.holdCurtain || (game.p.light && !heldKeys.f); if (any) { releaseHolds(); document.querySelectorAll('.btn.down').forEach(function (b) { b.classList.remove('down'); }); } } };
+    var up = function () { fingers = Math.max(0, fingers - 1); if (fingers === 0 && game && !heldKeys.space) { var any = game.p.holdDoor || game.p.holdBreath || game.p.holdCurtain || (game.p.light && !heldKeys.f && !lightLatch); if (any) { releaseHolds(); document.querySelectorAll('.btn.down').forEach(function (b) { b.classList.remove('down'); }); } } };
     window.addEventListener('pointerup', up, true); window.addEventListener('pointercancel', up, true);
     window.addEventListener('blur', function () { if (game) ['door', 'breath', 'curtain', 'light'].forEach(function (h) { game.hold(h, false); }); stopBreath(); });
   }

@@ -1,0 +1,22 @@
+const puppeteer = require('puppeteer-core');
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+(async () => {
+  const browser = await puppeteer.launch({ executablePath: '/usr/bin/google-chrome', headless: 'new', args: ['--no-sandbox', '--mute-audio'] });
+  const page = await browser.newPage(); const errors = [];
+  page.on('pageerror', e => errors.push(e.message));
+  await page.setViewport({ width: 844, height: 390, isMobile: true, hasTouch: true, deviceScaleFactor: 2 });
+  await page.evaluateOnNewDocument(() => { localStorage.clear(); });
+  await page.goto('http://127.0.0.1:8765/index.html', { waitUntil: 'networkidle0' });
+  await page.waitForFunction(() => document.getElementById('load-go').style.visibility === 'visible', { timeout: 60000 });
+  await page.click('#load-go'); await sleep(800);
+  await page.evaluate(() => { window.__AS_NOCALL = true; window.__AS_UI.startNight(5, 3); }); await sleep(600);
+  await page.click('#intro-go'); await sleep(1800);
+  await page.evaluate(() => { const g = window.__AS_UI.game; g.level = () => 0; window.__AS_UI.go('kitchen'); });
+  await page.waitForFunction(() => { const g = window.__AS_UI.game; return g && !g.p.travel && g.p.room === 'kitchen'; }, { timeout: 15000 });
+  const cdp = await page.target().createCDPSession();
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: 560, y: 150 }] }); await sleep(600);
+  console.log('light:', await page.evaluate(() => window.__AS_UI.game.p.light), 'lit filter:', await page.evaluate(() => document.getElementById('litImg').style.filter));
+  await page.screenshot({ path: '/tmp/torch.png' });
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+  console.log('errors', errors.join(';') || 'none'); await browser.close();
+})();
