@@ -378,7 +378,7 @@ if VIEW == 'hall':          # Chapter 2 hub: standing at the back-door end of th
 elif VIEW == 'kitchen':     # in the kitchen doorway area looking at the counter wall (the hall door on the right)
     camera(KW(-0.2, 0.15, 1.55), KW(0.1, KDIM[1], 1.05), lens=21)
 elif VIEW == 'kitchen_hide':   # inside the low cabinet on the kitchen's side wall: the hall door is on the left
-    camera(KW(-1.75, 2.75, 0.42), KW(1.3, 3.2, 0.75), lens=20)
+    camera(KW(-2.0, 0.9, 0.45), KW(1.3, 2.4, 0.7), lens=20)
 elif VIEW == 'living':
     camera(LW(-0.35, 1.0, 1.55), LW(0.25, LDIM[1], 1.1), lens=22)
 elif VIEW == 'plan':   # debug: the whole house from above, cut at ceiling height
