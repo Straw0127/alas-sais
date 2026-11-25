@@ -195,6 +195,17 @@ input[type=range]{width:100%;accent-color:#b3261e;height:30px}
 @keyframes pzshake{0%,100%{transform:none}25%{transform:translateX(-10px)}75%{transform:translateX(10px)}}
 .pzm{margin-top:12px;font:500 17px Inter,sans-serif;color:#cdb99b;min-height:22px}
 .pzl{margin-top:12px;background:none;border:1px solid #5a4632;color:#cdb99b;border-radius:20px;padding:6px 18px;font:500 15px Inter,sans-serif}
+
+.cumodes{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:6px 0 12px}
+.cumode{background:#1b1612;border:1px solid #3a2f24;color:#e8d8bf;border-radius:10px;padding:8px 6px;font:500 14px Inter,sans-serif;line-height:1.25}
+.cumode.on{border-color:#e0a24a;background:#2a1f14}
+.cumode small{display:block;color:#9b8a72;font-size:11px;margin-top:2px}
+.cuai{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+.cuent{background:#141210;border:1px solid #33291f;border-radius:10px;padding:8px;text-align:center}
+.cuent img{width:100%;height:64px;object-fit:cover;border-radius:6px;filter:saturate(.7)}
+.cuent b{display:block;color:#e8d8bf;font:600 14px Oswald,sans-serif;letter-spacing:.06em;margin:4px 0}
+.cuent .lv{font:600 26px Oswald,sans-serif;color:#f2c46b}
+.cuent button{width:36px;height:32px;margin:2px;border-radius:8px;border:1px solid #4a3a28;background:#231d17;color:#e8d8bf;font:600 18px Inter,sans-serif}
 </style>
 </head>
 <body>
@@ -269,6 +280,14 @@ input[type=range]{width:100%;accent-color:#b3261e;height:30px}
   <div id="scr-nights" class="scr"><div class="panel">
     <h2 data-t="chapters"></h2><div id="night-list" class="chlist"></div>
     <div><button class="cta" id="n-back" type="button" data-t="back"></button></div>
+  </div></div>
+
+  <div id="scr-custom" class="scr"><div class="panel">
+    <h2 data-t="custom_night"></h2>
+    <div id="cu-modes" class="cumodes"></div>
+    <div id="cu-ai" class="cuai"></div>
+    <p class="note" id="cu-rec"></p>
+    <div class="row2"><button class="cta red" id="cu-go" type="button" data-t="cu_start"></button><button class="cta" id="cu-back" type="button" data-t="back"></button></div>
   </div></div>
 
   <div id="scr-settings" class="scr"><div class="panel">
@@ -365,7 +384,7 @@ input[type=range]{width:100%;accent-color:#b3261e;height:30px}
 
 </div></div>
 <div id="rotate"><div class="ph"></div><div data-t="rotate"></div><button class="cta" id="rot-ok" type="button" data-t="play_anyway"></button></div>
-<script>var CALLS = {"c1n1": [{"fil": "Migo, gising ka pa? Huwag mong kalimutan ang pinto.", "en": "Migo, still awake? Don't forget the door."}, {"fil": "Pakinggan mo muna. Kapag may humihinga na sa kabila, huwag mo nang ilawan. Isara mo na lang, at huwag kang bibitaw.", "en": "Listen first. If something is already breathing on the other side, don't shine your light. Just close it, and don't let go."}], "c1n2": [{"fil": "Migo, kapag tumahimik ang mga kuliglig sa labas, silipin mo ang kurtina.", "en": "Migo, when the crickets outside go quiet, check behind the curtain."}, {"fil": "Kapag nakita mo siyang papalapit, isara mo at hawakan. Matagal bago siya sumuko, kaya huwag mong bibitawan.", "en": "If you see her coming, close it and hold it. She takes a long time to give up, so don't let go."}], "c1n3": [{"fil": "Migo, may narinig ka bang gumagapang sa loob ng aparador?", "en": "Migo, have you heard something crawling inside the aparador?"}, {"fil": "Ilawan mo. Paulit-ulit. Huwag mong hayaang bumukas nang tuluyan ang pinto niyan.", "en": "Shine your light on it. Again and again. Don't let that door swing all the way open."}], "c1n4": [{"fil": "Gising silang lahat ngayong gabi. Ang pinto, ang kurtina, ang aparador.", "en": "They're all awake tonight. The door, the curtain, the aparador."}, {"fil": "Makinig ka lang. Sila mismo ang magsasabi sa'yo kung nasaan sila.", "en": "Just listen. They'll tell you where they are."}], "c1n5": [{"fil": "Migo, papatayin daw ang kuryente sa barangay mamayang alas-kuwatro.", "en": "Migo, they said the barangay will cut the power at four."}, {"fil": "Tipirin mo ang flashlight. Kahit anong marinig mo, huwag kang lalabas ng kwarto.", "en": "Save your flashlight. Whatever you hear, don't leave the room."}, {"fil": "Migo? Bakit bukas ang ilaw diyan? Akala ko wala nang kuryente.", "en": "Migo? Why is the light on over there? I thought the power was out."}], "c2n1": [{"fil": "Migo, si Tita Cora ulit. Nakaligtas ka sa kwarto ng Lola mo. Pero simula ngayong gabi, huwag ka nang babalik doon.", "en": "Migo, it's Tita Cora again. You survived your Lola's room. But from tonight on, don't go back in there."}, {"fil": "Dito ka na sa pasilyo. Mula diyan, abot mo ang sala, ang kusina, at ang kurtina sa likod na pinto.", "en": "Stay in the hallway now. From there you can reach the living room, the kitchen and the curtain on the back door."}, {"fil": "Kapag bumukas nang kusa ang TV sa sala at may umiiyak na sanggol, puntahan mo agad at patayin ang TV.", "en": "If the TV in the living room turns on by itself and you hear a baby crying, go at once and switch it off."}, {"fil": "Kapag tumawa na siya, huwag mong buksan ang ilaw. Magtago ka sa sopa at huwag kang gagalaw.", "en": "If it starts laughing, don't turn on the light. Hide on the sofa and don't move."}, {"fil": "At ang kurtina sa likod. Kapag tumahimik ang kuliglig, silipin mo. Kapag nasa salamin na siya, isara at hawakan.", "en": "And the curtain at the back. When the crickets go quiet, look. If she's at the glass, close it and hold it."}], "c2n2": [{"fil": "Migo, may naririnig ka bang kalansing sa kusina? Parang kutsara at kutsilyong nagbabanggaan?", "en": "Migo, do you hear clinking in the kitchen? Like spoons and knives knocking together?"}, {"fil": "Ang asin sa garapon, sa tabi ng kalan. Kapag papalapit na ang kalansing, ihagis mo ang asin.", "en": "The salt in the jar, beside the stove. When the clinking comes close, throw the salt."}, {"fil": "Kapag nasa loob na siya ng kusina, magtago ka sa paminggalan at huwag kang gagalaw kahit anong mangyari.", "en": "If it's already inside the kitchen, hide in the cupboard and don't move, no matter what."}], "c2n3": [{"fil": "Gising na silang tatlo, Migo. Ang TV, ang kusina, ang kurtina.", "en": "All three are awake now, Migo. The TV, the kitchen, the curtain."}, {"fil": "Huwag kang tatakbo kung hindi kailangan. Naririnig nila ang yabag mo.", "en": "Don't run unless you have to. They can hear your footsteps."}], "c2n4": [{"fil": "Migo, makinig ka. Ngayong gabi, may papatay ng kuryente mula sa may sala. Hindi brownout iyon.", "en": "Migo, listen. Tonight someone will switch the power off from the living room side. It isn't a brownout."}, {"fil": "Nasa kusina ang breaker. Tandaan mo ang pagkakasunod ng mga ilaw, saka mo ulitin. Isang beses lang niya ipapakita.", "en": "The breaker is in the kitchen. Remember the order of the lights, then repeat it. It shows only once."}], "c2n5": [{"fil": "Huling gabi sa labas ng kwarto, Migo. Dalawang beses nilang papatayin ang kuryente.", "en": "Last night outside the bedroom, Migo. They will cut the power twice."}, {"fil": "Tipirin mo ang flashlight. Kapag nagkamali ka sa breaker, maririnig nila.", "en": "Save your flashlight. If you get the breaker wrong, they will hear it."}, {"fil": "Pagsikat ng araw, tapos na. Kaya mo 'to.", "en": "When the sun comes up, it's over. You can do this."}]};
+<script>var CALLS = {"c1n1": [{"fil": "Migo, gising ka pa? Huwag mong kalimutan ang pinto.", "en": "Migo, still awake? Don't forget the door."}, {"fil": "Pakinggan mo muna. Kapag may humihinga na sa kabila, huwag mo nang ilawan. Isara mo na lang, at huwag kang bibitaw.", "en": "Listen first. If something is already breathing on the other side, don't shine your light. Just close it, and don't let go."}], "c1n2": [{"fil": "Migo, kapag tumahimik ang mga kuliglig sa labas, silipin mo ang kurtina.", "en": "Migo, when the crickets outside go quiet, check behind the curtain."}, {"fil": "Kapag nakita mo siyang papalapit, isara mo at hawakan. Matagal bago siya sumuko, kaya huwag mong bibitawan.", "en": "If you see her coming, close it and hold it. She takes a long time to give up, so don't let go."}], "c1n3": [{"fil": "Migo, may narinig ka bang gumagapang sa loob ng aparador?", "en": "Migo, have you heard something crawling inside the aparador?"}, {"fil": "Ilawan mo. Paulit-ulit. Huwag mong hayaang bumukas nang tuluyan ang pinto niyan.", "en": "Shine your light on it. Again and again. Don't let that door swing all the way open."}], "c1n4": [{"fil": "Gising silang lahat ngayong gabi. Ang pinto, ang kurtina, ang aparador.", "en": "They're all awake tonight. The door, the curtain, the aparador."}, {"fil": "Makinig ka lang. Sila mismo ang magsasabi sa'yo kung nasaan sila.", "en": "Just listen. They'll tell you where they are."}], "c1n5": [{"fil": "Migo, papatayin daw ang kuryente sa barangay mamayang alas-kuwatro.", "en": "Migo, they said the barangay will cut the power at four."}, {"fil": "Tipirin mo ang flashlight. Kahit anong marinig mo, huwag kang lalabas ng kwarto.", "en": "Save your flashlight. Whatever you hear, don't leave the room."}, {"fil": "Migo? Bakit bukas ang ilaw diyan? Akala ko wala nang kuryente.", "en": "Migo? Why is the light on over there? I thought the power was out."}], "c2n1": [{"fil": "Migo, si Tita Cora ulit. Nakaligtas ka sa kwarto ng Lola mo. Pero simula ngayong gabi, huwag ka nang babalik doon.", "en": "Migo, it's Tita Cora again. You survived your Lola's room. But from tonight on, don't go back in there."}, {"fil": "Dito ka na sa pasilyo. Mula diyan, abot mo ang sala, ang kusina, at ang kurtina sa likod na pinto.", "en": "Stay in the hallway now. From there you can reach the living room, the kitchen and the curtain on the back door."}, {"fil": "Kapag bumukas nang kusa ang TV sa sala at may umiiyak na sanggol, puntahan mo agad at patayin ang TV.", "en": "If the TV in the living room turns on by itself and you hear a baby crying, go at once and switch it off."}, {"fil": "Kapag tumawa na siya, huwag mong buksan ang ilaw. Magtago ka sa sopa at huwag kang gagalaw.", "en": "If it starts laughing, don't turn on the light. Hide on the sofa and don't move."}, {"fil": "At ang kurtina sa likod. Kapag tumahimik ang kuliglig, silipin mo. Kapag nasa salamin na siya, isara at hawakan.", "en": "And the curtain at the back. When the crickets go quiet, look. If she's at the glass, close it and hold it."}], "c2n2": [{"fil": "Migo, may naririnig ka bang kalansing sa kusina? Parang kutsara at kutsilyong nagbabanggaan?", "en": "Migo, do you hear clinking in the kitchen? Like spoons and knives knocking together?"}, {"fil": "Ang asin sa garapon, sa tabi ng kalan. Kapag papalapit na ang kalansing, ihagis mo ang asin.", "en": "The salt in the jar, beside the stove. When the clinking comes close, throw the salt."}, {"fil": "Kapag nasa loob na siya ng kusina, magtago ka sa paminggalan at huwag kang gagalaw kahit anong mangyari.", "en": "If it's already inside the kitchen, hide in the cupboard and don't move, no matter what."}], "c2n3": [{"fil": "Gising na silang tatlo, Migo. Ang TV, ang kusina, ang kurtina.", "en": "All three are awake now, Migo. The TV, the kitchen, the curtain."}, {"fil": "Huwag kang tatakbo kung hindi kailangan. Naririnig nila ang yabag mo.", "en": "Don't run unless you have to. They can hear your footsteps."}], "c2n4": [{"fil": "Migo, makinig ka. Ngayong gabi, may papatay ng kuryente mula sa may sala. Hindi brownout iyon.", "en": "Migo, listen. Tonight someone will switch the power off from the living room side. It isn't a brownout."}, {"fil": "Nasa kusina ang breaker. Tandaan mo ang pagkakasunod ng mga ilaw, saka mo ulitin. Isang beses lang niya ipapakita.", "en": "The breaker is in the kitchen. Remember the order of the lights, then repeat it. It shows only once."}], "c2n5": [{"fil": "Huling gabi sa labas ng kwarto, Migo. Dalawang beses nilang papatayin ang kuryente.", "en": "Last night outside the bedroom, Migo. They will cut the power twice."}, {"fil": "Tipirin mo ang flashlight. Kapag nagkamali ka sa breaker, maririnig nila.", "en": "Save your flashlight. If you get the breaker wrong, they will hear it."}, {"fil": "Pagsikat ng araw, tapos na. Kaya mo 'to.", "en": "When the sun comes up, it's over. You can do this."}], "c3n1": [{"fil": "Migo, si Tita Cora. Ngayong gabi, buong bahay na ang babantayan mo. Pwede ka nang bumalik sa kwarto.", "en": "Migo, it's Tita Cora. Tonight you watch the whole house. You may go back into the bedroom now."}, {"fil": "Mula sa pinto ng kwarto, silipin mo ang pasilyo. Kita mo kung may ilaw sa sala o may nakatayo sa dilim.", "en": "From the bedroom door, look out into the hallway. You'll see if there's light in the living room or someone standing in the dark."}, {"fil": "At ang aparador ni Lola. Kapag kumakalabog at bumubukas, ilawan mo agad.", "en": "And Lola's aparador. When it knocks and starts to open, shine your light on it right away."}], "c3n2": [{"fil": "Lima na sila, Migo. Ang kurtina sa likod at ang kusina, gising na rin.", "en": "There are five now, Migo. The curtain at the back and the kitchen are awake too."}, {"fil": "Isara mo ang pinto ng kwarto kapag lalabas ka. Hindi lahat ng humihinga sa pasilyo ay tao.", "en": "Close the bedroom door when you leave. Not everything breathing in the hallway is a person."}], "c3n3": [{"fil": "Migo, may papatay ulit ng kuryente ngayong gabi. Nasa kusina ang breaker. Tandaan mo ang pattern.", "en": "Migo, someone will cut the power again tonight. The breaker is in the kitchen. Remember the pattern."}], "c3n4": [{"fil": "Huwag kang tatakbo kung hindi kailangan. Naririnig nila ang yabag mo, lalo na sa dilim.", "en": "Don't run unless you must. They hear your steps, especially in the dark."}], "c3n5": [{"fil": "Dalawang beses nilang papatayin ang ilaw ngayong gabi. Kaya mo, Migo. Malapit na.", "en": "They will kill the lights twice tonight. You can do it, Migo. It's almost over."}], "c3n6": [{"fil": "Migo, brownout sa buong baryo. Hindi na babalik ang kuryente hanggang umaga.", "en": "Migo, the whole barrio is in a brownout. The power won't come back until morning."}, {"fil": "May kandila sa kwarto, sa sala, at sa kusina. Patayin mo ang flashlight kapag hindi kailangan. Mauubos iyan.", "en": "There are candles in the bedroom, the living room and the kitchen. Turn off the flashlight when you don't need it. It will run out."}], "c3n7": [{"fil": "Ito na ang huling gabi, Migo. Gising silang lahat at alam nilang nandiyan ka.", "en": "This is the last night, Migo. They're all awake and they know you're there."}, {"fil": "Pagsikat ng araw, kukunin na kita. Pangako. Huwag kang bibitaw.", "en": "When the sun comes up, I'll come for you. I promise. Don't let go."}]};
 var PROLOGUE = {"c1": [{"fil": "Hello? Migo? Si Tita Cora 'to. Nakarating ka na ba sa bahay ni Lola?", "en": "Hello? Migo? It's Tita Cora. Did you make it to Lola's house?"}, {"fil": "Pasensya ka na, anak, ha. Ikaw lang talaga ang puwedeng magbantay diyan habang nasa probinsya kami.", "en": "I'm sorry, anak. You're the only one who can watch the house while we're in the province."}, {"fil": "Hindi puwedeng walang tao diyan hangga't hindi pa tapos ang apatnapung araw ni Lola. Alam mo naman ang pamahiin.", "en": "Someone has to be there until Lola's forty days are over. You know the old belief."}, {"fil": "Noong bata pa ako, ayaw ni Lola na may natutulog nang bukas ang pinto. Gabi-gabi, siya mismo ang nagsasara ng lahat. Ang pinto, ang kurtina, pati ang aparador niya.", "en": "When I was little, Lola never let anyone sleep with the door open. Every night she closed everything herself. The door, the curtain, even her aparador."}, {"fil": "Ang aparador na 'yan, bigay raw ng dati niyang kumare sa San Lucio. Mula nang dumating 'yan, may naririnig na kaming kaluskos sa loob. Parang may gumagapang.", "en": "That aparador was a gift from an old friend of hers in San Lucio. Ever since it came, we'd hear scratching inside. Like something crawling."}, {"fil": "Noong huling linggo bago siya nawala, sabi niya may babaeng nakaputi raw na nakatayo sa pasilyo tuwing alas-tres. At may lumilipad daw sa may bintana.", "en": "In her last week, she said a woman in white stood in the hallway every night at three. And that something flew past the window."}, {"fil": "Akala namin, dahil lang sa gamot niya. Pero noong lamay, nakita ng Tito mo na bukas ang kurtina, at may mga kalmot sa rehas.", "en": "We thought it was just her medicine. But during the wake, your Tito found the curtain open, and claw marks on the window bars."}, {"fil": "Migo, makinig ka. Hindi ako nagbibiro.", "en": "Migo, listen to me. I'm not joking."}, {"fil": "Hindi sumasara nang kusa ang pinto ng kwartong 'yan. Kapag may narinig kang humihinga sa likod nito, isara mo, at huwag mong bibitawan hangga't hindi siya umaalis.", "en": "That bedroom door never stays shut by itself. If you hear breathing behind it, close it, and don't let go until she leaves."}, {"fil": "Kapag nakapasok siya, magtago ka sa ilalim ng kama. At habang nasa kwarto siya, huwag kang hihinga.", "en": "If she gets in, hide under the bed. And as long as she's in the room, don't breathe."}, {"fil": "Sumilip ka sa kurtina paminsan-minsan. Kapag nakita mo siyang papalapit, isara mo at hawakan hanggang lumipad siya palayo.", "en": "Look behind the curtain every now and then. If you see her coming, close it and hold it until she flies away."}, {"fil": "At kapag may kaluskos sa aparador, ilawan mo agad. Ayaw nila sa liwanag.", "en": "And if something rustles in the aparador, shine a light on it right away. They hate the light."}, {"fil": "Pagsapit ng alas-sais, tutunog ang kampana ng simbahan. Saka ka lang ligtas.", "en": "At six, the church bell will ring. Only then are you safe."}, {"fil": "Sige na, anak. Matulog ka na. Teka, sino 'yang kasama mo diyan? Bakit may naririnig akong humihinga sa tabi mo?", "en": "Go on, anak. Get some sleep. Wait, who's there with you? Why do I hear someone breathing right next to you?"}]};
 /* ALAS-SAIS — English / Filipino text */
 var STR = {
@@ -389,6 +408,12 @@ var STR = {
     ch_names: { 1: "Lola's Bedroom", 2: 'The Hallway', 3: 'The Whole House' },
     ch_desc: { 1: 'Five nights. You never leave the bedroom.', 2: 'Five nights. The hallway, the living room and the kitchen. The bedroom is locked.', 3: 'Seven nights. Every room is open now.' },
     c1_night_names: ['Listen at the Door', 'The Window', 'The Aparador', 'All of Them', 'Brownout'],
+    cu_start: 'Start', cu_rec: 'Best: {n}', cu_none: 'No record yet', cu_won: 'Survived! {n} points',
+    cu_modes: [['Quiet House', 'all at 5'], ['Wide Awake', 'all at 10'], ['Midnight', 'all at 15'], ['Bangungot', 'all at 20'], ['Only the Door', 'Kumot 20'], ['Glass and Wood', 'Silip 20 · Barang 20'], ['Kitchen & Sala', 'Malikmata 15 · Kalansing 15'], ['Brownout', 'all at 10, candles only']],
+    c2_end: 'The hallway goes quiet as the sky turns grey. Tita Cora says the house is not finished with you.', c3_end: 'The sun comes up over the whole house. Tita Cora\'s car is outside. You walk out the front door and do not look back.',
+    c3_night_names: ['The Whole House', 'Five of Them', 'Someone at the Switch', 'Do Not Run', 'Lights Out Again', 'Candles', 'The Last Night'],
+    c3_cut: 'Someone will cut the power tonight. The breaker is in the kitchen: remember the pattern.', c3_dark: 'Brownout all night. Only three candles and your flashlight. Turn it off when you can.',
+    c3_final: 'The last night. Everything in the house is awake, and it is dark.', a_look: 'Look out', c3_barang: 'The aparador is opening — shine your light on it.',
     c2_night_names: ['The Hallway', 'The Kitchen', 'All Three', 'Someone at the Switch', 'Lights Out'],
     c2_forbidden: 'Lola said: do not go back into the bedroom.', c2_cut: 'Someone switched the power off. Fix it at the breaker in the kitchen.',
     c2_n4: 'Tonight someone will cut the power from the living room side. The breaker is in the kitchen: remember the pattern.',
@@ -465,6 +490,12 @@ var STR = {
     ch_names: { 1: 'Ang Kwarto ni Lola', 2: 'Ang Pasilyo', 3: 'Ang Buong Bahay' },
     ch_desc: { 1: 'Limang gabi. Hindi ka lalabas ng kwarto.', 2: 'Limang gabi. Pasilyo, sala at kusina. Naka-lock ang kwarto.', 3: 'Pitong gabi. Bukas na ang lahat ng kwarto.' },
     c1_night_names: ['Pakinggan ang Pinto', 'Ang Bintana', 'Ang Aparador', 'Silang Lahat', 'Brownout'],
+    cu_start: 'Simulan', cu_rec: 'Pinakamahusay: {n}', cu_none: 'Wala pang record', cu_won: 'Nakaligtas! {n} puntos',
+    cu_modes: [['Tahimik na Bahay', 'lahat sa 5'], ['Gising na Gising', 'lahat sa 10'], ['Hatinggabi', 'lahat sa 15'], ['Bangungot', 'lahat sa 20'], ['Pinto Lang', 'Kumot 20'], ['Salamin at Kahoy', 'Silip 20 · Barang 20'], ['Kusina at Sala', 'Malikmata 15 · Kalansing 15'], ['Brownout', 'lahat sa 10, kandila lang']],
+    c2_end: 'Tumahimik ang pasilyo habang pumuputi ang langit. Sabi ni Tita Cora, hindi pa tapos ang bahay sa iyo.', c3_end: 'Sumikat ang araw sa buong bahay. Nasa labas na ang kotse ni Tita Cora. Lumabas ka sa pinto at hindi ka na lumingon.',
+    c3_night_names: ['Ang Buong Bahay', 'Silang Lima', 'May Pumatay ng Ilaw', 'Huwag Tumakbo', 'Patay Muli ang Ilaw', 'Mga Kandila', 'Ang Huling Gabi'],
+    c3_cut: 'May papatay ng kuryente ngayong gabi. Nasa kusina ang breaker: tandaan ang pattern.', c3_dark: 'Brownout buong gabi. Tatlong kandila at ang flashlight mo lang. Patayin mo ito kapag kaya.',
+    c3_final: 'Huling gabi. Gising ang lahat sa bahay, at madilim.', a_look: 'Silipin', c3_barang: 'Bumubukas ang aparador — ilawan mo.',
     c2_night_names: ['Ang Pasilyo', 'Ang Kusina', 'Silang Tatlo', 'May Pumatay ng Ilaw', 'Patay ang Ilaw'],
     c2_forbidden: 'Sabi ni Lola: huwag ka nang babalik sa kwarto.', c2_cut: 'May pumatay ng kuryente. Ayusin sa breaker sa kusina.',
     c2_n4: 'Ngayong gabi, may papatay ng kuryente mula sa may sala. Nasa kusina ang breaker: tandaan ang pattern.',
@@ -541,6 +572,17 @@ var AS = (function () {
     { hourSec: 40, lv: { kumot: [0, 0], malik: [7, 10], kal: [6, 9], silip: [6, 9] }, blackouts: 1 },
     { hourSec: 40, lv: { kumot: [0, 0], malik: [9, 13], kal: [8, 12], silip: [8, 12] }, blackouts: 2 }
   ];
+  // Chapter 3: the whole house, five entities, 7 nights. Nights 3-5: the power is cut (breaker puzzle).
+  // Nights 6-7: a real brownout all night, three candles, the flashlight is all you have; the nightmare versions.
+  var NIGHTS3 = [
+    { hourSec: 40, lv: { kumot: [4, 6], malik: [3, 5], kal: [0, 0], silip: [0, 0], barang: [3, 5] }, blackouts: 0 },
+    { hourSec: 40, lv: { kumot: [5, 7], malik: [4, 6], kal: [2, 4], silip: [2, 4], barang: [4, 6] }, blackouts: 0 },
+    { hourSec: 40, lv: { kumot: [5, 7], malik: [4, 6], kal: [3, 6], silip: [3, 6], barang: [4, 6] }, blackouts: 1 },
+    { hourSec: 40, lv: { kumot: [6, 8], malik: [5, 7], kal: [4, 7], silip: [4, 7], barang: [5, 7] }, blackouts: 1 },
+    { hourSec: 40, lv: { kumot: [7, 9], malik: [6, 8], kal: [5, 8], silip: [5, 8], barang: [6, 8] }, blackouts: 2 },
+    { hourSec: 42, lv: { kumot: [6, 9], malik: [6, 9], kal: [6, 9], silip: [6, 9], barang: [6, 9] }, dark: true },
+    { hourSec: 45, lv: { kumot: [7, 10], malik: [7, 10], kal: [7, 10], silip: [7, 10], barang: [7, 10] }, dark: true }
+  ];
   var ROOMS = ['bedroom', 'hall', 'living', 'kitchen', 'curtain'];
   // seconds to walk between a room and the hallway (running is 0.6x)
   var LEG = { bedroom: 1.2, hall: 0, living: 1.5, kitchen: 2.0, curtain: 1.8 };
@@ -563,12 +605,12 @@ var AS = (function () {
 
   function create(nightIdx, opts) {
     opts = opts || {};
-    var CH2 = opts.chapter === 2;
-    var N = (CH2 ? NIGHTS2 : NIGHTS)[Math.min(nightIdx, 4)];
+    var CH2 = opts.chapter === 2, CH3 = opts.chapter === 3;
+    var N = CH3 ? NIGHTS3[Math.min(nightIdx, 6)] : (CH2 ? NIGHTS2 : NIGHTS)[Math.min(nightIdx, 4)];
     var custom = opts.custom; // {kumot:lv,...} for Panata night
     var rnd = opts.rng || rngFrom(opts.seed || (Date.now() & 0xffffff));
     var nightNo = nightIdx + 1;
-    var diff = Math.min(nightIdx, 4) / 4; // 0..1 across nights
+    var diff = CH3 ? Math.min(nightIdx, 6) / 6 : Math.min(nightIdx, 4) / 4; // 0..1 across nights
 
     var g = {
       night: nightNo, time: 0, hourSec: N.hourSec, over: false, won: false, dead: null, deathRoom: null,
@@ -581,12 +623,14 @@ var AS = (function () {
       m: { st: 0, t: 0, tick: 0, cool: 6, lock: 0, exposed: 0, hunt: 0, giggle: 0, win: lerp(8, 4, diff), darkT: 0 },
       c: { st: 0, t: 0, tick: 0, cool: 8, grace: 0, win: lerp(6, 3, diff), sniff: 0 },
       s: { st: 0, t: 0, tick: 0, cool: 10, flash: 0, held: 0, win: lerp(9, 6.5, diff), openT: 0, tap: 0 },
+      b: { st: 0, tick: 0, flash: 0, atk: 0 },
       blackoutAt: [], heartbeat: false, msgs: []
     };
     if (CH2) { g.chapter = 2; g.p.room = 'hall'; g.saltOK = N.lv.kal[1] > 0; } else g.saltOK = nightNo >= 3;
+    if (CH3) { g.chapter = 3; g.saltOK = custom ? (custom.kal || 0) > 0 : N.lv.kal[1] > 0; if (N.dark || opts.dark) { g.dark = true; g.house.power = false; } if (custom) g.blackoutAt = []; }
     // blackout schedule
     for (var b = 0; b < N.blackouts; b++) g.blackoutAt.push(N.hourSec * (1.4 + b * 1.4 + rnd() * 0.8));
-    if (nightNo === 5 && !CH2) g.blackoutAt.push(N.hourSec * 5.0);
+    if (nightNo === 5 && !CH2 && !CH3) g.blackoutAt.push(N.hourSec * 5.0);
 
     function emit(type, data) { g.events.push({ type: type, data: data || {}, t: g.time }); }
     g.emit = emit;
@@ -596,10 +640,10 @@ var AS = (function () {
 
     function level(name) {
       if (custom) return custom[name] || 0;
-      var r = N.lv[name]; if (!r[1]) return 0;
+      var r = N.lv[name]; if (!r || !r[1]) return 0;
       var h = g.hour(); var step = h >= 4 ? 1 : h >= 3 ? 0.66 : h >= 2 ? 0.33 : 0;
       var lv = Math.round(lerp(r[0], r[1], step));
-      if (nightNo === 5 && h >= 5) lv += 2;
+      if ((nightNo === 5 || (CH3 && nightNo === 7)) && h >= 5) lv += 2;
       return lv;
     }
     g.level = level;
@@ -607,10 +651,11 @@ var AS = (function () {
 
     function fatalCount() {
       var n = 0;
-      if (g.k.st >= 3) n++; if (g.m.st >= 1) n++; if (g.c.st >= 2) n++; if (g.s.st >= 4) n++;
+      if (g.k.st >= 3) n++; if (g.m.st >= 1) n++; if (g.c.st >= 2) n++; if (g.s.st >= 4) n++; if (g.b.st >= 3) n++;
       return n;
     }
     var cap = nightNo <= 3 ? 1 : 2;
+    if (CH3 && nightNo >= 6) cap = 2;
     if (nightNo === 5) cap = 2;
     function canEscalate() { return fatalCount() < cap; }
 
@@ -674,7 +719,7 @@ var AS = (function () {
       }
       if (a === 'breaker_fail' && room === 'kitchen') { g.noise = clamp(g.noise + 20, 0, 100); emit('breaker_fail'); return true; }
       if (a === 'breaker' && room === 'kitchen' && !p.hidden) {
-        if (H.power) return false;
+        if (H.power || g.dark) return false;   // nights 6-7: the whole street is out, the breaker can't help
         H.power = true; emit('breaker'); g.noise = clamp(g.noise + 15, 0, 100); return true;
       }
       return false;
@@ -708,7 +753,7 @@ var AS = (function () {
       // breath / battery / noise
       if (p.holdBreath) { p.breath -= dt; if (p.breath <= 0) { p.breath = 0; p.holdBreath = false; emit('gasp'); g.noise = clamp(g.noise + 25, 0, 100); g._gasp = g.time; } }
       else p.breath = Math.min(8, p.breath + dt * 1.6);
-      if (p.light) { p.battery -= dt * 1.4; if (p.battery <= 0) { p.battery = 0; p.light = false; emit('battery_dead'); } }
+      if (p.light) { p.battery -= dt * (g.dark ? 1.15 : 1.4); if (p.battery <= 0) { p.battery = 0; p.light = false; emit('battery_dead'); } }
       g.noise = Math.max(0, g.noise - dt * 6);
 
       // blackouts
@@ -725,9 +770,10 @@ var AS = (function () {
         updateMalik(dt); if (g.over) return;
         updateKal(dt); if (g.over) return;
         updateSilip(dt); if (g.over) return;
+        if (CH3) { updateBarang(dt); if (g.over) return; }
       }
 
-      var danger = (g.k.st >= 3 && (here('bedroom') || p.room === 'hall')) || (g.m.st === 2) || (g.c.st === 3 && here('kitchen')) || (g.s.st >= 4 && here('curtain'));
+      var danger = (g.k.st >= 3 && (here('bedroom') || p.room === 'hall')) || (g.m.st === 2) || (g.c.st === 3 && here('kitchen')) || (g.s.st >= 4 && here('curtain')) || (g.b.st >= 3 && here('bedroom'));
       if (danger !== g.heartbeat) { g.heartbeat = danger; emit('heartbeat', { on: danger }); }
     };
 
@@ -801,8 +847,8 @@ var AS = (function () {
         if (m.tick >= 5) {
           m.tick = 0;
           var bonus = m.darkT > 40 ? 3 : 0;
-          if (H.power && m.cool <= 0 && roll(lv + bonus) && canEscalate()) {
-            m.st = 1; m.t = m.win; H.tv = true;
+          if ((H.power || g.dark) && m.cool <= 0 && roll(lv + bonus) && canEscalate()) {
+            m.st = 1; m.t = m.win; H.tv = !!H.power;
             emit('malik_static'); emit('cue', { id: 'static_swell', room: 'living', cap: 'cap_static', dur: m.win });
             emit('cue', { id: 'baby_cry', room: 'living', cap: 'cap_cry' });
           }
@@ -811,6 +857,7 @@ var AS = (function () {
       }
       if (m.st === 1) {
         m.t -= dt;
+        if (g.dark && here('living') && p.light) { m.lock += dt; if (m.lock >= 2) { m.lock = 0; m.st = 0; m.cool = 6; emit('malik_sleep'); return; } }
         if (m.t <= 0) { m.st = 2; m.t = 15; m.lock = 0; m.exposed = 0; m.hunt = 0; m.giggle = 0; emit('malik_out'); emit('cue', { id: 'vhs_glitch', room: 'living', cap: 'cap_vhs' }); }
         return;
       }
@@ -825,6 +872,22 @@ var AS = (function () {
         if (m.hunt > 6 && !p.hidden) { m.exposed += dt; if (m.exposed >= 4.5) { kill('malik'); return; } }
       }
       if (m.t <= 0) { m.st = 0; m.cool = lerp(10, 6, diff); H.tv = false; emit('malik_return'); }
+    }
+
+    // -------- BARANG (Chapter 3): the aparador in the bedroom opens a little more each time; light pushes her back
+    function updateBarang(dt) {
+      var b = g.b, p = g.p, lv = level('barang');
+      if (!lv && b.st === 0) return;
+      b.tick += dt;
+      if (b.st < 4 && b.tick >= 7) {
+        b.tick = 0;
+        if (roll(lv) && (b.st < 2 || canEscalate())) { b.st++; emit('barang_step', { st: b.st }); if (b.st === 4) { b.atk = lerp(7.5, 4.2, diff); emit('barang_out'); } }
+      }
+      if (here('bedroom') && p.light && !p.hidden && b.st >= 1) {
+        b.flash += dt;
+        if (b.flash >= 1.4) { b.flash = 0; b.st--; b.tick = 0; emit('barang_back', { st: b.st }); }
+      } else b.flash = Math.max(0, b.flash - dt);
+      if (b.st === 4) { b.atk -= dt; if (b.atk <= 0) kill('barang'); }
     }
 
     // -------- KALANSING (Aswang): noise, cabinet, asin
@@ -912,7 +975,7 @@ var AS = (function () {
     return g;
   }
 
-  return { create: create, NIGHTS: NIGHTS, NIGHTS2: NIGHTS2, ROOMS: ROOMS, ROOM_X: ROOM_X, travelTime: travelTime, rngFrom: rngFrom };
+  return { create: create, NIGHTS: NIGHTS, NIGHTS2: NIGHTS2, NIGHTS3: NIGHTS3, ROOMS: ROOMS, ROOM_X: ROOM_X, travelTime: travelTime, rngFrom: rngFrom };
 })();
 if (typeof module !== 'undefined') module.exports = AS;
 
@@ -1149,6 +1212,7 @@ if (typeof module !== 'undefined') module.exports = C1;
   var HERO = { kumot: 'hero_kumot', malik: 'hero_malikmata', kal: 'hero_kalansing', silip: 'hero_silip', barang: 'hero_barang' };
   var C1_RULES = { 1: ['kumot'], 2: ['silip'], 3: ['barang'], 4: [], 5: [] };
   var C2_RULES = { 1: ['malik', 'silip'], 2: ['kal'], 3: [], 4: [], 5: [] };
+  var C3_RULES = { 1: ['kumot', 'malik', 'barang'], 2: ['kal', 'silip'], 3: [], 4: [], 5: [], 6: [], 7: [] };
 
   // ------------------------------------------------------------ save / settings
   var DEF = { lang: 'en', gfx: 'medium', vol: { master: 0.9, sfx: 1, amb: 0.8, music: 0.6 }, captions: true, reduced: false };
@@ -1241,7 +1305,7 @@ if (typeof module !== 'undefined') module.exports = C1;
 
   // ------------------------------------------------------------ screens
   var game = null, raf = 0, lastT = 0, paused = false, nightIdx = 0, nightStart = 0, msgQ = [], msgT = 0, capT = 0, deathTimer = 0, introShown = false;
-  function show(id) { ['scr-load', 'scr-menu', 'scr-settings', 'scr-nights', 'scr-credits', 'scr-phone', 'scr-intro', 'scr-pause', 'scr-win', 'scr-over', 'scr-end', 'scr-exit'].forEach(function (s) { $(s).classList.toggle('show', s === id); }); }
+  function show(id) { ['scr-load', 'scr-menu', 'scr-settings', 'scr-nights', 'scr-custom', 'scr-credits', 'scr-phone', 'scr-intro', 'scr-pause', 'scr-win', 'scr-over', 'scr-end', 'scr-exit'].forEach(function (s) { $(s).classList.toggle('show', s === id); }); }
   var settingsFrom = 'scr-menu';
 
   function renderTexts() {
@@ -1264,7 +1328,7 @@ if (typeof module !== 'undefined') module.exports = C1;
     $('t-red').textContent = s.reduced ? T('on') : T('off');
     applyGfx();
   }
-  var CH_NIGHTS = { 1: 5, 2: 5, 3: 7 }, CH_READY = { 1: true, 2: true, 3: false };
+  var CH_NIGHTS = { 1: 5, 2: 5, 3: 7 }, CH_READY = { 1: true, 2: true, 3: true };
   function chUnlocked(ch) { return ch === 1 || (ch === 2 && save.prog.c1 >= 5) || (ch === 3 && save.prog.c1 >= 5 && save.prog.c2 >= 5); }
   function renderNights() {
     var box = $('night-list'); box.innerHTML = '';
@@ -1305,6 +1369,7 @@ if (typeof module !== 'undefined') module.exports = C1;
   // ------------------------------------------------------------ night flow
   var curCh = 1;
   function startNight(idx, ch) {
+    customRun = null;
     curCh = ch || curCh || 1;
     if (curCh === 1 && idx === 0 && !save.pro.c1 && !window.__AS_NOCALL) { return prologue('c1', function () { save.pro.c1 = true; store(); startNight(0, 1); }); }
     stopMenu();
@@ -1313,28 +1378,35 @@ if (typeof module !== 'undefined') module.exports = C1;
     game = null; paused = false;
     var n = idx + 1;
     $('intro-n').textContent = T('night_n', n);
-    $('intro-name').textContent = curCh <= 2 ? T('ch_n', curCh) + ' · ' + T('c' + curCh + '_night_names')[idx] : T('night_names')[idx];
+    $('intro-name').textContent = curCh <= 3 ? T('ch_n', curCh) + ' · ' + T('c' + curCh + '_night_names')[idx] : T('night_names')[idx];
     var rules = $('intro-rules'); rules.innerHTML = '';
-    var list = curCh === 1 ? C1_RULES[n] : curCh === 2 ? C2_RULES[n] : (idx === 4 ? [] : (STR.en.intro_rules[n] || []));
+    var list = curCh === 1 ? C1_RULES[n] : curCh === 2 ? C2_RULES[n] : curCh === 3 ? C3_RULES[n] : (idx === 4 ? [] : (STR.en.intro_rules[n] || []));
     // remind earlier threats briefly on later nights
     list.forEach(function (w) {
       var d = document.createElement('div'); d.className = 'rule';
       var im = document.createElement('img'); im.src = 'assets/img/' + HERO[w] + '.jpg'; im.alt = '';
       var tx = document.createElement('div'); var b = document.createElement('b'); b.textContent = T('new_threat') + ': ' + T('who')[w];
-      var p = document.createElement('div'); p.textContent = curCh === 1 ? T('c1_hint')[w] : T('hint')[w]; p.style.marginTop = '6px'; p.style.fontSize = '16px'; p.style.lineHeight = '1.45';
+      var p = document.createElement('div'); p.textContent = curCh === 1 ? T('c1_hint')[w] : (T('hint')[w] || T('c1_hint')[w]); p.style.marginTop = '6px'; p.style.fontSize = '16px'; p.style.lineHeight = '1.45';
       tx.appendChild(b); tx.appendChild(p); d.appendChild(im); d.appendChild(tx); rules.appendChild(d);
     });
-    if (idx >= 3) { var f = document.createElement('p'); f.className = 'sub'; f.textContent = curCh === 1 ? (idx === 3 ? T('c1_all') : T('c1_final')) : curCh === 2 ? T(idx === 3 ? 'c2_n4' : 'c2_n5') : T('final_night'); rules.appendChild(f); }
+    if (curCh === 3 && idx >= 2) { var f3 = document.createElement('p'); f3.className = 'sub'; f3.textContent = T(idx <= 4 ? 'c3_cut' : idx === 5 ? 'c3_dark' : 'c3_final'); rules.appendChild(f3); }
+    else if (idx >= 3) { var f = document.createElement('p'); f.className = 'sub'; f.textContent = curCh === 1 ? (idx === 3 ? T('c1_all') : T('c1_final')) : curCh === 2 ? T(idx === 3 ? 'c2_n4' : 'c2_n5') : T('final_night'); rules.appendChild(f); }
     show('scr-intro');
     play('dog_howl', { bus: 'amb', vol: 0.5 });
   }
   var C2_IMG = ['hallway_empty', 'hallway_salatv', 'living_tvoff', 'living_empty', 'living_lights', 'living_lights_off_tv', 'living_malik', 'kitchen_empty', 'kitchen_kal',
     'cabinet_empty', 'cabinet_kal', 'curtain_closed', 'curtain_shadow', 'curtain_open', 'curtain_s1', 'curtain_s2', 'curtain_silip', 'curtain_glass', 'scare_malikmata', 'scare_kalansing', 'scare_silip'];
+  var C3_LIT = ['c3_bed_c', 'c3_bed_closed_c', 'c3_bed_kumot_c', 'hallway_empty_c', 'hallway_kumot_c', 'living_tvoff_c', 'living_malik_c', 'kitchen_empty_c', 'kitchen_kal_c',
+    'curtain_closed_c', 'curtain_shadow_c', 'curtain_open_c', 'curtain_s1_c', 'curtain_s2_c', 'curtain_silip_c', 'curtain_glass_c'];
+  var C3_IMG = ['c3_bed', 'c3_bed_closed', 'c3_bed_kumot', 'hallway_kumot', 'c3_look', 'c3_look_tv', 'c3_look_k2', 'c3_look_k3', 'c3_bed_c', 'c3_bed_closed_c', 'c3_bed_kumot_c',
+    'hallway_empty_c', 'hallway_kumot_c', 'living_tvoff_c', 'living_malik_c', 'kitchen_empty_c', 'kitchen_kal_c', 'cabinet_empty_c', 'cabinet_kal_c', 'curtain_closed_c', 'curtain_shadow_c',
+    'curtain_open_c', 'curtain_s1_c', 'curtain_s2_c', 'curtain_silip_c', 'curtain_glass_c', 'c1_under', 'c1_under_kumot', 'c1_peek_0', 'c1_peek_2', 'c1_peek_3', 'hero_barang', 'scare_kumot'];
   function beginNight() {
+    if (curCh === 3) C2_IMG.concat(C3_IMG, C3_LIT.map(function (k) { return k + 'l'; })).forEach(function (k) { if (!imgs[k]) { var i = new Image(); i.src = 'assets/img/' + k + '.jpg'; imgs[k] = i; } });
     if (curCh === 2) C2_IMG.forEach(function (k) { if (!imgs[k]) { var i = new Image(); i.src = 'assets/img/' + k + '.jpg'; imgs[k] = i; } });
     initAudio().then(function () {
       show(null); fit();
-      game = curCh === 1 ? C1.create(nightIdx, { seed: (Date.now() & 0xffffff) }) : AS.create(nightIdx, { seed: (Date.now() & 0xffffff), chapter: curCh === 2 ? 2 : 0 });
+      game = curCh === 1 ? C1.create(nightIdx, { seed: (Date.now() & 0xffffff) }) : AS.create(nightIdx, { seed: (Date.now() & 0xffffff), chapter: curCh === 2 || curCh === 3 ? curCh : 0, custom: customRun ? customRun.lv : null, dark: customRun && customRun.lv.dark });
       nightStart = performance.now(); paused = false; deathTimer = 0;
       lastView = ''; hotSig = ''; viewLock = null; camClear(); black(0, 10); $('fx').innerHTML = '';
       setView(true, true); renderHUD();
@@ -1342,7 +1414,7 @@ if (typeof module !== 'undefined') module.exports = C1;
       amb.garden = play('amb_garden', { bus: 'amb', loop: true, vol: 0.5, room: curCh === 1 ? 'window' : 'curtain' });
       if (nightIdx === 4 && curCh === 3) amb.rain = play('rain_heavy', { bus: 'amb', loop: true, vol: 0.55 });
       msgQ = []; msgT = 1.2;
-      if (!window.__AS_NOCALL) startCall(curCh <= 2 ? 'c' + curCh + 'n' + game.night : game.night);
+      if (!window.__AS_NOCALL && !customRun) startCall(curCh <= 3 ? 'c' + curCh + 'n' + game.night : game.night);
       buildHot();
       if (game.night === 1) setTimeout(function () { if (game && call && call.state === 'ring') hint(T('ph_answer') + ' ☎', 4); }, 2500);
       lastT = performance.now(); raf = requestAnimationFrame(loop);
@@ -1414,6 +1486,9 @@ if (typeof module !== 'undefined') module.exports = C1;
         case 'breaker': play('breaker'); cap('breaker'); flashWhite(); jolt(); break;
         case 'blackout': play('power_down'); cap('blackout'); jolt(); if (e.data && e.data.cut) { play('light_switch', { vol: 0.9, room: 'living' }); hint(T('c2_cut'), 4); } break;
         case 'breaker_fail': play('door_slam', { vol: 0.5 }); jolt(); break;
+        case 'barang_step': play('aparador_creak', { room: 'bedroom', vol: 0.5 + e.data.st * 0.12 }); if (e.data.st >= 3) play('beetles', { room: 'bedroom', vol: 0.6 }); if (e.data.st === 3 && here('bedroom')) hint(T('c3_barang'), 3); break;
+        case 'barang_out': play('beetle_scatter', { room: 'bedroom', vol: 1 }); break;
+        case 'barang_back': play('cabinet_close', { room: 'bedroom', vol: 0.6 }); break;
         case 'no_power': cap('no_power'); hint(T('cap').no_power || ''); break;
         case 'crickets_off': cap('crickets'); break;
         case 'silip_back': cap('silip_back'); break;
@@ -1479,16 +1554,25 @@ if (typeof module !== 'undefined') module.exports = C1;
     if (game && game.p.room === 'hall' && game.night === 1 && !onArrive._hallHint) { onArrive._hallHint = 1; hint(T('h_light'), 4); }
   }
   // swing the bedroom door: a cut-out of the closed door rotating on its hinge
-  var DOOR = { x: 516, y: 198, w: 169, h: 374 };
+  var DOOR = { x: 516, y: 198, w: 169, h: 374 }, DOOR3 = { x: 402, y: 236, w: 158, h: 300 };
+  function c3Look() {
+    if (!game || game.p.travel || game.house.door) return;
+    if (game.dark) { if (game.p.battery <= 0) return; game.p.battery = Math.max(0, game.p.battery - 3); play('flashlight_on', { vol: 0.5 }); }
+    play('door_creak', { vol: 0.3 });
+    viewLock = { key: c3LookKey(), until: performance.now() + 1500 }; setView(true, true);
+    if (game.k.st === 3) { play('wheeze', { vol: 0.9 }); jolt(); }
+    setTimeout(function () { viewLock = null; if (game) setView(true, true); }, 1520);
+  }
   function doorAnim(closing, ms) {
     var fx = $('fx'); fx.innerHTML = '';
     if (lowFx()) { setView(true, true); return; }
+    var c3 = game && game.chapter === 3, R = c3 ? DOOR3 : DOOR, sfx = c3 && game.dark ? '_c' : '';
     var leaf = document.createElement('div'); leaf.className = 'leaf';
-    leaf.style.cssText = 'left:' + DOOR.x + 'px;top:' + DOOR.y + 'px;width:' + DOOR.w + 'px;height:' + DOOR.h + 'px;background-image:url(assets/img/bedroom_closed.jpg);background-position:-' + DOOR.x + 'px -' + DOOR.y + 'px';
+    leaf.style.cssText = 'left:' + R.x + 'px;top:' + R.y + 'px;width:' + R.w + 'px;height:' + R.h + 'px;background-image:url(assets/img/' + (c3 ? 'c3_bed_closed' + sfx : 'bedroom_closed') + '.jpg);background-position:-' + R.x + 'px -' + R.y + 'px';
     fx.appendChild(leaf);
     var open = 'rotateY(-78deg)', shut = 'rotateY(0deg)';
     // the room behind the leaf is the "open" picture during the swing
-    viewLock = { key: closing ? 'bedroom_empty' : viewKeyRaw(), until: performance.now() + ms };
+    viewLock = { key: closing ? (c3 ? 'c3_bed' + sfx : 'bedroom_empty') : viewKeyRaw(), until: performance.now() + ms };
     setView(true, true);
     var a = leaf.animate([{ transform: closing ? open : shut }, { transform: closing ? shut : open }], { duration: ms, easing: closing ? 'cubic-bezier(.5,0,.9,.6)' : 'cubic-bezier(.2,.6,.3,1)', fill: 'forwards' });
     a.onfinish = function () { viewLock = null; setView(true, true); fx.innerHTML = ''; if (closing) jolt(); };
@@ -1500,8 +1584,14 @@ if (typeof module !== 'undefined') module.exports = C1;
     if (lowFx()) { setView(true, true); return; }
     var L = document.createElement('div'), R = document.createElement('div');
     L.className = R.className = 'half';
+    if (game && game.chapter >= 2) {   // the one house: only the cloth inside the back-door frame slides apart
+      var ck = 'curtain_closed' + (game.dark ? '_c' : ''), X0 = 384, XM = 627, X1 = 870;
+      L.style.cssText = 'left:' + X0 + 'px;width:' + (XM - X0) + 'px;background-image:url(assets/img/' + ck + '.jpg);background-position:-' + X0 + 'px 0;transform-origin:0 50%';
+      R.style.cssText = 'left:' + XM + 'px;width:' + (X1 - XM) + 'px;background-image:url(assets/img/' + ck + '.jpg);background-position:-' + XM + 'px 0;transform-origin:100% 50%';
+    } else {
     L.style.cssText = 'left:0;background-image:url(assets/img/curtain_closed.jpg);background-position:0 0;transform-origin:0 50%';
     R.style.cssText = 'right:0;background-image:url(assets/img/curtain_closed.jpg);background-position:-640px 0;transform-origin:100% 50%';
+    }
     fx.appendChild(L); fx.appendChild(R);
     var ms = opening ? 700 : 520;
     var shutL = 'translateX(0) scaleX(1)', openL = 'translateX(0) scaleX(.3)', shutR = shutL, openR = openL;
@@ -1563,6 +1653,7 @@ if (typeof module !== 'undefined') module.exports = C1;
     if (isC1()) return c1Key();
     var g = game, p = g.p, H = g.house;
     if (p.travel) return lastKey || 'hallway_empty';
+    if (g.chapter === 3) return c3Key();
     switch (p.room) {
       case 'bedroom':
         if (p.hidden === 'bed') return g.k.st === 4 ? 'under_kumot' : 'under_empty';
@@ -1583,11 +1674,50 @@ if (typeof module !== 'undefined') module.exports = C1;
     }
     return 'hallway_empty';
   }
+  // Chapter 3: every view comes from the one house; nights 6-7 use the candle-lit renders (suffix _c)
+  function c3Key() {
+    var g = game, p = g.p, H = g.house, c = g.dark ? '_c' : '';
+    switch (p.room) {
+      case 'bedroom':
+        if (p.hidden === 'bed') return g.k.st === 4 ? 'c1_under_kumot' : 'c1_under';
+        if (g.k.st === 4) return 'c3_bed_kumot' + c;
+        return (H.door ? 'c3_bed_closed' : 'c3_bed') + c;
+      case 'hall': if (g.k.st === 2) return 'hallway_kumot' + c; return !g.dark && H.tv && H.power ? 'hallway_salatv' : 'hallway_empty' + c;
+      case 'living':
+        if (g.dark) return g.m.st === 2 ? 'living_malik_c' : 'living_tvoff_c';
+        if (g.m.st === 2) return 'living_malik';
+        if (H.tv) return H.lights ? 'living_lights' : 'living_empty';
+        return H.lights ? 'living_lights_off_tv' : 'living_tvoff';
+      case 'kitchen':
+        if (p.hidden === 'cabinet') return (g.c.st === 3 ? 'cabinet_kal' : 'cabinet_empty') + c;
+        return (g.c.st >= 2 ? 'kitchen_kal' : 'kitchen_empty') + c;
+      case 'curtain':
+        if (!H.curtain) return (g.s.st >= 4 ? 'curtain_shadow' : 'curtain_closed') + c;
+        return ['curtain_open', 'curtain_s1', 'curtain_s2', 'curtain_silip', 'curtain_glass', 'curtain_glass'][g.s.st] + c;
+    }
+    return 'hallway_empty' + c;
+  }
+  function c3LookKey() {   // leaning out of the bedroom door: the lit house on nights 1-5, only the flashlight on 6-7
+    var g = game, k = g.k.st;
+    if (g.dark || !g.house.power) return 'c1_peek_' + (k === 2 || k === 3 ? k : 0);
+    if (k === 2 || k === 3) return 'c3_look_k' + k;
+    return g.house.tv ? 'c3_look_tv' : 'c3_look';
+  }
+  function c3Overlays() {
+    var g = game, p = g.p, H = g.house, keys = [], n = g.dark ? 'n' : '';
+    if (p.room === 'bedroom' && !p.travel && !p.hidden && g.k.st !== 4 && !(viewLock && performance.now() < viewLock.until)) {
+      if (g.k.st === 3 && !H.door) keys.push('hubx_k3' + (g.dark ? 'n' : 'l'));
+      if (g.b.st >= 2) keys.push('hubx_b' + Math.min(4, g.b.st) + n);
+    }
+    var sig = keys.join(','); if (sig === ovlSig) return; ovlSig = sig;
+    var box = $('ovl'); box.innerHTML = '';
+    keys.forEach(function (key) { var im = document.createElement('img'); im.className = 'bg'; im.alt = ''; im.src = 'assets/img/' + key + '.webp'; box.appendChild(im); });
+  }
   function viewKey() { if (viewLock && performance.now() < viewLock.until) return viewLock.key; return viewKeyRaw(); }
   function setView(force, instant) {
     var g = game; if (!g) return;
     var key = viewKey();
-    var dark = !g.house.power && g.p.room !== 'curtain' && !(g.chapter === 1 && g.p.pos === 'window');
+    var dark = !g.house.power && !g.dark && g.p.room !== 'curtain' && !(g.chapter === 1 && g.p.pos === 'window');
     var sofa = g.p.hidden === 'sofa' && !(viewLock && performance.now() < viewLock.until);
     var sig = key + '|' + dark + '|' + sofa;
     if (sig !== lastView || force) {
@@ -1601,13 +1731,18 @@ if (typeof module !== 'undefined') module.exports = C1;
     }
     // the beam reveals the flashlight-lit render underneath the finger
     var lk = isC1() ? c1LitKey() : null, li = $('litImg');
+    // brownout nights: the torch brightens whatever is under the beam (the candle renders are too dark to just "reveal")
+    var torch3 = !isC1() && g.p.light && (g.dark || !g.house.power) && !g.p.travel;
+    var litOK = torch3 && g.dark && /_c$/.test(key) && key.indexOf('cabinet') < 0;
+    if (torch3) lk = litOK ? key + 'l' : key;   // candle nights: the same view lit by the torch (rendered), revealed under the beam
+    li.style.filter = torch3 && g.dark && !litOK ? 'brightness(4.2) saturate(.75) contrast(1.05)' : '';
     if (lk) {
       if (li.getAttribute('data-k') !== lk) { li.src = 'assets/img/' + lk + '.jpg'; li.setAttribute('data-k', lk); }
       var m = 'radial-gradient(circle at ' + beam[0] + 'px ' + beam[1] + 'px, #000 0, #000 120px, rgba(0,0,0,.6) 190px, transparent 280px)';
       li.style.webkitMaskImage = li.style.maskImage = m; li.style.opacity = 1;
     } else li.style.opacity = 0;
     if (pz && (!game || game.over || game.p.room !== 'kitchen' || game.p.travel || game.house.power)) puzzleClose();
-    if (isC1()) c1Overlays(); else if (ovlSig) { ovlSig = ''; $('ovl').innerHTML = ''; }
+    if (isC1()) c1Overlays(); else if (game.chapter === 3) c3Overlays(); else if (ovlSig) { ovlSig = ''; $('ovl').innerHTML = ''; }
     // flashlight beam follows the finger
     var dk = $('dark'), lit = g.p.light;
     var needDark = dark || (g.p.room === 'curtain' && g.house.curtain) || g.p.room === 'hall' && !g.house.power || (isC1() && g.p.pos === 'cabinet');
@@ -1661,13 +1796,24 @@ if (typeof module !== 'undefined') module.exports = C1;
     stopBreath(); if (holdH) { stop(holdH, 0.2); holdH = null; }
     document.querySelectorAll('.spot.down').forEach(function (b) { b.classList.remove('down'); });
   }
-  function lightAllowed() { if (isC1()) return c1LightAllowed(); var g = game, H = g.house, r = g.p.room; return !g.p.hidden && ((r === 'curtain' && H.curtain) || !H.power || r === 'hall'); }
+  function lightAllowed() { if (isC1()) return c1LightAllowed(); var g = game, H = g.house, r = g.p.room; return !g.p.hidden && ((r === 'curtain' && H.curtain) || !H.power || r === 'hall' || (g.chapter === 3 && r === 'bedroom') || (g.dark && r === 'living')); }
   function spots() {
     if (isC1()) return c1Spots();
     var g = game, p = g.p, H = g.house, r = p.room, S = [];
     var exit = { id: 'exit', x: 28, y: 86, w: 44, h: 14, cls: 'exit', label: '▼  ' + T('go_hall').toUpperCase(), tap: function () { go('hall', [50, 100]); } };
     var out = { id: 'exit', x: 28, y: 86, w: 44, h: 14, cls: 'exit', label: '▲  ' + T('a_unhide').toUpperCase(), tap: function () { act('hide'); } };
-    if (r === 'bedroom') {
+    if (r === 'bedroom' && g.chapter === 3) {
+      if (p.hidden) S.push(out);
+      else {
+        if (H.door) S.push({ id: 'door', x: 30, y: 33, w: 14, h: 46, cls: 'hold', label: T('a_hold_door'), hold: 'door', dbl: function () { act('door'); }, hintTap: 'h_door' });
+        else {
+          S.push({ id: 'door', x: 30, y: 33, w: 14, h: 46, label: T('a_door_close'), tap: function () { act('door'); } });
+          S.push({ id: 'look', x: 30, y: 12, w: 14, h: 20, label: T('a_look'), tap: function () { c3Look(); } });
+        }
+        S.push({ id: 'bed', x: 0, y: 66, w: 25, h: 34, label: T('a_hide_bed'), tap: function () { act('hide'); } });
+        S.push(exit);
+      }
+    } else if (r === 'bedroom') {
       if (p.hidden) S.push(out);
       else {
         if (H.door) S.push({ id: 'door', x: 39, y: 26, w: 16, h: 56, cls: 'hold', label: T('a_hold_door'), hold: 'door', dbl: function () { act('door'); }, hintTap: 'h_door' });
@@ -1694,16 +1840,16 @@ if (typeof module !== 'undefined') module.exports = C1;
         if (g.saltOK && p.salt > 0) S.push({ id: 'salt', x: 38, y: 30, w: 24, h: 30, label: T('a_salt', p.salt), tap: function () { act('salt'); } });
         S.push(out);
       } else {
-        S.push({ id: 'cabinet', x: g.chapter === 2 ? 0 : 9, y: g.chapter === 2 ? 24 : 60, w: g.chapter === 2 ? 9 : 46, h: g.chapter === 2 ? 62 : 25, label: T('a_hide_cab'), tap: function () { act('hide'); } });
+        S.push({ id: 'cabinet', x: g.chapter >= 2 ? 0 : 9, y: g.chapter >= 2 ? 24 : 60, w: g.chapter >= 2 ? 9 : 46, h: g.chapter >= 2 ? 62 : 25, label: T('a_hide_cab'), tap: function () { act('hide'); } });
         if (g.saltOK) S.push({ id: 'salt', x: 24, y: 42, w: 11, h: 16, cls: p.salt > 0 ? '' : 'off', label: T('a_salt', p.salt), tap: function () { act('salt'); } });
-        if (!H.power) S.push({ id: 'breaker', x: 84, y: 20, w: 15, h: 20, cls: 'urgent', label: T('a_breaker'), tap: function () { if (g.chapter === 2) puzzleOpen(); else act('breaker'); } });
+        if (!H.power && !g.dark) S.push({ id: 'breaker', x: 84, y: 20, w: 15, h: 20, cls: 'urgent', label: T('a_breaker'), tap: function () { if (g.chapter >= 2) puzzleOpen(); else act('breaker'); } });
         S.push(exit);
       }
     } else if (r === 'curtain') {
-      if (!H.curtain) S.push({ id: 'curtain', x: g.chapter === 2 ? 20 : 10, y: 6, w: g.chapter === 2 ? 52 : 80, h: 76, cls: 'hold', label: T('a_hold_curtain'), hold: 'curtain', dbl: function () { act('curtain'); }, hintTap: 'h_curtain' });
+      if (!H.curtain) S.push({ id: 'curtain', x: g.chapter >= 2 ? 20 : 10, y: 6, w: g.chapter >= 2 ? 52 : 80, h: 76, cls: 'hold', label: T('a_hold_curtain'), hold: 'curtain', dbl: function () { act('curtain'); }, hintTap: 'h_curtain' });
       else {
-        S.push({ id: 'cl', x: g.chapter === 2 ? 6 : 0, y: 0, w: 15, h: 84, label: T('a_close_short'), tap: function () { act('curtain'); } });
-        S.push({ id: 'cr', x: g.chapter === 2 ? 70 : 83, y: 0, w: 15, h: 84, label: T('a_close_short'), tap: function () { act('curtain'); } });
+        S.push({ id: 'cl', x: g.chapter >= 2 ? 6 : 0, y: 0, w: 15, h: 84, label: T('a_close_short'), tap: function () { act('curtain'); } });
+        S.push({ id: 'cr', x: g.chapter >= 2 ? 70 : 83, y: 0, w: 15, h: 84, label: T('a_close_short'), tap: function () { act('curtain'); } });
       }
       S.push(exit);
     }
@@ -2037,6 +2183,44 @@ if (typeof module !== 'undefined') module.exports = C1;
     } else { call.wait = 1.0 + txt.length * 0.062; }
   }
 
+  // ------------------------------------------------------------ Custom Night: 8 modes, each entity 0-20, records
+  var CU_ENT = ['kumot', 'malik', 'kal', 'silip', 'barang'];
+  var CU_MODES = [
+    { kumot: 5, malik: 5, kal: 5, silip: 5, barang: 5 }, { kumot: 10, malik: 10, kal: 10, silip: 10, barang: 10 }, { kumot: 15, malik: 15, kal: 15, silip: 15, barang: 15 },
+    { kumot: 20, malik: 20, kal: 20, silip: 20, barang: 20 }, { kumot: 20, malik: 0, kal: 0, silip: 0, barang: 0 }, { kumot: 0, malik: 0, kal: 0, silip: 20, barang: 20 },
+    { kumot: 0, malik: 15, kal: 15, silip: 0, barang: 0 }, { kumot: 10, malik: 10, kal: 10, silip: 10, barang: 10, dark: true }];
+  var cuSel = { mode: 1, lv: JSON.parse(JSON.stringify(CU_MODES[1])) }, customRun = null;
+  function cuPoints(lv) { return CU_ENT.reduce(function (a, k) { return a + (lv[k] || 0); }, 0) * 10 * (lv.dark ? 2 : 1); }
+  function customRender() {
+    var m = $('cu-modes'); m.innerHTML = '';
+    T('cu_modes').forEach(function (md, i) {
+      var b = document.createElement('button'); b.className = 'cumode' + (cuSel.mode === i ? ' on' : ''); b.type = 'button';
+      b.innerHTML = '<span></span><small></small>'; b.firstChild.textContent = md[0]; b.lastChild.textContent = md[1];
+      b.addEventListener('click', function () { cuSel.mode = i; cuSel.lv = JSON.parse(JSON.stringify(CU_MODES[i])); customRender(); });
+      m.appendChild(b);
+    });
+    var a = $('cu-ai'); a.innerHTML = '';
+    CU_ENT.forEach(function (k) {
+      var d = document.createElement('div'); d.className = 'cuent';
+      var im = document.createElement('img'); im.src = 'assets/img/' + HERO[k] + '.jpg'; im.alt = '';
+      var nm = document.createElement('b'); nm.textContent = T('who')[k];
+      var lv = document.createElement('div'); lv.className = 'lv'; lv.textContent = cuSel.lv[k] || 0;
+      var mi = document.createElement('button'); mi.type = 'button'; mi.textContent = '−'; var pl = document.createElement('button'); pl.type = 'button'; pl.textContent = '+';
+      var set = function (dv) { cuSel.lv[k] = Math.max(0, Math.min(20, (cuSel.lv[k] || 0) + dv)); cuSel.mode = -1; customRender(); };
+      mi.addEventListener('click', function () { set(-1); }); pl.addEventListener('click', function () { set(1); });
+      d.appendChild(im); d.appendChild(nm); d.appendChild(lv); d.appendChild(mi); d.appendChild(pl); a.appendChild(d);
+    });
+    var key = cuSel.mode >= 0 ? 'm' + cuSel.mode : 'free', r = save.custom.records[key];
+    $('cu-rec').textContent = (r ? T('cu_rec', r + ' pts') : T('cu_none')) + ' · ' + cuPoints(cuSel.lv) + ' pts';
+  }
+  function customOpen() { stopMenu(); customRender(); show('scr-custom'); }
+  function customStart() {
+    customRun = { lv: JSON.parse(JSON.stringify(cuSel.lv)), key: cuSel.mode >= 0 ? 'm' + cuSel.mode : 'free' };
+    curCh = 3; nightIdx = 0; stopAll();
+    $('intro-n').textContent = T('custom_night'); $('intro-name').textContent = cuSel.mode >= 0 ? T('cu_modes')[cuSel.mode][0] : cuPoints(customRun.lv) + ' pts';
+    $('intro-rules').innerHTML = ''; show('scr-intro');
+  }
+
   // ------------------------------------------------------------ win / death
   function cleanupScene() { endCall(true); releaseHolds(); camClear(); viewLock = null; $('fx').innerHTML = ''; $('hot').innerHTML = ''; hotSig = 'none'; black(0, 10); if (runH) { stop(runH); runH = null; } }
   function onWin() {
@@ -2044,6 +2228,12 @@ if (typeof module !== 'undefined') module.exports = C1;
     var secs = Math.round((performance.now() - nightStart) / 1000);
     $('win-n').textContent = (curCh === 1 ? T('ch_n', 1) + ' · ' : '') + T('night_n', game.night);
     $('win-time').textContent = T('time_survived') + ': ' + Math.floor(secs / 60) + 'm ' + (secs % 60) + 's';
+    if (customRun) {
+      var pts = cuPoints(customRun.lv), rk = customRun.key;
+      save.custom.records[rk] = Math.max(save.custom.records[rk] || 0, pts); store();
+      $('win-n').textContent = T('custom_night'); $('win-time').textContent = T('cu_won', pts);
+      game = null; setTimeout(function () { show('scr-win'); }, 300); return;
+    }
     var key = 'c' + curCh, n = game.night, last = n >= CH_NIGHTS[curCh];
     save.prog[key] = Math.max(save.prog[key] || 0, n);
     if (!last) save.cur = { ch: curCh, n: n + 1 }; else if (curCh < 3) save.cur = { ch: curCh + 1, n: 1 };
@@ -2061,7 +2251,7 @@ if (typeof module !== 'undefined') module.exports = C1;
     play(WHO_SFX[who], { vol: save.set.reduced ? 0.45 : 1 });
     if (navigator.vibrate && !save.set.reduced) try { navigator.vibrate([120, 40, 200]); } catch (e) {}
     $('over-who').textContent = T('who')[who];
-    $('over-hint').textContent = (isC1() ? T('c1_hint') : T('hint'))[who] || '';
+    $('over-hint').textContent = (isC1() ? T('c1_hint') : T('hint'))[who] || T('c1_hint')[who] || '';
     if (who === 'barang') play('beetle_scatter', { vol: 1 });
     var c = game.clock(); $('over-time').textContent = (isC1() ? T('ch_n', 1) + ' · ' : '') + T('night_n', game.night) + ' · ' + c.h + ':' + (c.m < 10 ? '0' : '') + c.m + ' AM';
     $('over-bg').src = 'assets/img/' + WHO_IMG[who] + '.jpg';
@@ -2182,7 +2372,9 @@ if (typeof module !== 'undefined') module.exports = C1;
     on('load-go', function () { initAudio().then(function () { goFull(); toMenu(); }); });
     on('m-new', function () { save.pro.c1 = false; startNight(0, 1); });
     on('m-cont', function () { var c = save.cur; if (CH_READY[c.ch]) startNight(c.n - 1, c.ch); else show('scr-nights'); });
-    on('m-custom', function () { show('scr-nights'); });
+    on('m-custom', function () { customOpen(); });
+    on('cu-back', function () { show('scr-menu'); });
+    on('cu-go', function () { customStart(); });
     on('pp-ans', function () { ppAnswer(); });
     on('pp-skip', function () { ppEnd(true); });
     on('m-nights', function () { show('scr-nights'); });
@@ -2200,9 +2392,9 @@ if (typeof module !== 'undefined') module.exports = C1;
     on('p-settings', function () { settingsFrom = 'scr-pause'; show('scr-settings'); });
     on('p-menu', function () { cleanupScene(); paused = false; if (AC) AC.resume(); stopAll(); game = null; if (raf) cancelAnimationFrame(raf); toMenu(); });
     on('pz-leave', function () { puzzleClose(); });
-    on('w-next', function () { startNight(Math.min(CH_NIGHTS[curCh] - 1, nightIdx + 1), curCh); });
+    on('w-next', function () { if (customRun) { customOpen(); return; } startNight(Math.min(CH_NIGHTS[curCh] - 1, nightIdx + 1), curCh); });
     on('w-menu', function () { toMenu(); });
-    on('o-retry', function () { startNight(nightIdx, curCh); });
+    on('o-retry', function () { if (customRun) { customStart(); return; } startNight(nightIdx, curCh); });
     on('o-menu', function () { stopAll(); toMenu(); });
     on('e-menu', function () { toMenu(); });
     on('s-full', function () { if (document.fullscreenElement) { try { document.exitFullscreen(); } catch (e) {} } else goFull(); });
