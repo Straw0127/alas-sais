@@ -96,7 +96,7 @@ for s_ in (-1, 1):
     cc.rotation_euler = (math.radians(90), 0, 0); cc.location = (CX + s_ * 0.21, HY1 - 0.02, 1.02)
     if OPT.get('hcurtain', 'closed') == 'open': cc.scale = (0.45, 1, 1); cc.location.x = CX + s_ * 0.52   # drawn aside
 # the back door itself: a jalousie-glass door, shut; beyond it the back yard (Chapter 2: Silip comes from there)
-jal_ = mat_basic('bdJal', (0.7, 0.75, 0.75), 0.05, trans=0.85)
+jal_ = mat_basic('bdJal', (0.7, 0.75, 0.75), 0.05, trans=0.92)
 bdf_ = mat_planks('bdFrame', (0.18, 0.12, 0.07), (0.22, 0.15, 0.09), scale=3)
 for sx_ in (-1, 1): box('bdStile%d' % sx_, (0.07, 0.05, 2.04), (CX + sx_ * 0.39, HY1 + 0.08, 1.02), bdf_)
 box('bdRailT', (0.85, 0.05, 0.08), (CX, HY1 + 0.08, 2.0), bdf_); box('bdRailB', (0.85, 0.05, 0.5), (CX, HY1 + 0.08, 0.25), bdf_)
@@ -356,8 +356,8 @@ HS = int(OPT.get('hsilip', 0))
 if HS:
     hp_ = {1: ((CX + 0.6, HY1 + 9.2, 2.3), 1.0), 2: ((CX - 0.9, HY1 + 5.2, 1.7), 1.0), 3: ((CX + 0.25, HY1 + 2.3, 1.45), 1.0), 4: ((CX + 0.05, HY1 + 0.45, 1.25), 0.8)}[HS]
     silip_at(hp_[0], 0.0, hp_[1])
-    if OPT.get('hcurtain', 'closed') == 'open': point('hsKey', (hp_[0][0] + 0.5, hp_[0][1] - 0.9 if HS < 4 else HY1 + 0.15, hp_[0][2] + 0.6), 5 if HS < 4 else 2, color=(0.6, 0.7, 1.0), radius=0.3)
-    elif HS >= 3: area('hsBack', (CX, hp_[0][1] + 1.4, 1.5), (math.radians(-90), 0, 0), 220, size=(0.6, 0.6), color=(0.55, 0.65, 1.0))   # her shadow on the curtain
+    if OPT.get('hcurtain', 'closed') == 'open': hk_ = point('hsKey', (hp_[0][0] + 0.5, hp_[0][1] - 0.9 if HS < 4 else HY1 + 0.15, hp_[0][2] + 0.6), 5 if HS < 4 else 2, color=(0.6, 0.7, 1.0), radius=0.3); hk_.visible_glossy = False
+    elif HS >= 3: hb_ = point('hsBack', (CX + 0.05, hp_[0][1] + 1.1, 1.45), 260, color=(0.55, 0.65, 1.0), radius=0.02); hb_.visible_glossy = False   # her shadow on the curtain
 if SIL == 1:     # far: hovering above the fence line
     silip_at((W / 2 + 5.0, WY + 0.7, 1.65), math.radians(-90), 1.0)
     point('silKey1', (W / 2 + 4.0, WY + 0.2, 2.2), 4, color=(0.6, 0.7, 1.0), radius=0.3)
@@ -404,7 +404,7 @@ elif VIEW == 'kitchen':     # in the kitchen doorway area looking at the counter
 elif VIEW == 'kitchen_hide':   # inside the low cabinet on the kitchen's side wall: the hall door is on the left
     camera(KW(-2.0, 2.55, 1.32), KW(1.3, 2.95, 1.05), lens=20)
 elif VIEW == 'curtain':     # facing the back door at the start of the hall
-    point('curtainFill', (CX + 0.1, D + 0.35, 2.2), 6, color=(1.0, 0.62, 0.32), radius=0.25)   # the hall bulb's spill on the cloth
+    cf_ = point('curtainFill', (CX + 0.1, D + 0.35, 2.2), 6, color=(1.0, 0.62, 0.32), radius=0.25); cf_.visible_glossy = False   # the hall bulb's spill on the cloth
     camera((CX + 0.02, D + 0.12, 1.5), (CX - 0.03, HY1 + 4.0, 1.4), lens=19)
 elif VIEW == 'living':
     camera(LW(-0.35, 1.0, 1.55), LW(0.25, LDIM[1], 1.1), lens=22)
