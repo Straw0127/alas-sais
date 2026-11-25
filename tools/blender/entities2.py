@@ -143,7 +143,7 @@ def scatter_beetles(prefix, center, size, n, normal_axis='x', seed=1, s=1.0, mat
         _beetle('%sB%d' % (prefix, i), loc, rot, mat, s * rnd.uniform(0.7, 1.3))
 
 
-def build_barang(loc=(0, 0, 0), rotz=0.0, stage=4, glow=1.0):
+def build_barang(loc=(0, 0, 0), rotz=0.0, stage=4, glow=1.0, right_hand=True):
     """Barang: what the mambabarang left in Lola's aparador. A withered woman folded among the hanging dresses,
     skin split and crawling with black beetles; eyes are holes where the beetles come out. Built facing -y.
     stage 2: only eyes in the dark; stage 3: face + one hand on the edge; stage 4: leaning out, mouth open, both hands."""
@@ -193,7 +193,7 @@ def build_barang(loc=(0, 0, 0), rotz=0.0, stage=4, glow=1.0):
         if stage >= 3: sphere('brHole%d' % s, 0.022, (ex, hy - 0.075, hz + 0.02), hole, scale=(1, 0.5, 0.8))
         sphere('brGlint%d' % s, 0.005, (ex, hy - 0.09 if stage >= 3 else hy - 0.02, hz + 0.022), glint)
     # hands: long grey fingers over the edge of the flap
-    if stage >= 3:
+    if stage >= 3 and right_hand:
         _claws('brHR', (0.2, hy - 0.06, 1.12), (0.05, -0.6, -0.2), skin, n=4, L=0.2, spread=0.03, curl=-0.08)
         skin_body('brArmR', [(0.1, hy + 0.15, 1.0), (0.2, hy - 0.06, 1.12)], [(0, 1)], [0.03, 0.02], skin, sub=1)
         scatter_beetles('brHRb', (0.22, hy - 0.12, 1.1), (0.08, 0.06), 6, 'z', seed=11, mat=bm)

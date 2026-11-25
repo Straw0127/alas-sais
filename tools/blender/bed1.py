@@ -213,7 +213,20 @@ if BAR >= 1:   # beetles creeping out of the gap onto the door
     scatter_beetles('gap', (fx - 0.035, AY + 0.04, 1.0), (0.12, 0.9), {1: 5, 2: 16, 3: 26, 4: 40}[BAR], 'x', seed=21, mat=bm)
     if BAR >= 2: scatter_beetles('floorB', (fx - 0.3, AY, 0.012), (0.5, 0.6), {2: 4, 3: 10, 4: 18}[BAR], 'z', seed=8, mat=bm, s=1.1)
 if BAR >= 2:
-    build_barang((AX - 0.02, AY + 0.15, 0), rotz=math.radians(-90), stage=BAR)
+    build_barang((AX - 0.02, AY + 0.15, 0), rotz=math.radians(-90), stage=BAR, right_hand=False)
+if BAR >= 3:
+    # long grey fingers curled around the free edge of the closed door, coming from inside the gap
+    from entities import skin_body, mat_skin
+    fskin = mat_skin('brFing', (0.12, 0.1, 0.075), (0.24, 0.2, 0.15), sss=0.15, rough=0.7)
+    nailm = mat_basic('brNail2', (0.06, 0.05, 0.035), 0.3)
+    ey = AY                                  # free edge of the closed door
+    for i, z in enumerate((1.02, 1.065, 1.11, 1.155)):
+        L = 1.0 if i in (1, 2) else 0.85
+        pts = [(fx + 0.09, ey + 0.05, z - 0.01), (fx + 0.03, ey + 0.012, z), (fx - 0.012, ey - 0.002, z), (fx - 0.03, ey - 0.03 * L, z + 0.002), (fx - 0.033, ey - 0.07 * L, z - 0.004)]
+        skin_body('brFinger%d' % i, pts, [(k, k + 1) for k in range(4)], [0.012, 0.0105, 0.0095, 0.008, 0.006], fskin, sub=2)
+        tip = (fx - 0.034, ey - 0.07 * L - 0.012, z - 0.006)
+        sphere('brNailT%d' % i, 0.007, tip, nailm, scale=(0.5, 1.6, 0.5))
+    skin_body('brWrist', [(fx + 0.25, ey + 0.12, 1.0), (fx + 0.09, ey + 0.05, 1.08)], [(0, 1)], [0.03, 0.026], fskin, sub=2)
 
 # ---------------------------------------------------------------- room props
 cord = mat_basic('cord', (0.02, 0.02, 0.02), 0.6)
