@@ -29,53 +29,64 @@ box('jambL', (0.06, 0.16, 2.14), (dx - 0.49, D, 1.07), wood_dark)
 box('jambR', (0.06, 0.16, 2.14), (dx + 0.49, D, 1.07), wood_dark)
 box('jambT', (1.04, 0.16, 0.07), (dx, D, 2.14), wood_dark)
 dim = mat_noise('hall', (0.035, 0.032, 0.03), (0.07, 0.06, 0.055), scale=3)
-# the hallway outside the bedroom door. From the doorway you look down the hall; the sala doorway is a few steps ahead
-# in the right-hand wall, seen at a steep angle, so you only ever catch its light and a slice of the room.
-hallW = mat_tabla('tablaHallB', paint=(0.26, 0.23, 0.18))
-HX0, HX1, HY0, HY1 = dx - 5.6, dx + 1.0, D, D + 1.3
-CY = (HY0 + HY1) / 2
-OX0, OX1 = dx - 3.05, dx - 2.1                                 # sala doorway in the far wall of the hall
-box('hallFloor', (HX1 - HX0, HY1 - HY0, 0.1), ((HX0 + HX1) / 2, CY, -0.05), mat_cement('hallCem'))
-box('hallCeil', (HX1 - HX0, HY1 - HY0, 0.1), ((HX0 + HX1) / 2, CY, 2.8), mat_plywood('hallPly'))
-opp = box('hallOpp', (HX1 - HX0, 0.1, 2.8), ((HX0 + HX1) / 2, HY1 + 0.05, 1.4), hallW)
-cut(opp, box('salaDoor', (OX1 - OX0, 0.5, 2.1), ((OX0 + OX1) / 2, HY1 + 0.05, 1.05)))
-box('salaJambL', (0.05, 0.14, 2.12), (OX0 - 0.03, HY1 + 0.05, 1.06), mat_planks('sjw', (0.07, 0.035, 0.015), (0.1, 0.05, 0.02), scale=3))
-box('salaJambR', (0.05, 0.14, 2.12), (OX1 + 0.03, HY1 + 0.05, 1.06), mat_planks('sjw2', (0.07, 0.035, 0.015), (0.1, 0.05, 0.02), scale=3))
-box('hallNearL', ((-W / 2) - HX0, 0.1, 2.8), ((HX0 - W / 2) / 2, HY0 - 0.05, 1.4), hallW)
-eL = box('hallEndL', (0.1, HY1 - HY0, 2.8), (HX0 - 0.05, CY, 1.4), hallW)
-cut(eL, box('hwin', (0.5, 0.7, 0.8), (HX0 - 0.05, CY, 1.55)))                 # a small window at the far end of the hall
-for k_ in range(5): cyl('hwbar%d' % k_, 0.008, 0.8, (HX0 - 0.05, CY - 0.28 + k_ * 0.14, 1.55), mat_basic('hwi', (0.03, 0.03, 0.03), 0.5), verts=8)
-area('hallMoon', (HX0 - 0.9, CY, 1.9), (0, math.radians(-75), 0), 160, size=(0.6, 0.6), color=(0.5, 0.62, 1.0))
-box('hallEndR', (0.1, HY1 - HY0, 2.8), (HX1 + 0.05, CY, 1.4), hallW)
-framed('hallPhoto0', (dx - 1.2, HY1 - 0.01, 1.62), (0.34, 0.44), '-y', mat_noise('hp0', (0.04, 0.03, 0.02), (0.18, 0.14, 0.1), scale=5, bump=0.0))
-framed('hallPhoto1', (dx - 4.2, HY1 - 0.01, 1.62), (0.3, 0.4), '-y', mat_noise('hp1', (0.04, 0.03, 0.02), (0.18, 0.14, 0.1), scale=6, bump=0.0))
-box('hallCal', (0.3, 0.01, 0.42), (dx - 1.8, HY0 + 0.01, 1.5), mat_noise('hcal', (0.55, 0.5, 0.42), (0.7, 0.65, 0.55), scale=20))
-cyl('hallBulbCord', 0.005, 0.4, (dx - 1.6, CY, 2.6), mat_basic('cordH', (0.02, 0.02, 0.02), 0.6))
-sphere('hallBulbDead', 0.045, (dx - 1.6, CY, 2.37), mat_basic('deadBulb', (0.4, 0.38, 0.32), 0.2))
-for k_, (xx, rz) in enumerate(((dx - 0.9, 0.4), (dx - 1.1, -0.3))):    # tsinelas by the door
-    box('tsinelas%d' % k_, (0.1, 0.26, 0.02), (xx, D + 0.35 + k_ * 0.12, 0.012), mat_basic('tsin%d' % k_, (0.5, 0.12, 0.1) if k_ else (0.6, 0.55, 0.5), 0.8), rot=(0, 0, rz), bevel=0.01)
-cyl('walis', 0.012, 1.4, (dx - 3.4, HY1 - 0.08, 0.7), mat_basic('walisB', (0.1, 0.3, 0.7), 0.4), rot=(0.12, 0, 0))
-decal('hallStainF', mat_stain('hstain', (0.04, 0.03, 0.02), scale=3), (dx - 1.5, CY, 0.004), (1.4, 0.9), 'z')
-# the sala, through that doorway
-SX0, SX1, SY0, SY1 = dx - 5.6, dx - 0.9, HY1 + 0.1, HY1 + 3.7
+# The hallway, matching the hallway scene of the house: the bedroom door is on its left wall. Leaning out of the bedroom,
+# the hall runs to the kitchen at the end; the sala door is on the opposite wall a little further down, seen at an angle;
+# the back door with the red curtain is behind you.
+hallW = mat_tabla('tablaHallB', paint=(0.3, 0.26, 0.2))
+def HXP(sv): return dx - sv            # distance along the hall from the bedroom door (toward the kitchen) -> x
+HY0, HY1 = D, D + 1.3; CY = (HY0 + HY1) / 2
+XK, XB = HXP(4.3), HXP(-2.2)           # kitchen end, back end
+box('hallFloor', (XB - XK, HY1 - HY0, 0.1), ((XK + XB) / 2, CY, -0.05), mat_cement('hallCem'))
+box('hallCeil', (XB - XK, HY1 - HY0, 0.1), ((XK + XB) / 2, CY, 2.7), mat_plywood('hallPly'))
+opp = box('hallOpp', (XB - XK, 0.1, 2.7), ((XK + XB) / 2, HY1 + 0.05, 1.35), hallW)
+LX = HXP(1.4); CX = HXP(-1.2)          # sala door and the curtained back door, both on the opposite wall
+cut(opp, box('salaDoor', (0.85, 0.5, 2.05), (LX, HY1 + 0.05, 1.02))); cut(opp, box('backDoor', (0.85, 0.5, 2.05), (CX, HY1 + 0.05, 1.02)))
+box('hallNearL', ((-W / 2) - XK, 0.1, 2.7), ((XK - W / 2) / 2, HY0 - 0.05, 1.35), hallW)
+box('hallNearR', (XB - W / 2, 0.1, 2.7), ((XB + W / 2) / 2, HY0 - 0.05, 1.35), hallW)
+endK = box('hallEndK', (0.1, HY1 - HY0, 2.7), (XK - 0.05, CY, 1.35), hallW); cut(endK, box('kd', (0.5, 0.85, 2.05), (XK - 0.05, CY, 1.02)))
+box('hallEndB', (0.1, HY1 - HY0, 2.7), (XB + 0.05, CY, 1.35), hallW)
+frame = mat_planks('hframe', (0.07, 0.035, 0.015), (0.1, 0.05, 0.02), scale=3, rough=0.45)
+photo = mat_noise('hphoto', (0.1, 0.09, 0.08), (0.35, 0.3, 0.25), scale=25)
+rr = random.Random(4)
+for i_, (sv, z) in enumerate(((2.2, 1.6), (2.7, 1.55))):     # family photos on the bedroom-side wall, further down
+    f_ = box('hpf%d' % i_, (0.26, 0.02, 0.32), (HXP(sv), HY0 + 0.015, z), frame, rot=(0, math.radians(rr.uniform(-6, 6)), 0))
+    box('hpp%d' % i_, (0.2, 0.005, 0.26), (HXP(sv), HY0 + 0.028, z), photo, rot=f_.rotation_euler)
+gl = mat_basic('hbulb', (1, 0.85, 0.6), 0.1, emit=(1.0, 0.6, 0.3), emit_str=6)
+hb = sphere('hallBulb', 0.045, (HXP(1.0), CY, 2.3), gl); hb.visible_shadow = False
+point('hallBulbL', (HXP(1.0), CY, 2.28), 10, color=(1.0, 0.6, 0.3), radius=0.04)
+wire_run([(XB, HY1 - 0.02, 2.68), (XK, HY1 - 0.02, 2.68)])
+# the kitchen at the end: hollow blocks, cold light
+box('kitBack', (0.1, 3.0, 2.7), (XK - 1.5, CY, 1.35), mat_hollowblock('hbKit'))
+box('kitFloor', (3.0, 3.0, 0.1), (XK - 1.0, CY, -0.05), mat_cement('kitCem'))
+point('kitLight', (XK - 1.0, CY + 0.6, 2.2), 26, color=(0.6, 0.8, 1.0), radius=0.2)
+box('kitShelf', (0.3, 0.9, 0.04), (XK - 1.42, CY - 0.2, 1.4), frame)
+for k_ in range(4): cyl('kitJar%d' % k_, 0.05, 0.14, (XK - 1.42, CY - 0.5 + k_ * 0.2, 1.49), mat_basic('kj%d' % k_, (0.5, 0.45, 0.35), 0.3), verts=12)
+# the sala through its door: dark, the TV on
+SALA = OPT.get('sala', 'tv')
+SX0, SX1, SY0, SY1 = LX - 2.6, LX + 1.6, HY1 + 0.1, HY1 + 3.6
 salaW = mat_noise('salaWall', (0.16, 0.15, 0.13), (0.24, 0.22, 0.19), scale=3, bump=0.05)
 box('salaFloor', (SX1 - SX0, SY1 - SY0, 0.1), ((SX0 + SX1) / 2, (SY0 + SY1) / 2, -0.05), mat_planks('salaFl', (0.12, 0.08, 0.05), (0.16, 0.11, 0.07), scale=1.5))
-box('salaBack', (SX1 - SX0, 0.1, 2.8), ((SX0 + SX1) / 2, SY1, 1.4), salaW)
-box('salaL', (0.1, SY1 - SY0, 2.8), (SX0, (SY0 + SY1) / 2, 1.4), salaW)
-box('salaR', (0.1, SY1 - SY0, 2.8), (SX1, (SY0 + SY1) / 2, 1.4), salaW)
-box('salaCeil', (SX1 - SX0, SY1 - SY0, 0.1), ((SX0 + SX1) / 2, (SY0 + SY1) / 2, 2.8), mat_plywood('salaPly'))
-SALA = OPT.get('sala', 'tv')
-cabM = mat_planks('tvCab', (0.06, 0.035, 0.015), (0.09, 0.05, 0.02), scale=3)
-box('tvCab', (1.1, 0.45, 0.55), (OX0 - 0.9, SY1 - 0.3, 0.28), cabM)
-box('tvBox', (0.6, 0.45, 0.48), (OX0 - 0.9, SY1 - 0.32, 0.8), mat_basic('tvShell', (0.04, 0.04, 0.04), 0.5))
-box('tvScr', (0.48, 0.02, 0.36), (OX0 - 0.9, SY1 - 0.56, 0.8), emission('tvScrE', (0.5, 0.78, 1.0), 2.6 if SALA == 'tv' else 0.02))
-if SALA == 'tv': point('tvGlow', ((OX0 + OX1) / 2, HY1 + 0.9, 1.0), 70, color=(0.45, 0.7, 1.0), radius=0.5)
+box('salaBack', (SX1 - SX0, 0.1, 2.7), ((SX0 + SX1) / 2, SY1, 1.35), salaW)
+box('salaL', (0.1, SY1 - SY0, 2.7), (SX0, (SY0 + SY1) / 2, 1.35), salaW); box('salaR', (0.1, SY1 - SY0, 2.7), (SX1, (SY0 + SY1) / 2, 1.35), salaW)
+box('salaCeil', (SX1 - SX0, SY1 - SY0, 0.1), ((SX0 + SX1) / 2, (SY0 + SY1) / 2, 2.7), mat_plywood('salaPly'))
+box('tvCab', (1.1, 0.45, 0.55), (LX - 1.0, SY1 - 0.3, 0.28), frame)
+box('tvBox', (0.6, 0.45, 0.48), (LX - 1.0, SY1 - 0.32, 0.8), mat_basic('tvShell', (0.04, 0.04, 0.04), 0.5))
+box('tvScr', (0.48, 0.02, 0.36), (LX - 1.0, SY1 - 0.56, 0.8), emission('tvScrE', (0.5, 0.78, 1.0), 2.6 if SALA == 'tv' else 0.02))
+if SALA == 'tv': point('tvGlow', (LX - 0.5, HY1 + 1.0, 1.0), 45, color=(0.45, 0.7, 1.0), radius=0.5)
 sofaM = mat_noise('sofaM', (0.08, 0.05, 0.04), (0.14, 0.09, 0.06), scale=8)
-box('sofaSeat', (1.8, 0.8, 0.42), (OX1 + 0.4, SY0 + 1.0, 0.21), sofaM, bevel=0.04); box('sofaBack', (0.2, 0.8, 0.8), (OX1 + 1.35, SY0 + 1.0, 0.5), sofaM, bevel=0.04)
-box('salaClock', (0.3, 0.02, 0.3), (OX0 - 0.2, SY1 - 0.02, 1.9), mat_basic('clk', (0.6, 0.58, 0.5), 0.4))
+box('sofaSeat', (1.8, 0.8, 0.42), (LX + 0.3, SY0 + 1.2, 0.21), sofaM, bevel=0.04)
 if SALA == 'lights':
-    box('salaTube', (1.2, 0.05, 0.04), ((SX0 + SX1) / 2, (SY0 + SY1) / 2, 2.74), emission('tubeE', (0.9, 1.0, 0.95), 8))
-    area('salaTubeL', ((SX0 + SX1) / 2, (SY0 + SY1) / 2, 2.7), (0, 0, 0), 260, size=(1.2, 0.2), color=(0.85, 1.0, 0.92))
+    box('salaTube', (1.2, 0.05, 0.04), ((SX0 + SX1) / 2, (SY0 + SY1) / 2, 2.64), emission('tubeE', (0.9, 1.0, 0.95), 8))
+    area('salaTubeL', ((SX0 + SX1) / 2, (SY0 + SY1) / 2, 2.6), (0, 0, 0), 260, size=(1.2, 0.2), color=(0.85, 1.0, 0.92))
+# the back door with the same red floral curtain as the bedroom window (behind you when you lean out)
+bcm = mat_floral('backCurtain', (0.45, 0.12, 0.14), (0.6, 0.45, 0.3), (0.3, 0.05, 0.08), scale=10)
+for s_ in (-1, 1):
+    bpy.ops.mesh.primitive_grid_add(x_subdivisions=40, y_subdivisions=6, size=1, location=(0, 0, 0))
+    cc = bpy.context.active_object; cc.scale = (0.46, 1.9, 1); bpy.ops.object.transform_apply(scale=True)
+    tt = bpy.data.textures.new('bct%d' % s_, 'WOOD'); tt.wood_type = 'BANDS'; tt.noise_basis_2 = 'SIN'; tt.noise_scale = 0.06
+    dmm = cc.modifiers.new('d', 'DISPLACE'); dmm.texture = tt; dmm.strength = 0.05; dmm.texture_coords = 'OBJECT'
+    cc.modifiers.new('s', 'SOLIDIFY').thickness = 0.004; cc.data.materials.append(bcm)
+    cc.rotation_euler = (math.radians(90), 0, 0); cc.location = (CX + s_ * 0.21, HY1 - 0.02, 1.02)
 door_mat = mat_planks('door', (0.2, 0.1, 0.045), (0.24, 0.13, 0.06), scale=2.5, rough=0.5)
 bpy.ops.object.empty_add(location=(dx + 0.45, D - 0.05, 0)); hinge = bpy.context.active_object
 parts = [box('doorPanel', (0.88, 0.045, 2.06), (dx + 0.01, D - 0.05, 1.03), door_mat, bevel=0.005)]
@@ -332,7 +343,7 @@ if PEEK > 0:   # what the flashlight finds down the hallway
     from entities import build_kumot_batibat
     before = set(o.name for o in bpy.data.objects)
     build_kumot_batibat(0, 0, peer=(PEEK == 3))
-    kp = {1: ((dx - 4.7, CY, 0), 90), 2: ((dx - 2.6, CY + 0.15, 0), 90), 3: ((dx - 1.15, CY - 0.05, 0), 90)}[PEEK]
+    kp = {1: ((HXP(3.85), CY, 0), 90), 2: ((HXP(1.7), CY + 0.1, 0), 90), 3: ((HXP(0.8), CY - 0.05, 0), 90)}[PEEK]
     group_at(before, kp[0], math.radians(kp[1]))
 if KUMOT:
     from entities import build_kumot_batibat
@@ -360,11 +371,15 @@ elif VIEW == 'door':
     # standing beside the door frame, looking diagonally to the left into the hallway (FNAF4's left door)
     if DOOR == 'closed':   # pulled back inside, both hands on the shut door
         camera((dx + 0.35, D - 0.55, 1.56), (dx - 0.55, D + 0.05, 1.3), lens=22)
-    else:                  # leaning out of the doorway: the hall runs ahead, the sala doorway is on the right, at an angle
-        camera((dx + 0.15, D + 0.28, 1.56), (dx - 5.5, D + 1.0, 1.36), lens=24)
+    else:                  # leaning out of the doorway, head tilted (FNAF4): the hall to the kitchen, the sala door at an angle
+        import mathutils
+        cpos = mathutils.Vector((dx + 0.12, D + 0.3, 1.5)); ctg = mathutils.Vector((HXP(4.3), D + 1.0, 1.32))
+        cam_ = camera(tuple(cpos), tuple(ctg), lens=22)
+        fwd_ = (ctg - cpos).normalized()
+        cam_.rotation_euler = (mathutils.Quaternion(fwd_, math.radians(-17)) @ fwd_.to_track_quat('-Z', 'Y')).to_euler()
     if PEEK >= 0:
         import mathutils
-        src_ = mathutils.Vector((dx + 0.1, D + 0.2, 1.42)); tg_ = mathutils.Vector((dx - 3.6, D + 0.75, 1.1))
+        src_ = mathutils.Vector((dx + 0.05, D + 0.25, 1.4)); tg_ = mathutils.Vector((HXP(3.0), D + 0.75, 1.1))
         spot('peekTorch', tuple(src_), (tg_ - src_).to_track_quat('-Z', 'Y').to_euler(), 700, angle=math.radians(40), color=(1.0, 0.93, 0.8), blend=0.85)
     point('viewFill', (dx + 0.9, D - 1.2, 1.9), 3, color=(1.0, 0.65, 0.35), radius=0.3)
 elif VIEW == 'window':
