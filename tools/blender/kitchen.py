@@ -1,4 +1,4 @@
-import sys, math; sys.path.insert(0, '/home/claude/render')
+import sys, os, math; sys.path.insert(0, '/home/claude/render')
 from lib import *
 sc = reset()
 a = sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else []
@@ -88,21 +88,21 @@ if KAL and not CAB:
     build_kalansing(1.3, D + 0.45); add_aswang_tongue(1.3, D + 0.45)
     point('kalRim', (1.3, D - 0.4, 1.7), 45, color=(0.7, 0.8, 0.7), radius=0.2)
 if CAB:
-    cut(bpy.data.objects['lowerCab'], box('cc', (0.54, 0.5, 0.76), (-0.45, D - 0.33, 0.43)))
+    cut(bpy.data.objects['lowerCab'], box('cc', (0.54, 0.64, 0.76), (-0.45, D - 0.3, 0.43)))
     for nme in ('door2', 'h2'):
         bpy.data.objects.remove(bpy.data.objects[nme], do_unlink=True)
-    for k in range(8):
-        box('slat%d' % k, (0.56, 0.012, 0.045), (-0.45, D - 0.61, 0.1 + k * 0.095), wood, rot=(math.radians(-35), 0, 0))
+    for k in range(6):
+        box('slat%d' % k, (0.56, 0.012, 0.03), (-0.45, D - 0.61, 0.12 + k * 0.125), wood, rot=(math.radians(-20), 0, 0))
     if KAL:
         build_kalansing(-0.1, 1.45); add_aswang_tongue(-0.1, 1.45)
         point('kalKey', (-0.3, 0.6, 1.8), 25, color=(0.8, 1.0, 0.75), radius=0.2)
     cam = camera((-0.45, D - 0.25, 0.42), (-0.3, 0.0, 0.62), lens=20)
     if '--anim=hide' in a:
         bpy.data.objects.remove(bpy.data.objects['door1'], do_unlink=True) if 'door1' in bpy.data.objects else None
-        N = 14
-        keys = [(1, (-0.2, 0.15, 1.55), (0.1, D, 1.05)), (6, (-0.4, 1.9, 0.75), (-0.45, D, 0.35)), (10, (-0.45, 2.9, 0.42), (-0.45, D, 0.4)), (14, (-0.45, D - 0.25, 0.42), (-0.3, 0.0, 0.62))]
+        N = int(os.environ.get('ANIM_N', 12)) + 1
+        keys = [(1, (-0.2, 0.15, 1.55), (0.1, D, 1.05)), (max(2, N * 6 // 14), (-0.4, 1.9, 0.75), (-0.45, D, 0.35)), (max(3, N * 10 // 14), (-0.45, 2.9, 0.42), (-0.45, D, 0.4)), (N, (-0.45, D - 0.25, 0.42), (-0.3, 0.0, 0.62))]
         for s_ in [o for o in bpy.data.objects if o.name.startswith('slat')]:
-            s_.hide_render = True; key(s_, 'hide_render', 1, True); key(s_, 'hide_render', 11, False)
+            s_.hide_render = True; key(s_, 'hide_render', 1, True); key(s_, 'hide_render', max(4, N * 11 // 14), False)
         for f, l, tg in keys:
             key(cam, 'location', f, l); key(cam, 'rotation_euler', f, tuple(look_rot(l, tg)))
         render_anim(out, N); raise SystemExit

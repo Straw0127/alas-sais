@@ -324,7 +324,7 @@ def build_kumot_batibat(x=0, y=0, peer=False):
 
 def build_tiyanak(x=0, y=0, z=0.0, crawl=True):
     """Malikmata as a Tiyanak: baby-sized, grey wrinkled old man's face, needle teeth, static flecks."""
-    skin = mat_skin('tySkin', (0.16, 0.13, 0.11), (0.3, 0.24, 0.2), sss=0.2, rough=0.6)
+    skin = mat_skin('tySkin', (0.26, 0.21, 0.17), (0.4, 0.32, 0.26), sss=0.25, rough=0.55)
     # add static flecks
     nt = skin.node_tree; b = nt.nodes['Principled BSDF']
     tc = nt.nodes.new('ShaderNodeTexCoord'); nz = nt.nodes.new('ShaderNodeTexNoise'); nz.inputs['Scale'].default_value = 260
@@ -332,7 +332,7 @@ def build_tiyanak(x=0, y=0, z=0.0, crawl=True):
     cr = nt.nodes.new('ShaderNodeValToRGB'); cr.color_ramp.elements[0].position = 0.68; cr.color_ramp.elements[1].position = 0.72
     cr.color_ramp.elements[0].color = (0, 0, 0, 1); cr.color_ramp.elements[1].color = (0.5, 0.9, 1.0, 1)
     nt.links.new(nz.outputs['Fac'], cr.inputs['Fac']); nt.links.new(cr.outputs['Color'], b.inputs['Emission Color'])
-    b.inputs['Emission Strength'].default_value = 1.2
+    b.inputs['Emission Strength'].default_value = 0.5
     if crawl:   # on all fours, head up
         v = [(0, 0.15, 0.3), (0, -0.05, 0.33), (0, -0.2, 0.38), (0, -0.28, 0.5),
              (-0.09, -0.15, 0.32), (-0.14, -0.28, 0.16), (-0.13, -0.36, 0.02),
@@ -351,14 +351,15 @@ def build_tiyanak(x=0, y=0, z=0.0, crawl=True):
     body = skin_body('tyBody', v, e, r, skin, loc=(x, y, z))
     hx, hy, hz = x + head[0], y + head[1], z + head[2]
     hd = sphere('tyHead', 0.12, (hx, hy, hz), skin, scale=(1.0, 0.95, 1.08))
-    d = hd.modifiers.new('wr', 'DISPLACE'); t = bpy.data.textures.new('wrinkles', 'STUCCI'); t.noise_scale = 0.03; d.texture = t; d.strength = 0.012
+    d = hd.modifiers.new('wr', 'DISPLACE'); t = bpy.data.textures.new('wrinkles', 'STUCCI'); t.noise_scale = 0.025; d.texture = t; d.strength = 0.022
+    hd.modifiers.new('sub', 'SUBSURF').levels = 2
     eyeW = mat_basic('tyEyeW', (0.6, 0.55, 0.4), 0.15); pupil = emission('tyPupil', (0.6, 0.95, 1.0), 4)
     for s_ in (-1, 1):
         sphere('tyEye%d' % s_, 0.02, (hx + s_ * 0.045, hy - 0.1, hz + 0.02), eyeW)
         sphere('tyPup%d' % s_, 0.008, (hx + s_ * 0.045, hy - 0.118, hz + 0.02), pupil)
     # mouth: dark slit with needle teeth
-    box('tyMouth', (0.11, 0.01, 0.025), (hx, hy - 0.112, hz - 0.055), mat_basic('tyMouthM', (0.02, 0.0, 0.0), 0.4))
-    tooth = mat_basic('tyTooth', (0.7, 0.65, 0.5), 0.3)
+    box('tyMouth', (0.13, 0.012, 0.035), (hx, hy - 0.112, hz - 0.055), mat_basic('tyMouthM', (0.02, 0.0, 0.0), 0.4))
+    tooth = mat_basic('tyTooth', (0.8, 0.75, 0.6), 0.3)
     for i in range(10):
         bpy.ops.mesh.primitive_cone_add(vertices=5, radius1=0.004, depth=0.028, location=(hx - 0.045 + i * 0.01, hy - 0.118, hz - 0.055 + (0.008 if i % 2 else -0.008)), rotation=(math.radians(180 if i % 2 else 0), 0, 0))
         bpy.context.active_object.data.materials.append(tooth)
@@ -366,7 +367,7 @@ def build_tiyanak(x=0, y=0, z=0.0, crawl=True):
 
 def build_manananggal(x=0, y=0, z=1.35, wing=1.0):
     """Silip as a Manananggal: severed upper torso hovering, bat wings, entrails, long hair, cracked capiz-mask face."""
-    skin = mat_skin('mnSkin', (0.42, 0.38, 0.34), (0.55, 0.5, 0.45), sss=0.3, rough=0.45)
+    skin = mat_skin('mnSkin', (0.24, 0.2, 0.17), (0.34, 0.28, 0.24), sss=0.3, rough=0.45)
     v = [(0, 0, 0), (0, 0.01, 0.28), (0, 0.0, 0.42), (0, -0.02, 0.52),
          (-0.17, 0.01, 0.38), (-0.32, -0.08, 0.12), (-0.38, -0.2, -0.18), (-0.36, -0.3, -0.36),
          (0.17, 0.01, 0.38), (0.32, -0.08, 0.12), (0.38, -0.2, -0.18), (0.36, -0.3, -0.36)]
@@ -384,7 +385,7 @@ def build_manananggal(x=0, y=0, z=1.35, wing=1.0):
     nt.links.new(vo.outputs['Distance'], cr.inputs['Fac'])
     mx = nt.nodes.new('ShaderNodeMix'); mx.data_type = 'RGBA'; mx.blend_type = 'MULTIPLY'; mx.inputs['Factor'].default_value = 1; mx.inputs['A'].default_value = (0.8, 0.77, 0.68, 1)
     nt.links.new(cr.outputs['Color'], mx.inputs['B']); nt.links.new(mx.outputs['Result'], b.inputs['Base Color'])
-    f = box('mnMask', (0.15, 0.012, 0.19), (x, y - 0.095, hz), m, bevel=0.03); f.modifiers.new('sub', 'SUBSURF').levels = 2
+    f = sphere('mnMask', 0.1, (x, y - 0.085, hz), m, scale=(0.78, 0.22, 1.0))
     sphere('mnEyeW', 0.02, (x - 0.03, y - 0.085, hz + 0.02), mat_basic('mnEW', (0.75, 0.2, 0.15), 0.3))
     sphere('mnEyeP', 0.009, (x - 0.03, y - 0.105, hz + 0.02), mat_basic('mnEP', (0, 0, 0), 0.2))
     hair = mat_basic('mnHair', (0.008, 0.008, 0.008), 0.25)

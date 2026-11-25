@@ -1,4 +1,4 @@
-import sys, math; sys.path.insert(0, '/home/claude/render')
+import sys, os, math; sys.path.insert(0, '/home/claude/render')
 from lib import *
 sc = reset()
 out = sys.argv[sys.argv.index('--') + 1] if '--' in sys.argv else '/home/claude/render/out/bedroom.png'
@@ -167,13 +167,13 @@ for _a in sys.argv:
     if _a.startswith('--anim='): ANIM = _a.split('=')[1]
 if ANIM:
     cam = camera((0.35, 0.05, 1.58), (-0.15, 4.4, 1.25), lens=21)
-    N = 12
+    N = int(os.environ.get('ANIM_N', 12))
     if ANIM == 'door':      # door swings open, then we look through
         key(hinge, 'rotation_euler', 1, (0, 0, 0)); key(hinge, 'rotation_euler', N, (0, 0, math.radians(-62)))
     elif ANIM == 'doorclose':
         key(hinge, 'rotation_euler', 1, (0, 0, math.radians(-62))); key(hinge, 'rotation_euler', N, (0, 0, 0))
     elif ANIM == 'walk':    # walk from the room through the door into the hallway, with head-bob
-        hinge.rotation_euler = (0, 0, math.radians(-75)); N = 16
+        hinge.rotation_euler = (0, 0, math.radians(-75)); N = int(os.environ.get('ANIM_N', 12)) + 2
         path = [(0.35, 0.05), (0.2, 1.2), (0.0, 2.4), (-0.25, 3.5), (-0.35, 4.6), (-0.35, 5.6)]
         for f in range(1, N + 1):
             t = (f - 1) / (N - 1) * (len(path) - 1); i0 = min(int(t), len(path) - 2); u = t - i0
@@ -181,8 +181,8 @@ if ANIM:
             z = 1.58 + 0.035 * math.sin(f * math.pi / 2)
             key(cam, 'location', f, (x, y, z)); key(cam, 'rotation_euler', f, tuple(look_rot((x, y, z), (-0.35, y + 3, 1.45 + 0.02 * math.sin(f * math.pi / 2)))))
     elif ANIM == 'hide':    # crouch, look down, slide under the bed
-        N = 14
-        keys = [(1, (0.35, 0.05, 1.58), (-0.15, 4.4, 1.25)), (5, (-0.4, 0.9, 0.9), (-1.4, 1.6, 0.4)), (9, (-0.75, 1.2, 0.35), (-1.4, 1.6, 0.25)), (14, (-1.35, 1.25, 0.16), (-0.2, 4.4, 0.25))]
+        N = int(os.environ.get('ANIM_N', 12)) + 1
+        keys = [(1, (0.35, 0.05, 1.58), (-0.15, 4.4, 1.25)), (max(2, N * 5 // 14), (-0.4, 0.9, 0.9), (-1.4, 1.6, 0.4)), (max(3, N * 9 // 14), (-0.75, 1.2, 0.35), (-1.4, 1.6, 0.25)), (N, (-1.35, 1.25, 0.16), (-0.2, 4.4, 0.25))]
         for f, l, tg in keys:
             key(cam, 'location', f, l); key(cam, 'rotation_euler', f, tuple(look_rot(l, tg)))
     render_anim(out, N)

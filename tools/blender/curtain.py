@@ -1,4 +1,4 @@
-import sys, math, random; sys.path.insert(0, '/home/claude/render')
+import sys, os, math, random; sys.path.insert(0, '/home/claude/render')
 from lib import *
 sc = reset()
 a = sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else []
@@ -103,11 +103,11 @@ if OPEN:
     tgt = mathutils.Vector({1: (0.2, D + 11.3, 1.0), 2: (-1.2, D + 6.4, 1.0), 3: (0.62, D + 3.6, 0.9), 4: (0.2, D + 0.3, 1.7)}[STAGE])
     src = mathutils.Vector((0.15, 0.25, 1.45))
     rot = (tgt - src).to_track_quat('-Z', 'Y').to_euler()
-    spot('flashlight', tuple(src), rot, 3000, angle=math.radians(16), color=(1.0, 0.93, 0.8), blend=0.6)
+    spot('flashlight', tuple(src), rot, 3000 if STAGE < 4 else 350, angle=math.radians(16), color=(1.0, 0.93, 0.8), blend=0.6)
 sc.view_settings.exposure = 0.0
 cam = camera((-0.35, 1.2, 1.45), (0.55, D + 4, 1.05), lens=24)
 if ANIM:
-    N = 12
+    N = int(os.environ.get('ANIM_N', 12))
     o, c = ((1, 0.46), (N, 0.46)) if False else (None, None)
     sx = (1.0, 0.46) if ANIM == 'open' else (0.46, 1.0)
     for obj, xs in ((cL, (-0.62, -1.25)), (cR, (0.62, 1.25))):

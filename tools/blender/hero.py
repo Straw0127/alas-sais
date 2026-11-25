@@ -42,7 +42,7 @@ elif which == 'silip':
     build_manananggal(0, 0.2, 1.2)
     ld = bpy.data.lights.new('moon', 'SUN'); ld.energy = 3.0; ld.color = pal[0]
     mo = bpy.data.objects.new('moon', ld); mo.rotation_euler = (math.radians(50), 0, math.radians(160)); bpy.context.collection.objects.link(mo)
-    spot('flash', (0.2, -2.6, 1.5), (math.radians(86), 0, math.radians(-4)), 500, angle=math.radians(34), color=pal[1], blend=0.5)
+    spot('flash', (0.2, -2.6, 1.5), (math.radians(86), 0, math.radians(-4)), 160, angle=math.radians(34), color=pal[1], blend=0.5)
     sc.world.node_tree.nodes['Background'].inputs[0].default_value = (0.002, 0.003, 0.006, 1)
     tgt = (0, 0.25, 1.45) if not CLOSE else (0, 0.1, 1.86)
     camera((0.25, -3.6, 1.5) if not CLOSE else (0.05, -0.75, 1.86), tgt, lens=28 if not CLOSE else 34)

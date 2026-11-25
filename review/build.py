@@ -93,6 +93,18 @@ SOUNDS = [
         ('jumpscare_silip', 'Silip', 'Whisper, glass shatters, high scream.', False)]),
 ]
 
+FOOT = r"""</main><footer>All images rendered in Blender and all sounds synthesized from scratch for ALAS-SAIS. No third-party or FNAF assets are used.</footer></div>
+<button class="fs" id="fs" type="button">FULLSCREEN</button>
+<script>{
+const b=document.getElementById('fs'),d=document.documentElement;
+const can=d.requestFullscreen||d.webkitRequestFullscreen;
+if(!can)b.style.display='none';
+b.addEventListener('click',()=>{try{if(document.fullscreenElement||document.webkitFullscreenElement){(document.exitFullscreen||document.webkitExitFullscreen).call(document)}else{const r=can.call(d);if(r&&r.catch)r.catch(()=>{})}}catch(e){}});
+document.addEventListener('fullscreenchange',()=>{b.textContent=document.fullscreenElement?'EXIT FULLSCREEN':'FULLSCREEN'});
+// nav links scroll the inner container
+document.querySelectorAll('nav a').forEach(a=>a.addEventListener('click',e=>{const t=document.querySelector(a.getAttribute('href'));if(t){e.preventDefault();t.scrollIntoView({behavior:'smooth'})}}));
+}</script></body></html>"""
+
 def fig(k, t, d):
     return f'<figure><a href="img/{k}.jpg"><img loading="lazy" src="img/{k}.jpg" alt="{H(t)}"></a><figcaption><b>{H(t)}</b><span>{H(d)}</span></figcaption></figure>'
 
@@ -102,7 +114,11 @@ out = [f'''<!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ALAS-SAIS — Asset Review</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&family=Special+Elite&family=Inter:wght@400;600&display=swap">
-<style>{css}</style></head><body>
+<style>{css}
+html,body{{height:100%;overflow:hidden;overscroll-behavior:none}}
+#app{{height:100%;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;touch-action:pan-y;overscroll-behavior:contain}}
+.fs{{position:fixed;right:14px;bottom:14px;z-index:10;min-height:44px;padding:0 16px;font:600 14px Inter,sans-serif;letter-spacing:1px;color:#e9dfcb;background:#b3261e;border:0;border-radius:22px;box-shadow:0 6px 20px #000a}}
+</style></head><body><div id="app">
 <header><h1>ALAS-SAIS</h1><p class="sub">Asset review: 3D renders, animations and a {nsounds}-sound pack, before we build the game.</p></header>
 <nav><div><a href="#rooms">ROOMS</a><a href="#entities">ENTITIES</a><a href="#jumpscares">JUMPSCARES</a><a href="#anim">ANIMATIONS</a>''' +
        ''.join(f'<a href="#{s[0]}">{s[1].split(" ")[0]}</a>' for s in SOUNDS) + '</div></nav><main>']
@@ -122,6 +138,6 @@ for sid, title, warn, items in SOUNDS:
     out.append(f'<h2 id="{sid}">{title}</h2>' + (f'<p class="warn">{H(warn)}</p>' if warn else '') + '<div class="sounds">')
     out += [f'<div class="snd"><b>{H(t)}</b><span>{H(d)}</span><audio controls preload="none"{" loop" if lp else ""} src="sfx/{f}.mp3"></audio></div>' for f, t, d, lp in items]
     out.append('</div>')
-out.append('</main><footer>All images rendered in Blender and all sounds synthesized from scratch for ALAS-SAIS. No third-party or FNAF assets are used.</footer></body></html>')
+out.append(FOOT)
 open(os.path.join(os.path.dirname(__file__), 'index.html'), 'w').write('\n'.join(out))
 print('ok', nsounds)

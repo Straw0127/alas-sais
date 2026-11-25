@@ -33,7 +33,11 @@ figcaption span{color:var(--dim);font-size:14px}
 footer{max-width:1100px;margin:0 auto;padding:24px 16px 60px;color:var(--dim);font-size:13px}
 
 figure video{display:block;width:100%;aspect-ratio:16/9;background:#000;object-fit:cover}
-</style></head><body>
+
+html,body{height:100%;overflow:hidden;overscroll-behavior:none}
+#app{height:100%;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;touch-action:pan-y;overscroll-behavior:contain}
+.fs{position:fixed;right:14px;bottom:14px;z-index:10;min-height:44px;padding:0 16px;font:600 14px Inter,sans-serif;letter-spacing:1px;color:#e9dfcb;background:#b3261e;border:0;border-radius:22px;box-shadow:0 6px 20px #000a}
+</style></head><body><div id="app">
 <header><h1>ALAS-SAIS</h1><p class="sub">Asset review: 3D renders, animations and a 48-sound pack, before we build the game.</p></header>
 <nav><div><a href="#rooms">ROOMS</a><a href="#entities">ENTITIES</a><a href="#jumpscares">JUMPSCARES</a><a href="#anim">ANIMATIONS</a><a href="#ambience">AMBIENCE</a><a href="#night">FILIPINO</a><a href="#cues">ENTITY</a><a href="#player">PLAYER</a><a href="#scares">JUMPSCARE</a></div></nav><main>
 <h2 id="rooms">ROOMS</h2><p class="lead">Pre-rendered 3D (Blender, Cycles), like Sister Location, with a film-grade pass. A poor provincial Filipino house: hollow blocks and an open GI roof, tabla, sawali, cracked cement, kulambo, plastic wardrobes, monobloc chairs, Huling Hapunan on the wall. Tap an image for full size.</p><div class="grid">
@@ -127,4 +131,14 @@ figure video{display:block;width:100%;aspect-ratio:16/9;background:#000;object-f
 <div class="snd"><b>Kalansing</b><span>Avalanche of clattering metal, guttural scream.</span><audio controls preload="none" src="sfx/jumpscare_kalansing.mp3"></audio></div>
 <div class="snd"><b>Silip</b><span>Whisper, glass shatters, high scream.</span><audio controls preload="none" src="sfx/jumpscare_silip.mp3"></audio></div>
 </div>
-</main><footer>All images rendered in Blender and all sounds synthesized from scratch for ALAS-SAIS. No third-party or FNAF assets are used.</footer></body></html>
+</main><footer>All images rendered in Blender and all sounds synthesized from scratch for ALAS-SAIS. No third-party or FNAF assets are used.</footer></div>
+<button class="fs" id="fs" type="button">FULLSCREEN</button>
+<script>{
+const b=document.getElementById('fs'),d=document.documentElement;
+const can=d.requestFullscreen||d.webkitRequestFullscreen;
+if(!can)b.style.display='none';
+b.addEventListener('click',()=>{try{if(document.fullscreenElement||document.webkitFullscreenElement){(document.exitFullscreen||document.webkitExitFullscreen).call(document)}else{const r=can.call(d);if(r&&r.catch)r.catch(()=>{})}}catch(e){}});
+document.addEventListener('fullscreenchange',()=>{b.textContent=document.fullscreenElement?'EXIT FULLSCREEN':'FULLSCREEN'});
+// nav links scroll the inner container
+document.querySelectorAll('nav a').forEach(a=>a.addEventListener('click',e=>{const t=document.querySelector(a.getAttribute('href'));if(t){e.preventDefault();t.scrollIntoView({behavior:'smooth'})}}));
+}</script></body></html>
