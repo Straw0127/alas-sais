@@ -384,6 +384,8 @@ if KUMOT:
     if VIEW == 'under': build_kumot_batibat(-0.45, 1.9)   # standing right beside the bed, searching
     else: build_kumot_batibat(-0.6, 3.1)
 
+if VIEW == 'hub' and CURT == 'open' and 'morning' not in OPT:   # from the middle of the room the moon patch read as a ghost: keep it soft
+    bpy.data.objects['moonWin'].data.energy *= 0.35; bpy.data.objects['moonWin'].data.size = 0.35; bpy.data.objects['moonWin'].data.size_y = 0.35
 if 'morning' in OPT:   # 6:00 AM: bulb off, sun through the open window, the yard bright
     for n_ in ('bulbLight', 'fill', 'hallGlow', 'roomSpill', 'tvGlow', 'tvSpill'):
         if n_ in bpy.data.objects: bpy.data.objects[n_].data.energy = 0
