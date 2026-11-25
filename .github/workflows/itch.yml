@@ -1,0 +1,44 @@
+name: Deploy to itch.io
+
+# Uploads the playable build (or, until the game exists, the asset review page)
+# to itch.io with butler. Needs one repo secret: BUTLER_API_KEY
+# (itch.io -> Settings -> API keys -> Generate new API key).
+
+on:
+  push:
+    branches: [main]
+    paths: ['review/**', 'game/**', '.github/workflows/itch.yml']
+  workflow_dispatch:
+
+env:
+  ITCH_TARGET: straw0127/alas-sais
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for the itch.io key
+        run: |
+          if [ -z "$BUTLER_API_KEY" ]; then
+            echo "::warning::BUTLER_API_KEY secret is not set, skipping the itch.io upload."
+          fi
+
+      - name: Install butler
+        if: env.BUTLER_API_KEY != ''
+        run: |
+          curl -L -o butler.zip https://broth.itch.zone/butler/linux-amd64/LATEST/archive/default
+          unzip -q butler.zip -d butler && chmod +x butler/butler
+          ./butler/butler -V
+
+      - name: Choose what to upload
+        if: env.BUTLER_API_KEY != ''
+        run: |
+          if [ -f game/index.html ]; then echo "SRC=game" >> $GITHUB_ENV; else echo "SRC=review" >> $GITHUB_ENV; fi
+
+      - name: Push to itch.io (HTML channel)
+        if: env.BUTLER_API_KEY != ''
+        run: ./butler/butler push "$SRC" "$ITCH_TARGET:html" --userversion "${GITHUB_SHA::7}"
