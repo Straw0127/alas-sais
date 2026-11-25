@@ -293,6 +293,42 @@ def jumpscare(kind):
     return np.stack([y, np.roll(y, 300)], 1)
 
 
+# Jumpscares v2, timed to the animation: 0-0.35 s a quiet "she's there" beat (frames 0-1), the scream and boom land at exactly
+# HIT = 0.35 s as the lunge starts (frames 2-7 by 0.62 s), the scream holds and shudders while the face fills the screen, out by 1.9 s.
+HIT = 0.35
+def jumpscare2(kind):
+    d = 2.1; n = int(d * SR); y = np.zeros(n)
+    boom = stinger_hit() * 1.1
+    crack = bp(noise(0.08), 1500, 9000) * np.exp(-t_(0.08) / 0.012) * 2.0   # transient right on the hit
+    place(y, boom, HIT); place(y, crack, HIT)
+    def scream(v, att=0.008, rel=0.45, drive=6, trem=11):
+        t = np.arange(len(v)) / SR; v = v * (1 + 0.35 * np.sin(2 * np.pi * trem * t))          # shudder, matched by the frame jitter
+        return dist(v * env(len(v), att, rel), drive)
+    if kind == 'kumot':
+        place(y, breath(0.33, True)[::-1] * 2.2, 0.0); place(y, door_creak()[:int(0.3 * SR)] * 0.5, 0.0)
+        v = scream_voice(1.45, 420, 980, ((800, 1), (1200, .8), (2600, .5)), 0.5) + scream_voice(1.45, 300, 700, ((700, 1), (1100, .6)), 0.4)
+        place(y, scream(v) * 0.95, HIT)
+    elif kind == 'malikmata':
+        place(y, baby_cry()[:int(0.33 * SR)] * 0.5, 0.0)
+        v = crush(scream_voice(1.4, 560, 1400, ((900, 1), (1500, .7), (3000, .5)), 0.3), 4, 10)
+        place(y, scream(v, drive=5, trem=13) * 0.9, HIT); place(y, vhs_glitch(1.0) * 0.5, HIT)
+    elif kind == 'kalansing':
+        place(y, clinks(1.0, 30)[:int(0.33 * SR)] * 0.7, 0.0)
+        v = scream_voice(1.4, 170, 460, ((400, 1), (650, .9), (1100, .4)), 0.8)
+        place(y, scream(v, drive=8, trem=9) * 0.95, HIT); place(y, clinks(1.2, 70) * 0.8, HIT)
+    elif kind == 'silip':
+        place(y, whisper(1.0)[:int(0.33 * SR)] * 0.7, 0.0); place(y, wing_flap(2, False)[:int(0.33 * SR)] * 0.6, 0.02)
+        v = scream_voice(1.3, 950, 1900, ((1400, 1), (2400, .8), (3600, .4)), 0.4)
+        place(y, scream(v, drive=5, trem=14) * 0.9, HIT); place(y, glass_shatter() * 0.6, HIT)
+    elif kind == 'barang':
+        place(y, beetles(1.5)[:int(0.33 * SR)] * 0.9, 0.0); place(y, aparador_creak()[:int(0.33 * SR)] * 0.6, 0.0)
+        v = scream_voice(1.4, 240, 620, ((500, 1), (900, .8), (2200, .5)), 0.7)
+        place(y, scream(v, drive=7, trem=10) * 0.95, HIT); place(y, beetle_scatter() * 0.7, HIT)
+    y[:int(HIT * SR)] *= 0.45   # the dread beat stays quiet so the hit lands
+    y = reverb(y, 1.2, 0.22)
+    return np.stack([y, np.roll(y, 300)], 1)
+
+
 # ---------------------------------------------------------------- pack 2: Filipino night + player sounds
 def step_surface(d=0.35, surface='wood', hard=1.0):
     t = t_(d); n = noise(d)
@@ -632,8 +668,9 @@ if __name__ == '__main__':
         'clinks': (clinks, 0.7), 'sniff': (sniff, 0.6), 'knife_taps': (knife_taps, 0.7), 'nail_taps': (nail_taps, 0.6),
         'whisper': (whisper, 0.6), 'glass_shatter': (glass_shatter, 0.9), 'bell_6am': (bell6, 0.85),
         'light_switch': (light_switch, 0.7), 'flashlight_click': (flashlight_click, 0.6), 'curtain_rings': (curtain_rings, 0.7),
-        'jumpscare_kumot': (lambda: jumpscare('kumot'), 0.98), 'jumpscare_malikmata': (lambda: jumpscare('malikmata'), 0.98),
-        'jumpscare_kalansing': (lambda: jumpscare('kalansing'), 0.98), 'jumpscare_silip': (lambda: jumpscare('silip'), 0.98),
+        'jumpscare_kumot': (lambda: jumpscare2('kumot'), 0.98), 'jumpscare_malikmata': (lambda: jumpscare2('malikmata'), 0.98),
+        'jumpscare_kalansing': (lambda: jumpscare2('kalansing'), 0.98), 'jumpscare_silip': (lambda: jumpscare2('silip'), 0.98),
+        'jumpscare_barang': (lambda: jumpscare2('barang'), 0.98),
         'steps_walk_wood': (lambda: footsteps(8, 0.55, 'wood'), 0.8), 'steps_run_wood': (lambda: footsteps(12, 0.3, 'wood', True), 0.9),
         'steps_walk_cement': (lambda: footsteps(8, 0.55, 'cement'), 0.8), 'tuko_gecko': (tuko, 0.75), 'dog_howl': (dog_howl, 0.7),
         'tricycle_far': (tricycle_far, 0.5), 'rooster_dawn': (rooster, 0.8), 'phone_text': (phone_text, 0.7),

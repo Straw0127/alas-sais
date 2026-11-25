@@ -206,6 +206,21 @@ input[type=range]{width:100%;accent-color:#b3261e;height:30px}
 .cuent b{display:block;color:#e8d8bf;font:600 14px Oswald,sans-serif;letter-spacing:.06em;margin:4px 0}
 .cuent .lv{font:600 26px Oswald,sans-serif;color:#f2c46b}
 .cuent button{width:36px;height:32px;margin:2px;border-radius:8px;border:1px solid #4a3a28;background:#231d17;color:#e8d8bf;font:600 18px Inter,sans-serif}
+/* High graphics: a breathing vignette, a slow uneven bulb, and a hint of lens fringe at the edges */
+#vig.breathe{animation:vigb 7s ease-in-out infinite}
+@keyframes vigb{0%,100%{opacity:1}50%{opacity:.82}}
+#cam.hi #bgA,#cam.hi #bgB{animation:bulb 9s steps(1) infinite}
+@keyframes bulb{0%{filter:brightness(1)}61%{filter:brightness(.94)}62%{filter:brightness(1.02)}64%{filter:brightness(.9)}65%{filter:brightness(1)}88%{filter:brightness(.97)}89%{filter:brightness(1)}}
+#cam.hi::after{content:"";position:absolute;inset:0;pointer-events:none;box-shadow:inset 3px 0 18px rgba(255,0,40,.07),inset -3px 0 18px rgba(0,160,255,.07)}
+/* jumpscare frames */
+#scare.anim img{animation:none;inset:0;width:100%;height:100%}
+#scare.hit{animation:sshake .07s linear infinite}
+@keyframes sshake{0%{transform:translate(0,0)}25%{transform:translate(-14px,9px) rotate(-.6deg)}50%{transform:translate(12px,-7px)}75%{transform:translate(-9px,-11px) rotate(.5deg)}100%{transform:translate(0,0)}}
+#scare.split img{filter:drop-shadow(6px 0 0 rgba(255,0,0,.55)) drop-shadow(-6px 0 0 rgba(0,200,255,.45)) contrast(1.25)}
+#scare .redout{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%,transparent 30%,rgba(120,0,0,.65) 100%);mix-blend-mode:multiply;opacity:0;pointer-events:none}
+#scare.hit .redout{opacity:1}
+/* settings: Back sits beside the title so it never falls off short phone screens */
+#scr-settings #s-back{position:absolute;top:30px;right:34px;margin:0}
 </style>
 </head>
 <body>
@@ -216,6 +231,7 @@ input[type=range]{width:100%;accent-color:#b3261e;height:30px}
       <img id="bgA" class="bg" alt="">
       <img id="bgB" class="bg" alt="" style="opacity:0">
       <img id="litImg" class="bg" alt="" style="opacity:0;transition:none">
+      <canvas id="dust" class="layer" style="pointer-events:none;display:none"></canvas>
       <div id="ovl" class="layer" style="pointer-events:none"></div>
       <div id="fx" class="layer"></div>
       <div id="fog" class="layer"><div class="hand" style="left:500px;top:230px"></div><div class="hand" style="left:690px;top:260px;transform:rotate(12deg)"></div></div>
@@ -297,6 +313,10 @@ input[type=range]{width:100%;accent-color:#b3261e;height:30px}
         <div class="field"><span data-t="language"></span><div class="seg"><button class="btn langbtn" data-lang="en" type="button">English</button><button class="btn langbtn" data-lang="fil" type="button">Filipino</button></div></div>
         <div class="field"><span data-t="graphics"></span><div class="seg"><button class="btn" data-gfx="low" type="button"></button><button class="btn" data-gfx="medium" type="button"></button><button class="btn" data-gfx="high" type="button"></button></div></div>
         <div class="field"><span data-t="fullscreen"></span><button class="btn" id="s-full" type="button" data-t="fullscreen"></button></div>
+        <div class="field"><span data-t="save_code"></span><p class="note" data-t="save_note" style="margin:2px 0 6px"></p>
+          <input id="s-code" type="text" spellcheck="false" autocomplete="off" style="width:100%;font:12px monospace;padding:6px;background:#111;color:#ddd;border:1px solid #444;border-radius:6px">
+          <div class="seg"><button class="btn" id="s-copy" type="button" data-t="code_copy"></button><button class="btn" id="s-load" type="button" data-t="code_load"></button></div>
+          <p class="note" id="s-code-msg"></p></div>
       </div>
       <div style="display:flex;flex-direction:column;gap:14px">
         <label class="field"><span><span data-t="master"></span> <b id="vl-master"></b></span><input type="range" id="v-master" min="0" max="100"></label>
@@ -305,6 +325,7 @@ input[type=range]{width:100%;accent-color:#b3261e;height:30px}
         <label class="field"><span><span data-t="music"></span> <b id="vl-music"></b></span><input type="range" id="v-music" min="0" max="100"></label>
       </div>
       <div style="display:flex;flex-direction:column;gap:18px">
+        <div class="field tog"><span data-t="motion"></span><button class="btn" id="t-mot" type="button"></button></div>
         <div class="field tog"><span data-t="reduced"></span><button class="btn" id="t-red" type="button"></button></div>
         <p class="note">Keyboard: 1 door · 2 window · 3 aparador · S back · H hide · SPACE hold · F flashlight · Esc pause</p>
       </div>
@@ -395,7 +416,7 @@ var STR = {
     night_n: 'Night {n}', night_names: ['The First Encounter', 'Something Is Inside', 'No Place Is Safe', 'The House Is Awake', 'The Final Night'],
     locked: 'Locked', back: 'Back', resume: 'Resume', restart: 'Restart Night', main_menu: 'Main Menu', paused: 'Paused',
     language: 'Language', graphics: 'Graphics', low: 'Low', medium: 'Medium', high: 'High',
-    master: 'Master', sfx: 'Sound effects', amb: 'Ambience', music: 'Music', captions: 'Sound captions', reduced: 'Reduced intensity',
+    master: 'Master', sfx: 'Sound effects', amb: 'Ambience', music: 'Music', captions: 'Sound captions', reduced: 'Softer scares', motion: 'Reduce motion', save_code: 'Save code', save_note: 'Progress saves by itself in this browser. To move it to another browser or phone, copy this code there and press Load.', code_copy: 'Copy', code_load: 'Load', code_ok: 'Progress loaded.', code_bad: 'That code is not valid.', code_copied: 'Copied.',
     fullscreen: 'Fullscreen', on: 'On', off: 'Off',
     go_hall: 'Hallway', h_door: 'HOLD the door to keep it shut · double-tap to open it', h_curtain: 'HOLD the curtain shut · double-tap to open it',
     h_light: 'Hold on the dark to use the flashlight', h_breath: 'HOLD anywhere to hold your breath', h_run: 'Running is fast but loud', run_on: 'RUN', run_off: 'WALK',
@@ -477,7 +498,7 @@ var STR = {
     night_n: 'Gabi {n}', night_names: ['Ang Unang Pagkikita', 'May Nasa Loob', 'Walang Ligtas na Lugar', 'Gising na ang Bahay', 'Ang Huling Gabi'],
     locked: 'Naka-lock', back: 'Bumalik', resume: 'Ituloy', restart: 'Ulitin ang Gabi', main_menu: 'Main Menu', paused: 'Naka-pause',
     language: 'Wika', graphics: 'Graphics', low: 'Mababa', medium: 'Katamtaman', high: 'Mataas',
-    master: 'Master', sfx: 'Sound effects', amb: 'Ambience', music: 'Musika', captions: 'Captions ng tunog', reduced: 'Bawas-takot (intensity)',
+    master: 'Master', sfx: 'Sound effects', amb: 'Ambience', music: 'Musika', captions: 'Captions ng tunog', reduced: 'Mas mahinang takot', motion: 'Bawasan ang galaw', save_code: 'Save code', save_note: 'Kusang nase-save ang progress sa browser na ito. Para ilipat sa ibang browser o phone, kopyahin ang code na ito at i-Load doon.', code_copy: 'Kopyahin', code_load: 'I-load', code_ok: 'Na-load ang progress.', code_bad: 'Hindi tama ang code.', code_copied: 'Nakopya na.',
     fullscreen: 'Fullscreen', on: 'Bukas', off: 'Sarado',
     go_hall: 'Pasilyo', h_door: 'HAWAKAN nang matagal ang pinto · i-double tap para buksan', h_curtain: 'HAWAKAN nang matagal ang kurtina · i-double tap para buksan',
     h_light: 'Pindutin nang matagal ang dilim para sa flashlight', h_breath: 'PINDUTIN nang matagal kahit saan para pigilan ang hininga', h_run: 'Mabilis ang takbo pero maingay', run_on: 'TAKBO', run_off: 'LAKAD',
@@ -1194,7 +1215,7 @@ if (typeof module !== 'undefined') module.exports = C1;
     'fluorescent_hum', 'scuffs_far', 'scuffs_near', 'wheeze', 'lullaby_hum', 'handle_rattle', 'static_swell', 'vhs_glitch', 'giggle', 'baby_cry', 'clinks', 'sniff', 'knife_taps',
     'nail_taps', 'steps_walk_wood', 'steps_run_wood', 'steps_walk_cement', 'breath_hold_gasp', 'door_creak', 'door_slam', 'cabinet_open', 'cabinet_close', 'curtain_rings',
     'plastic_crinkle', 'kulambo_rustle', 'light_switch', 'flashlight_click', 'tv_static', 'power_down', 'breaker', 'phone_text',
-    'jumpscare_kumot', 'jumpscare_malikmata', 'jumpscare_kalansing', 'jumpscare_silip',
+    'jumpscare_kumot', 'jumpscare_malikmata', 'jumpscare_kalansing', 'jumpscare_barang', 'jumpscare_silip',
     'door_open_slow', 'door_close_shut', 'door_push_strain', 'curtain_open_pull', 'curtain_close_pull', 'curtain_grip', 'hide_bed', 'unhide_bed',
     'hide_cabinet', 'hide_sofa', 'turn_whoosh', 'run_pant', 'nervous_breath', 'floor_creak', 'steps_run_cement', 'flashlight_on', 'salt_throw', 'tv_click_off',
     'ringtone', 'phone_pickup', 'phone_hangup', 'line_static',
@@ -1208,14 +1229,16 @@ if (typeof module !== 'undefined') module.exports = C1;
   if (typeof CALLS !== 'undefined') Object.keys(CALLS).forEach(function (n) { CALLS[n].forEach(function (_, i) { VOICE.push(n + '_' + pad2(i)); }); });
   if (typeof PROLOGUE !== 'undefined') Object.keys(PROLOGUE).forEach(function (n) { PROLOGUE[n].forEach(function (_, i) { VOICE.push('pro_' + n + '_' + pad2(i)); }); });
   var WHO_IMG = { kumot: 'scare_kumot', malik: 'scare_malikmata', kal: 'scare_kalansing', silip: 'scare_silip', barang: 'c1_scare_barang' };
-  var WHO_SFX = { kumot: 'jumpscare_kumot', malik: 'jumpscare_malikmata', kal: 'jumpscare_kalansing', silip: 'jumpscare_silip', barang: 'jumpscare_kalansing' };
+  var WHO_SFX = { kumot: 'jumpscare_kumot', malik: 'jumpscare_malikmata', kal: 'jumpscare_kalansing', silip: 'jumpscare_silip', barang: 'jumpscare_barang' };
+  var JS = { kumot: 'kumot', malik: 'malikmata', kal: 'kalansing', silip: 'silip', barang: 'barang' }, scareTimers = [];
+  function preloadScares() { Object.keys(JS).forEach(function (w) { for (var f = 0; f < 8; f++) { var k = 'js_' + JS[w] + '_' + f; if (!imgs[k + IMGDIR()]) { var i = new Image(); i.src = IMGDIR() + k + '.jpg'; imgs[k + IMGDIR()] = i; } } }); }
   var HERO = { kumot: 'hero_kumot', malik: 'hero_malikmata', kal: 'hero_kalansing', silip: 'hero_silip', barang: 'hero_barang' };
   var C1_RULES = { 1: ['kumot'], 2: ['silip'], 3: ['barang'], 4: [], 5: [] };
   var C2_RULES = { 1: ['malik', 'silip'], 2: ['kal'], 3: [], 4: [], 5: [] };
   var C3_RULES = { 1: ['kumot', 'malik', 'barang'], 2: ['kal', 'silip'], 3: [], 4: [], 5: [], 6: [], 7: [] };
 
   // ------------------------------------------------------------ save / settings
-  var DEF = { lang: 'en', gfx: 'medium', vol: { master: 0.9, sfx: 1, amb: 0.8, music: 0.6 }, captions: true, reduced: false };
+  var DEF = { lang: 'en', gfx: 'medium', vol: { master: 0.9, sfx: 1, amb: 0.8, music: 0.6 }, captions: true, reduced: false, motion: undefined };
   var save = { prog: { c1: 0, c2: 0, c3: 0 }, cur: { ch: 1, n: 1 }, custom: { unlocked: false, records: {} }, pro: {}, set: JSON.parse(JSON.stringify(DEF)) };
   function load() {
     try {
@@ -1226,6 +1249,20 @@ if (typeof module !== 'undefined') module.exports = C1;
   }
   function store() { try { localStorage.setItem('alassais', JSON.stringify(save)); } catch (e) {} }
   load();
+  if (save.set.motion === undefined) { try { save.set.motion = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches); } catch (e) { save.set.motion = false; } }
+  // ask the browser to keep this save even when space runs low (Chrome grants it for sites you return to)
+  try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
+  function IMGDIR() { return save.set.gfx === 'low' ? 'assets/img_lo/' : 'assets/img/'; }
+  // save code: the whole save as text, to carry progress to another browser or phone
+  function saveCode() { return 'AS1-' + btoa(unescape(encodeURIComponent(JSON.stringify({ prog: save.prog, cur: save.cur, custom: save.custom, pro: save.pro })))); }
+  function loadCode(code) {
+    try {
+      var s = JSON.parse(decodeURIComponent(escape(atob(String(code).trim().replace(/^AS1-/, '')))));
+      if (!s || !s.prog) return false;
+      save.prog = Object.assign({ c1: 0, c2: 0, c3: 0 }, s.prog); save.cur = s.cur || save.cur; save.custom = s.custom || save.custom; save.pro = s.pro || {};
+      store(); return true;
+    } catch (e) { return false; }
+  }
   function L() { return STR[save.set.lang] || STR.en; }
   function T(key, n) { var v = L()[key]; if (v === undefined) v = STR.en[key]; return typeof v === 'string' && n !== undefined ? v.replace('{n}', n) : v; }
 
@@ -1248,8 +1285,8 @@ if (typeof module !== 'undefined') module.exports = C1;
     var total = IMG.length + SFX.length + VOICE.length, done = 0;
     function tick() { done++; onProgress(done / total); }
     var jobs = [];
-    ['hubx_k3', 'hubx_s2c', 'hubx_s3c', 'hubx_s2o', 'hubx_s3o', 'hubx_b2', 'hubx_b3', 'hubx_b4'].forEach(function (k) { var i = new Image(); i.src = 'assets/img/' + k + '.webp'; imgs[k] = i; });
-    IMG.forEach(function (k) { jobs.push(new Promise(function (res) { var i = new Image(); i.onload = i.onerror = function () { tick(); res(); }; i.src = 'assets/img/' + k + '.jpg'; imgs[k] = i; })); });
+    ['hubx_k3', 'hubx_s2c', 'hubx_s3c', 'hubx_s2o', 'hubx_s3o', 'hubx_b2', 'hubx_b3', 'hubx_b4'].forEach(function (k) { var i = new Image(); i.src = IMGDIR() + k + '.webp'; imgs[k] = i; });
+    IMG.forEach(function (k) { jobs.push(new Promise(function (res) { var i = new Image(); i.onload = i.onerror = function () { tick(); res(); }; i.src = IMGDIR() + k + '.jpg'; imgs[k] = i; })); });
     SFX.forEach(function (k) { jobs.push(fetch('assets/sfx/' + k + '.mp3').then(function (r) { return r.ok ? r.arrayBuffer() : null; }).then(function (b) { rawAudio[k] = b; tick(); }).catch(function () { tick(); })); });
     VOICE.forEach(function (k) { jobs.push(fetch('assets/voice/' + k + '.mp3').then(function (r) { return r.ok ? r.arrayBuffer() : null; }).then(function (b) { rawAudio['v_' + k] = b; tick(); }).catch(function () { tick(); })); });
     return Promise.all(jobs);
@@ -1326,6 +1363,8 @@ if (typeof module !== 'undefined') module.exports = C1;
     document.querySelectorAll('[data-gfx]').forEach(function (b) { b.classList.toggle('cur', b.getAttribute('data-gfx') === s.gfx); b.textContent = T(b.getAttribute('data-gfx')); });
     ['master', 'sfx', 'amb', 'music'].forEach(function (k) { $('v-' + k).value = Math.round(s.vol[k] * 100); $('vl-' + k).textContent = Math.round(s.vol[k] * 100); });
     $('t-red').textContent = s.reduced ? T('on') : T('off');
+    $('t-mot').textContent = s.motion ? T('on') : T('off');
+    $('s-code').value = saveCode();
     applyGfx();
   }
   var CH_NIGHTS = { 1: 5, 2: 5, 3: 7 }, CH_READY = { 1: true, 2: true, 3: true };
@@ -1356,7 +1395,28 @@ if (typeof module !== 'undefined') module.exports = C1;
     var g = save.set.gfx;
     $('grain').style.opacity = g === 'low' ? 0 : g === 'medium' ? 0.22 : 0.32;
     $('vig').style.display = g === 'low' ? 'none' : 'block';
+    $('vig').classList.toggle('breathe', g === 'high' && !save.set.motion);
+    $('cam').classList.toggle('hi', g === 'high');
+    if (g === 'high') startDust(); else stopDust();
   }
+  // High graphics: dust drifting through the light (a few dozen soft specks on one canvas)
+  var dustRaf = 0, dustP = [];
+  function startDust() {
+    var c = $('dust'); if (!c || dustRaf) return; c.style.display = 'block'; c.width = 640; c.height = 360; var x = c.getContext('2d');
+    dustP = []; for (var i = 0; i < 46; i++) dustP.push({ x: Math.random() * 640, y: Math.random() * 360, r: 0.4 + Math.random() * 1.3, vx: (Math.random() - 0.5) * 6, vy: -1 - Math.random() * 4, a: 0.05 + Math.random() * 0.2, ph: Math.random() * 6 });
+    var last = performance.now();
+    (function frame(now) {
+      dustRaf = requestAnimationFrame(frame); var dt = Math.min(0.05, (now - last) / 1000); last = now;
+      if (!game || paused) { x.clearRect(0, 0, 640, 360); return; }
+      x.clearRect(0, 0, 640, 360);
+      dustP.forEach(function (p) {
+        p.ph += dt; p.x += (p.vx + Math.sin(p.ph) * 3) * dt; p.y += p.vy * dt;
+        if (p.y < -4) { p.y = 364; p.x = Math.random() * 640; } if (p.x < -4) p.x = 644; if (p.x > 644) p.x = -4;
+        x.fillStyle = 'rgba(255,236,200,' + (p.a * (0.6 + 0.4 * Math.sin(p.ph * 2))).toFixed(3) + ')'; x.beginPath(); x.arc(p.x, p.y, p.r, 0, 6.283); x.fill();
+      });
+    })(last);
+  }
+  function stopDust() { if (dustRaf) cancelAnimationFrame(dustRaf); dustRaf = 0; var c = $('dust'); if (c) { c.style.display = 'none'; } }
 
   // grain: one small noise tile, moved around (cheap on low-end phones)
   function makeGrain() {
@@ -1369,6 +1429,7 @@ if (typeof module !== 'undefined') module.exports = C1;
   // ------------------------------------------------------------ night flow
   var curCh = 1;
   function startNight(idx, ch) {
+    preloadScares();
     customRun = null;
     curCh = ch || curCh || 1;
     if (curCh === 1 && idx === 0 && !save.pro.c1 && !window.__AS_NOCALL) { return prologue('c1', function () { save.pro.c1 = true; store(); startNight(0, 1); }); }
@@ -1384,7 +1445,7 @@ if (typeof module !== 'undefined') module.exports = C1;
     // remind earlier threats briefly on later nights
     list.forEach(function (w) {
       var d = document.createElement('div'); d.className = 'rule';
-      var im = document.createElement('img'); im.src = 'assets/img/' + HERO[w] + '.jpg'; im.alt = '';
+      var im = document.createElement('img'); im.src = IMGDIR() + HERO[w] + '.jpg'; im.alt = '';
       var tx = document.createElement('div'); var b = document.createElement('b'); b.textContent = T('new_threat') + ': ' + T('who')[w];
       var p = document.createElement('div'); p.textContent = curCh === 1 ? T('c1_hint')[w] : (T('hint')[w] || T('c1_hint')[w]); p.style.marginTop = '6px'; p.style.fontSize = '16px'; p.style.lineHeight = '1.45';
       tx.appendChild(b); tx.appendChild(p); d.appendChild(im); d.appendChild(tx); rules.appendChild(d);
@@ -1402,8 +1463,8 @@ if (typeof module !== 'undefined') module.exports = C1;
     'hallway_empty_c', 'hallway_kumot_c', 'living_tvoff_c', 'living_malik_c', 'kitchen_empty_c', 'kitchen_kal_c', 'cabinet_empty_c', 'cabinet_kal_c', 'curtain_closed_c', 'curtain_shadow_c',
     'curtain_open_c', 'curtain_s1_c', 'curtain_s2_c', 'curtain_silip_c', 'curtain_glass_c', 'c1_under', 'c1_under_kumot', 'c1_peek_0', 'c1_peek_2', 'c1_peek_3', 'hero_barang', 'scare_kumot'];
   function beginNight() {
-    if (curCh === 3) C2_IMG.concat(C3_IMG, C3_LIT.map(function (k) { return k + 'l'; })).forEach(function (k) { if (!imgs[k]) { var i = new Image(); i.src = 'assets/img/' + k + '.jpg'; imgs[k] = i; } });
-    if (curCh === 2) C2_IMG.forEach(function (k) { if (!imgs[k]) { var i = new Image(); i.src = 'assets/img/' + k + '.jpg'; imgs[k] = i; } });
+    if (curCh === 3) C2_IMG.concat(C3_IMG, C3_LIT.map(function (k) { return k + 'l'; })).forEach(function (k) { if (!imgs[k]) { var i = new Image(); i.src = IMGDIR() + k + '.jpg'; imgs[k] = i; } });
+    if (curCh === 2) C2_IMG.forEach(function (k) { if (!imgs[k]) { var i = new Image(); i.src = IMGDIR() + k + '.jpg'; imgs[k] = i; } });
     initAudio().then(function () {
       show(null); fit();
       game = curCh === 1 ? C1.create(nightIdx, { seed: (Date.now() & 0xffffff) }) : AS.create(nightIdx, { seed: (Date.now() & 0xffffff), chapter: curCh === 2 || curCh === 3 ? curCh : 0, custom: customRun ? customRun.lv : null, dark: customRun && customRun.lv.dark });
@@ -1502,7 +1563,7 @@ if (typeof module !== 'undefined') module.exports = C1;
     }
   }
   function here(r) { return game && !game.p.travel && game.p.room === r; }
-  function lowFx() { return save.set.gfx === 'low' || save.set.reduced; }
+  function lowFx() { return save.set.gfx === 'low' || !!save.set.motion; }
   function jolt() { if (lowFx()) return; var s = $('view'); s.classList.remove('shake'); void s.offsetWidth; s.classList.add('shake'); }
   function stopBreath() { if (breathH) { stop(breathH, 0.2); breathH = null; } }
   function hint(t, sec) { var h = $('hint'); if (!t) return; h.textContent = t; h.style.opacity = 1; clearTimeout(hint._t); hint._t = setTimeout(function () { h.style.opacity = 0; }, (sec || 3) * 1000); }
@@ -1711,7 +1772,7 @@ if (typeof module !== 'undefined') module.exports = C1;
     }
     var sig = keys.join(','); if (sig === ovlSig) return; ovlSig = sig;
     var box = $('ovl'); box.innerHTML = '';
-    keys.forEach(function (key) { var im = document.createElement('img'); im.className = 'bg'; im.alt = ''; im.src = 'assets/img/' + key + '.webp'; box.appendChild(im); });
+    keys.forEach(function (key) { var im = document.createElement('img'); im.className = 'bg'; im.alt = ''; im.src = IMGDIR() + key + '.webp'; box.appendChild(im); });
   }
   function viewKey() { if (viewLock && performance.now() < viewLock.until) return viewLock.key; return viewKeyRaw(); }
   function setView(force, instant) {
@@ -1724,7 +1785,7 @@ if (typeof module !== 'undefined') module.exports = C1;
       var back = front === 'bgA' ? 'bgB' : 'bgA';
       var b = $(back), f = $(front);
       b.classList.toggle('now', !!instant); f.classList.toggle('now', !!instant);
-      if (b.getAttribute('data-k') !== key) { b.src = 'assets/img/' + key + '.jpg'; b.setAttribute('data-k', key); }
+      if (b.getAttribute('data-k') !== key) { b.src = IMGDIR() + key + '.jpg'; b.setAttribute('data-k', key); }
       b.style.filter = dark && key.indexOf('menu_') !== 0 ? 'brightness(.32) saturate(.6)' : (sofa ? 'brightness(.55)' : 'brightness(1.05)');
       b.style.transform = sofa ? 'scale(1.35) translateY(-6%)' : 'none';
       b.style.opacity = 1; f.style.opacity = 0; front = back; lastView = sig; lastKey = key;
@@ -1737,7 +1798,7 @@ if (typeof module !== 'undefined') module.exports = C1;
     if (torch3) lk = litOK ? key + 'l' : key;   // candle nights: the same view lit by the torch (rendered), revealed under the beam
     li.style.filter = torch3 && g.dark && !litOK ? 'brightness(4.2) saturate(.75) contrast(1.05)' : '';
     if (lk) {
-      if (li.getAttribute('data-k') !== lk) { li.src = 'assets/img/' + lk + '.jpg'; li.setAttribute('data-k', lk); }
+      if (li.getAttribute('data-k') !== lk) { li.src = IMGDIR() + lk + '.jpg'; li.setAttribute('data-k', lk); }
       var m = 'radial-gradient(circle at ' + beam[0] + 'px ' + beam[1] + 'px, #000 0, #000 120px, rgba(0,0,0,.6) 190px, transparent 280px)';
       li.style.webkitMaskImage = li.style.maskImage = m; li.style.opacity = 1;
     } else li.style.opacity = 0;
@@ -1958,7 +2019,7 @@ if (typeof module !== 'undefined') module.exports = C1;
     }
     var sig = keys.join(','); if (sig === ovlSig) return; ovlSig = sig;
     var box = $('ovl'); box.innerHTML = '';
-    keys.forEach(function (key) { var im = document.createElement('img'); im.className = 'bg'; im.alt = ''; im.src = 'assets/img/' + key + '.webp'; box.appendChild(im); });
+    keys.forEach(function (key) { var im = document.createElement('img'); im.className = 'bg'; im.alt = ''; im.src = IMGDIR() + key + '.webp'; box.appendChild(im); });
   }
   function c1LitKey() {   // the flashlight-lit render that the beam reveals
     var p = game.p; if (!p.light || p.travel) return null;
@@ -2207,7 +2268,7 @@ if (typeof module !== 'undefined') module.exports = C1;
     var a = $('cu-ai'); a.innerHTML = '';
     CU_ENT.forEach(function (k) {
       var d = document.createElement('div'); d.className = 'cuent';
-      var im = document.createElement('img'); im.src = 'assets/img/' + HERO[k] + '.jpg'; im.alt = '';
+      var im = document.createElement('img'); im.src = IMGDIR() + HERO[k] + '.jpg'; im.alt = '';
       var nm = document.createElement('b'); nm.textContent = T('who')[k];
       var lv = document.createElement('div'); lv.className = 'lv'; lv.textContent = cuSel.lv[k] || 0;
       var mi = document.createElement('button'); mi.type = 'button'; mi.textContent = '−'; var pl = document.createElement('button'); pl.type = 'button'; pl.textContent = '+';
@@ -2250,18 +2311,31 @@ if (typeof module !== 'undefined') module.exports = C1;
   }
   function onDeath(who) {
     cleanupScene(); stopBreath(); stopAll();
-    var sc = $('scare'); var im = $('scare-img'); im.src = 'assets/img/' + WHO_IMG[who] + '.jpg';
-    sc.style.display = 'block'; sc.classList.remove('go', 'soft'); void sc.offsetWidth; sc.classList.add('go'); if (save.set.reduced) sc.classList.add('soft');
-    if (!save.set.reduced) { var fl = $('flash'); fl.style.transition = 'none'; fl.style.opacity = 0.85; setTimeout(function () { fl.style.transition = 'opacity .5s'; fl.style.opacity = 0; }, 90); }
-    play(WHO_SFX[who], { vol: save.set.reduced ? 0.45 : 1 });
-    if (navigator.vibrate && !save.set.reduced) try { navigator.vibrate([120, 40, 200]); } catch (e) {}
+    // the jumpscare: frames 0-1 it is simply there, 2-7 it lunges (the scream lands with frame 2), then it shudders in your face
+    var sc = $('scare'), im = $('scare-img'), base = IMGDIR() + 'js_' + JS[who] + '_';
+    if (!sc.querySelector('.redout')) { var ro = document.createElement('div'); ro.className = 'redout'; sc.appendChild(ro); }
+    var soft = !!save.set.reduced, still = lowFx();
+    sc.style.display = 'block'; sc.className = 'anim'; im.src = base + '0.jpg';
+    play(WHO_SFX[who], { vol: soft ? 0.45 : 1 });
+    var T0 = [0, 170, 350, 395, 440, 485, 530, 575];
+    scareTimers.forEach(clearTimeout); scareTimers = [];
+    T0.forEach(function (t, f) { scareTimers.push(setTimeout(function () { im.src = base + f + '.jpg'; }, t)); });
+    scareTimers.push(setTimeout(function () {
+      if (!soft) {
+        if (!still) sc.classList.add('hit'); if (save.set.gfx !== 'low') sc.classList.add('split');
+        var fl = $('flash'); fl.style.transition = 'none'; fl.style.opacity = 0.8; setTimeout(function () { fl.style.transition = 'opacity .35s'; fl.style.opacity = 0; }, 60);
+        if (navigator.vibrate) try { navigator.vibrate([90, 30, 140, 30, 220]); } catch (e) {}
+      }
+    }, 350));
+    for (var tj = 640, alt = 0; tj < 1500; tj += 70, alt++) (function (t, a) { scareTimers.push(setTimeout(function () { im.src = base + (a % 2 ? 7 : 6) + '.jpg'; }, t)); })(tj, alt);
+    scareTimers.push(setTimeout(function () { im.src = base + '7.jpg'; sc.classList.remove('hit'); }, 1500));
     $('over-who').textContent = T('who')[who];
     $('over-hint').textContent = (isC1() ? T('c1_hint') : T('hint'))[who] || T('c1_hint')[who] || '';
     if (who === 'barang') play('beetle_scatter', { vol: 1 });
     var c = game.clock(); $('over-time').textContent = (isC1() ? T('ch_n', 1) + ' · ' : '') + T('night_n', game.night) + ' · ' + c.h + ':' + (c.m < 10 ? '0' : '') + c.m + ' AM';
-    $('over-bg').src = 'assets/img/' + WHO_IMG[who] + '.jpg';
+    $('over-bg').src = IMGDIR() + 'js_' + JS[who] + '_7.jpg';
     game = null;
-    setTimeout(function () { sc.style.display = 'none'; show('scr-over'); play('amb_menu', { bus: 'music', loop: true, vol: 0.5 }); }, 1700);
+    setTimeout(function () { sc.style.display = 'none'; sc.className = ''; show('scr-over'); play('amb_menu', { bus: 'music', loop: true, vol: 0.5 }); }, 1800);
   }
 
   // ------------------------------------------------------------ main menu: the room you have reached, its light failing
@@ -2277,10 +2351,10 @@ if (typeof module !== 'undefined') module.exports = C1;
     stopMenu(); show('scr-menu'); renderTexts();
     var sc = menuScene(); menuMode = sc;
     var on = $('mbg-on'), off = $('mbg-off'), lit = $('mbg-lit');
-    on.src = 'assets/img/' + sc.on + '.jpg'; on.style.opacity = 1;
+    on.src = IMGDIR() + sc.on + '.jpg'; on.style.opacity = 1;
     off.style.opacity = 0; lit.style.opacity = 0;
-    if (sc.off) off.src = 'assets/img/' + sc.off + '.jpg';
-    if (sc.lit) { lit.src = 'assets/img/' + sc.lit + '.jpg'; lit.style.opacity = 1; on.style.filter = 'brightness(.7)'; } else on.style.filter = '';
+    if (sc.off) off.src = IMGDIR() + sc.off + '.jpg';
+    if (sc.lit) { lit.src = IMGDIR() + sc.lit + '.jpg'; lit.style.opacity = 1; on.style.filter = 'brightness(.7)'; } else on.style.filter = '';
     if (sc.mode === 'day') on.style.filter = 'brightness(1.05)';
     menuMusic = play('theme_menu', { bus: 'music', loop: true, vol: sc.mode === 'day' ? 0.3 : 0.55 });
     menuAmb = play(sc.mode === 'day' ? 'rooster_dawn' : 'amb_menu', { bus: 'amb', loop: sc.mode !== 'day', vol: 0.35 });
@@ -2320,7 +2394,7 @@ if (typeof module !== 'undefined') module.exports = C1;
     if (!lines) { done(); return; }
     initAudio().then(function () {
       pp = { key: key, lines: lines, i: -1, done: done, t: 0, wait: 0, speaking: false };
-      $('pp-bg').src = 'assets/img/' + (key === 'c1' ? 'c1_hub' : 'hallway_empty') + '.jpg';
+      $('pp-bg').src = IMGDIR() + (key === 'c1' ? 'c1_hub' : 'hallway_empty') + '.jpg';
       $('pp-phone').className = 'pp-phone ring'; $('pp-state').textContent = T('ph_calling'); $('pp-time').textContent = '';
       $('pp-sub').style.opacity = 0; $('pp-sub').innerHTML = '';
       show('scr-phone');
@@ -2404,9 +2478,16 @@ if (typeof module !== 'undefined') module.exports = C1;
     on('e-menu', function () { toMenu(); });
     on('s-full', function () { if (document.fullscreenElement) { try { document.exitFullscreen(); } catch (e) {} } else goFull(); });
     on('t-red', function () { save.set.reduced = !save.set.reduced; renderSettings(); store(); });
+    on('t-mot', function () { save.set.motion = !save.set.motion; renderSettings(); store(); });
+    on('s-copy', function () {
+      var c = $('s-code'); c.value = saveCode(); c.select();
+      var done = function () { $('s-code-msg').textContent = T('code_copied'); };
+      try { if (navigator.clipboard) navigator.clipboard.writeText(c.value).then(done, function () { document.execCommand('copy'); done(); }); else { document.execCommand('copy'); done(); } } catch (e) {}
+    });
+    on('s-load', function () { var ok = loadCode($('s-code').value); $('s-code-msg').textContent = T(ok ? 'code_ok' : 'code_bad'); if (ok) renderTexts(); });
     on('rot-ok', function () { rotateDismissed = true; fit(); });
     document.querySelectorAll('.langbtn').forEach(function (b) { b.addEventListener('click', function () { save.set.lang = b.getAttribute('data-lang'); store(); renderTexts(); if (game) { hotSig = ''; buildHot(); } }); });
-    document.querySelectorAll('[data-gfx]').forEach(function (b) { b.addEventListener('click', function () { save.set.gfx = b.getAttribute('data-gfx'); store(); renderSettings(); }); });
+    document.querySelectorAll('[data-gfx]').forEach(function (b) { b.addEventListener('click', function () { save.set.gfx = b.getAttribute('data-gfx'); store(); renderSettings(); if (game) { lastView = ''; setView(true, true); } if ($('scr-menu').classList.contains('on')) toMenu(); }); });
     ['master', 'sfx', 'amb', 'music'].forEach(function (k) { $('v-' + k).addEventListener('input', function (e) { save.set.vol[k] = e.target.value / 100; $('vl-' + k).textContent = e.target.value; applyVolumes(); }); $('v-' + k).addEventListener('change', store); });
     // room map
     $('ph-ans').addEventListener('click', function (e) { e.preventDefault(); answerCall(); });
