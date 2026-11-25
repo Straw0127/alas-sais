@@ -18,6 +18,7 @@
     <div id="cam" class="layer">
       <img id="bgA" class="bg" alt="">
       <img id="bgB" class="bg" alt="" style="opacity:0">
+      <img id="litImg" class="bg" alt="" style="opacity:0;transition:none">
       <div id="fx" class="layer"></div>
       <div id="fog" class="layer"><div class="hand" style="left:500px;top:230px"></div><div class="hand" style="left:690px;top:260px;transform:rotate(12deg)"></div></div>
     </div>
@@ -60,14 +61,15 @@
   </div></div>
 
   <div id="scr-menu" class="scr" style="background:#000">
-    <img src="assets/img/ext_house.jpg" alt="" class="bg" style="opacity:.85">
+    <div id="mbg"><img id="mbg-on" alt=""><img id="mbg-off" alt=""><img id="mbg-lit" alt=""><div id="mbg-fog"></div><div id="mbg-shade"></div></div>
     <div class="lang"><button class="btn langbtn" data-lang="en" type="button">ENGLISH</button><button class="btn langbtn" data-lang="fil" type="button">FILIPINO</button></div>
     <div style="position:absolute;left:90px;top:70px;display:flex;flex-direction:column;gap:22px">
       <div><h1 class="logo">ALAS-SAIS</h1><p class="sub" id="m-sub"></p></div>
       <div class="menu">
-        <button class="mi" id="m-new" type="button" data-t="new_game"></button>
         <button class="mi" id="m-cont" type="button"><span data-t="cont"></span><small></small></button>
-        <button class="mi" id="m-nights" type="button"><span data-t="nights"></span><small></small></button>
+        <button class="mi" id="m-new" type="button" data-t="new_game"></button>
+        <button class="mi" id="m-nights" type="button"><span data-t="chapters"></span><small></small></button>
+        <button class="mi" id="m-custom" type="button"><span data-t="custom_night"></span><small></small></button>
         <button class="mi" id="m-settings" type="button" data-t="settings"></button>
         <button class="mi" id="m-credits" type="button" data-t="credits"></button>
         <button class="mi" id="m-quit" type="button" data-t="quit"></button>
@@ -77,7 +79,7 @@
   </div>
 
   <div id="scr-nights" class="scr"><div class="panel">
-    <h2 data-t="nights"></h2><div class="menu" id="night-list"></div>
+    <h2 data-t="chapters"></h2><div id="night-list" class="chlist"></div>
     <div><button class="cta" id="n-back" type="button" data-t="back"></button></div>
   </div></div>
 
@@ -96,18 +98,33 @@
         <label class="field"><span><span data-t="music"></span> <b id="vl-music"></b></span><input type="range" id="v-music" min="0" max="100"></label>
       </div>
       <div style="display:flex;flex-direction:column;gap:18px">
-        <div class="field tog"><span data-t="captions"></span><button class="btn" id="t-cap" type="button"></button></div>
         <div class="field tog"><span data-t="reduced"></span><button class="btn" id="t-red" type="button"></button></div>
-        <p class="note">Keyboard: 1–5 rooms · R run · E action · H hide · SPACE hold · F flashlight · Q asin · Esc pause</p>
+        <p class="note">Keyboard: 1 door · 2 window · 3 aparador · S back · H hide · SPACE hold · F flashlight · Esc pause</p>
       </div>
     </div>
     <div><button class="cta" id="s-back" type="button" data-t="back"></button></div>
   </div></div>
 
   <div id="scr-credits" class="scr"><div class="panel">
-    <h2 data-t="credits"></h2><p id="credits-text" style="white-space:pre-line;font-size:17px;line-height:1.6;margin:0"></p>
+    <h2 data-t="credits"></h2>
+    <div class="cred"><div class="cred-title">ALAS-SAIS</div><div class="cred-by" data-t="made_by"></div><p class="cred-desc" data-t="made_desc"></p><p class="cred-attr" data-t="attributions"></p></div>
     <div><button class="cta" id="c-back" type="button" data-t="back"></button></div>
   </div></div>
+
+  <div id="scr-phone" class="scr">
+    <img id="pp-bg" alt="">
+    <div class="pp-wrap">
+      <div class="pp-phone" id="pp-phone">
+        <div class="pp-scr">
+          <div class="pp-top"><span id="pp-state"></span><span id="pp-time"></span></div>
+          <div class="pp-av">C</div><div class="pp-who" data-t="ph_who"></div><div class="pp-num">0917 ••• 6262</div>
+        </div>
+        <div class="pp-btns"><button type="button" id="pp-ans" class="ph-g" data-t="prologue_answer"></button></div>
+      </div>
+      <div id="pp-sub"></div>
+    </div>
+    <button type="button" id="pp-skip" class="btn pe" data-t="prologue_skip"></button>
+  </div>
 
   <div id="scr-intro" class="scr"><div class="center">
     <p class="sub">12:00 AM</p>
@@ -147,8 +164,8 @@
   </div>
 
   <div id="scr-end" class="scr" style="background:radial-gradient(ellipse at 50% 20%,#5a4a2a,#07080a 75%)"><div class="center">
-    <h1 class="logo" data-t="end_title"></h1>
-    <p class="sub" style="max-width:760px;line-height:1.6" data-t="end_text"></p>
+    <h1 class="logo" id="end-title"></h1>
+    <p class="sub" style="max-width:760px;line-height:1.6" id="end-text"></p>
     <p class="note" data-t="thanks"></p>
     <button class="cta red" id="e-menu" type="button" data-t="credits"></button>
   </div></div>

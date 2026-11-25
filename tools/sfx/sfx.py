@@ -546,6 +546,82 @@ def line_static(d=8.0):
     for _ in range(int(d * 6)): place(cr, hp(noise(0.02), 1500) * rng.uniform(0.1, 0.6), rng.uniform(0, d - 0.05))
     return loopify(y + cr * 0.3, 0.5)
 
+# ---------------------------------------------------------------- pack 5: chapter 1 + single synced footsteps + menu theme
+def step_one(surface='wood', run=False, room=0.25, seed=0):
+    global rng
+    r0 = rng; rng = np.random.default_rng(seed)
+    y = step_surface(0.3, surface, 1.35 if run else 1.0) * (0.9 if run else 0.75)
+    rng = r0
+    return reverb(y, 0.35 + room, 0.12 + room * 0.3)
+def wing_flap(n=5, far=False):
+    d = n * 0.32 + 0.6; y = np.zeros(int(d * SR))
+    for i in range(n):
+        L = 0.22; t = t_(L)
+        w = bp(noise(L), 120 if far else 90, 900 if far else 1800) * np.sin(np.pi * t / L) ** 2
+        w += lp(noise(L), 120) * np.exp(-t / 0.05) * 0.8
+        place(y, w * rng.uniform(0.7, 1.0), i * 0.32 + rng.uniform(-0.02, 0.02))
+    y = lp(y, 900) if far else y
+    return reverb(y, 1.4 if far else 0.7, 0.35 if far else 0.2)
+def wind_gust():
+    d = 3.2; n = int(d * SR); t = t_(d)
+    y = bp(noise(d), 200, 1600) * np.sin(np.pi * t / d) ** 1.5 * (0.7 + 0.3 * np.sin(2 * np.pi * 1.3 * t))
+    z = np.zeros(n); place(z, curtain_open_pull() * 0.45, 0.9)
+    return y * 0.8 + z
+def beetles(d=6.0):
+    """Many small legs on wood inside the aparador (loop)."""
+    n = int(d * SR); y = np.zeros(n)
+    for _ in range(int(d * 260)):
+        L = 0.004; c = hp(noise(L), 2500)[:int(L * SR)] * rng.uniform(0.05, 0.35)
+        place(y, c, rng.uniform(0, d - 0.01))
+    y = bp(y, 1500, 9000) + lp(noise(d), 300) * 0.04
+    return loopify(reverb(y, 0.25, 0.15), 0.4)
+def beetle_scatter():
+    d = 1.4; y = np.zeros(int(d * SR))
+    for _ in range(420):
+        L = 0.004; place(y, hp(noise(L), 2500)[:int(L * SR)] * rng.uniform(0.1, 0.5), rng.exponential(0.35))
+    y = bp(y, 1500, 9000) * env(len(y), 0.01, 0.8)
+    return reverb(y, 0.3, 0.15)
+def aparador_creak():
+    return reverb(creak(1.6, f0=520, rate=(6, 26), res=(200, 600, 1300)) * 0.9, 0.6, 0.25)
+def kumot_breath(d=6.0):
+    """Slow wet breathing right behind the door (loop)."""
+    y = np.zeros(int(d * SR)); at = 0.0
+    while at < d - 2.2:
+        place(y, breath(1.2, True, True) * 0.8, at); place(y, breath(1.5, False, True) * 0.9, at + 1.3); at += rng.uniform(2.7, 3.1)
+    return loopify(lp(y, 2400), 0.5)
+def theme_menu(d=72.0):
+    """Original menu theme: a detuned toy-piano lullaby in A minor over a low drone, tape wobble, distant choir swells."""
+    n = int(d * SR); t = np.arange(n) / SR
+    wob = 1 + 0.004 * np.sin(2 * np.pi * 0.35 * t) + 0.002 * np.sin(2 * np.pi * 2.1 * t)
+    drone = (np.sin(2 * np.pi * 55 * np.cumsum(wob) / SR) * 0.18 + np.sin(2 * np.pi * 82.4 * np.cumsum(wob) / SR) * 0.08)
+    drone *= 0.6 + 0.4 * np.sin(2 * np.pi * t / 16) ** 2
+    y = drone.copy()
+    # melody (original): note numbers relative to A4=440, one note per 0.75 s, phrases with rests (None)
+    mel = [0, 3, 7, 5, 3, None, 2, 3, 0, None, -2, 0, 3, 2, None, None,
+           0, 3, 7, 8, 7, None, 5, 3, 2, None, 3, 2, -2, 0, None, None,
+           12, 10, 8, 7, None, 5, 7, 3, None, 2, 0, -2, -5, None, -4, -5]
+    def toy(f, L=1.6):
+        tt = t_(L); ph = 2 * np.pi * f * tt * (1 + 0.003 * np.sin(2 * np.pi * 5 * tt))
+        x = (np.sin(ph) + 0.35 * np.sin(2.01 * ph) + 0.15 * np.sin(4.2 * ph) + 0.08 * np.sin(6.9 * ph)) * np.exp(-tt / 0.55)
+        return x * 0.22
+    beat = 0.75; at = 2.0; i = 0
+    while at < d - 3:
+        m = mel[i % len(mel)]
+        if m is not None:
+            f = 440 * 2 ** (m / 12) * 0.5 * (1 + rng.uniform(-0.004, 0.004))
+            place(y, toy(f) * rng.uniform(0.75, 1.0), at)
+            if i % 4 == 0: place(y, toy(f / 2, 2.2) * 0.4, at)
+        at += beat * (1.0 + (0.25 if i % 16 == 15 else 0)); i += 1
+    # choir swells (formant-filtered noise chords), every ~18 s
+    for c0 in np.arange(6, d - 8, 18):
+        L = 7.0; tt = t_(L); sw = np.sin(np.pi * tt / L) ** 2
+        ch = sum(np.sin(2 * np.pi * f * tt) for f in (220, 261.6, 329.6)) * 0.05
+        ch = bp(ch + bp(noise(L), 400, 1200) * 0.08, 200, 2200) * sw
+        place(y, ch, c0)
+    y = reverb(y, 3.5, 0.45)
+    y = lp(y, 7000)
+    return loopify(y * 0.8, 2.0)
+
 if __name__ == '__main__':
     jobs = {
         'amb_house': (amb_house, 0.7), 'amb_garden': (amb_garden, 0.6), 'amb_menu': (amb_menu, 0.7),
@@ -565,6 +641,11 @@ if __name__ == '__main__':
         'breaker': (breaker, 0.85), 'cabinet_open': (lambda: cabinet_door(True), 0.75), 'cabinet_close': (lambda: cabinet_door(False), 0.8),
         'plastic_crinkle': (plastic_crinkle, 0.6), 'breath_hold_gasp': (breath_hold, 0.85), 'distant_scream': (distant_scream, 0.6),
         'rain_heavy': (rain_heavy, 0.75),
+        'wing_flap': (lambda: wing_flap(5, False), 0.7), 'wing_flap_far': (lambda: wing_flap(4, True), 0.5), 'wind_gust': (wind_gust, 0.7),
+        'beetles': (beetles, 0.5), 'beetle_scatter': (beetle_scatter, 0.7), 'aparador_creak': (aparador_creak, 0.7), 'kumot_breath': (kumot_breath, 0.75),
+        'theme_menu': (theme_menu, 0.6),
+        'step_w1': (lambda: step_one('wood', False, 0.25, 1), 0.55), 'step_w2': (lambda: step_one('wood', False, 0.25, 2), 0.55), 'step_w3': (lambda: step_one('wood', False, 0.25, 3), 0.55),
+        'step_c1': (lambda: step_one('cement', False, 0.35, 4), 0.55), 'step_c2': (lambda: step_one('cement', False, 0.35, 5), 0.55), 'step_c3': (lambda: step_one('cement', False, 0.35, 6), 0.55),
         'ringtone': (ringtone, 0.7), 'phone_pickup': (phone_pickup, 0.6), 'phone_hangup': (phone_hangup, 0.6), 'line_static': (line_static, 0.4),
         'door_open_slow': (door_open_slow, 0.85), 'door_close_shut': (door_close_shut, 0.95), 'door_push_strain': (door_push_strain, 0.6),
         'curtain_open_pull': (curtain_open_pull, 0.8), 'curtain_close_pull': (curtain_close_pull, 0.85), 'curtain_grip': (curtain_grip, 0.5),
