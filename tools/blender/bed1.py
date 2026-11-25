@@ -427,7 +427,8 @@ elif VIEW == 'kitchen':     # in the kitchen doorway area looking at the counter
 elif VIEW == 'kitchen_hide':   # inside the low cabinet on the kitchen's side wall: the hall door is on the left
     camera(KW(-2.0, 2.55, 1.32), KW(1.3, 2.95, 1.05), lens=20)
 elif VIEW == 'curtain':     # facing the back door at the start of the hall
-    if OPT.get('hcurtain', 'closed') != 'open' and 'candles' not in OPT: point('curtainFill', (CX + 0.1, D + 0.35, 2.2), 6, color=(1.0, 0.62, 0.32), radius=0.25)   # the hall bulb's spill on the cloth (off when the glass would mirror it)
+    if 'candles' not in OPT:   # the hall bulb's spill on the cloth and wall, open or shut (never seen in the glass)
+        cf_ = point('curtainFill', (CX + 0.1, D + 0.35, 2.2), 6, color=(1.0, 0.62, 0.32), radius=0.25); cf_.visible_glossy = False; cf_.visible_transmission = False
     camera((CX + 0.02, D + 0.12, 1.5), (CX - 0.03, HY1 + 4.0, 1.4), lens=19)
 elif VIEW == 'living':
     camera(LW(-0.35, 1.0, 1.55), LW(0.25, LDIM[1], 1.1), lens=22)
@@ -455,8 +456,9 @@ elif VIEW == 'door':
         bpy.ops.object.empty_add(location=(0, 0, 0)); sh_ = bpy.context.active_object
         sh_.parent = cam_; sh_.location = (0.27, 0.0, -0.3); sh_.scale = (0.4, 0.4, 0.4); sh_.rotation_euler = (0, -math.radians(SWING), math.radians(17))   # undo the head tilt: the door stays upright in the world
         swm_ = mat_noise('swWood', (0.2, 0.1, 0.045), (0.26, 0.14, 0.065), scale=5, rough=0.5)
+        swi_ = mat_noise('swInsetM', (0.15, 0.075, 0.033), (0.2, 0.1, 0.045), scale=5, rough=0.55)
         sp_ = [box('swPanel', (1.55, 2.06, 0.045), (-0.775, 0, 0), swm_, bevel=0.005)]
-        for i_, yy in enumerate((0.4, -0.55)): sp_.append(box('swInset%d' % i_, (0.95, 0.7, 0.02), (-0.8, yy, 0.03), wood_dark, bevel=0.01))
+        for i_, yy in enumerate((0.4, -0.55)): sp_.append(box('swInset%d' % i_, (0.95, 0.7, 0.02), (-0.8, yy, 0.03), swi_, bevel=0.01))
         sp_.append(sphere('swKnob', 0.035, (-1.4, -0.1, 0.05), brass))
         sp_.append(decal('swScr', scr, (-0.45, 0.25, 0.031), (0.3, 0.6), 'z'))
         for o_ in sp_: o_.parent = sh_
