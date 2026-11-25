@@ -23,6 +23,7 @@ def reset():
     except Exception:
         try: sc.view_settings.view_transform = 'Filmic'
         except Exception: pass
+    sc.view_settings.exposure = -0.35
     w = bpy.data.worlds.new('W'); sc.world = w
     w.use_nodes = True
     bg = w.node_tree.nodes['Background']
@@ -183,3 +184,100 @@ def cut(target, cutter):
 def render(path):
     bpy.context.scene.render.filepath = path
     bpy.ops.render.render(write_still=True)
+
+# ---------------------------------------------------------------- set dressing (upgrade pass)
+def mat_stain(name, color=(0.045, 0.03, 0.015), scale=2.5, lo=0.5, hi=0.62, rough=0.9, seed=0.0):
+    """Water-damage / grime decal: colour with an alpha mask from noise."""
+    m = bpy.data.materials.new(name); m.use_nodes = True; nt = m.node_tree
+    b = nt.nodes['Principled BSDF']; b.inputs['Base Color'].default_value = (*color, 1); b.inputs['Roughness'].default_value = rough
+    tc = _n(nt, 'ShaderNodeTexCoord'); nz = _n(nt, 'ShaderNodeTexNoise'); nz.inputs['Scale'].default_value = scale
+    nz.inputs['Detail'].default_value = 12; nz.inputs['Roughness'].default_value = 0.65
+    try: nz.inputs['W'].default_value = seed; nz.noise_dimensions = '4D'
+    except Exception: pass
+    nt.links.new(tc.outputs['Generated'], nz.inputs['Vector'])
+    gr = _n(nt, 'ShaderNodeTexGradient'); gr.gradient_type = 'SPHERICAL'
+    mp = _n(nt, 'ShaderNodeMapping'); mp.inputs['Location'].default_value = (-0.5, -0.5, 0)  # centre the radial falloff
+    nt.links.new(tc.outputs['Generated'], mp.inputs['Vector']); nt.links.new(mp.outputs['Vector'], gr.inputs['Vector'])
+    g2 = _n(nt, 'ShaderNodeMath'); g2.operation = 'POWER'; g2.inputs[1].default_value = 2.0
+    nt.links.new(gr.outputs['Fac'], g2.inputs[0])
+    mx = _n(nt, 'ShaderNodeMath'); mx.operation = 'MULTIPLY'
+    nt.links.new(nz.outputs['Fac'], mx.inputs[0]); nt.links.new(g2.outputs['Value'], mx.inputs[1])
+    mr = _n(nt, 'ShaderNodeMapRange'); mr.inputs['From Min'].default_value = 0.12; mr.inputs['From Max'].default_value = 0.42
+    mr.inputs['To Max'].default_value = 0.85
+    nt.links.new(mx.outputs['Value'], mr.inputs['Value']); nt.links.new(mr.outputs['Result'], b.inputs['Alpha'])
+    return m
+
+def decal(name, mat, loc, size, normal='-y'):
+    rot = {'-y': (math.radians(90), 0, 0), '+y': (math.radians(-90), 0, 0), '-x': (math.radians(90), 0, math.radians(90)),
+           '+x': (math.radians(90), 0, math.radians(-90)), 'z': (0, 0, 0), '-z': (math.radians(180), 0, 0)}[normal]
+    o = plane(name, size, loc, rot, mat); o.visible_shadow = False
+    return o
+
+def grime(W, D, H, seed=1, n=10, color=(0.05, 0.035, 0.018)):
+    """Scatter damp stains on back/side walls and ceiling of a room() box."""
+    import random as _r; _r.seed(seed)
+    for i in range(n):
+        m = mat_stain('stain%d_%d' % (seed, i), color, scale=_r.uniform(1.5, 4), seed=_r.uniform(0, 50))
+        wall = _r.choice(['back', 'left', 'right', 'ceil', 'back'])
+        s = _r.uniform(0.6, 1.8); sz = (s, s * _r.uniform(0.7, 1.6))
+        if wall == 'back': decal('g%d' % i, m, (_r.uniform(-W / 2 + 0.4, W / 2 - 0.4), D - 0.006, _r.uniform(0.3, H - 0.2)), sz, '-y')
+        elif wall == 'left': decal('g%d' % i, m, (-W / 2 + 0.006, _r.uniform(0.6, D - 0.4), _r.uniform(0.3, H - 0.2)), sz, '+x')
+        elif wall == 'right': decal('g%d' % i, m, (W / 2 - 0.006, _r.uniform(0.6, D - 0.4), _r.uniform(0.3, H - 0.2)), sz, '-x')
+        else: decal('g%d' % i, m, (_r.uniform(-W / 2 + 0.5, W / 2 - 0.5), _r.uniform(0.8, D - 0.5), H - 0.006), sz, '-z')
+    # vertical drip streaks from the ceiling line
+    for i in range(4):
+        m = mat_stain('drip%d_%d' % (seed, i), (0.035, 0.025, 0.012), scale=6, seed=_r.uniform(0, 50))
+        decal('drip%d' % i, m, (_r.uniform(-W / 2 + 0.3, W / 2 - 0.3), D - 0.005, H - 0.5), (0.25, 1.1), '-y')
+
+def cobweb(name, corner, size=0.45):
+    m = bpy.data.materials.new(name); m.use_nodes = True; nt = m.node_tree
+    b = nt.nodes['Principled BSDF']; b.inputs['Base Color'].default_value = (0.6, 0.6, 0.58, 1); b.inputs['Roughness'].default_value = 0.6
+    tc = _n(nt, 'ShaderNodeTexCoord'); vo = _n(nt, 'ShaderNodeTexVoronoi'); vo.feature = 'DISTANCE_TO_EDGE'; vo.inputs['Scale'].default_value = 7
+    nt.links.new(tc.outputs['Generated'], vo.inputs['Vector'])
+    mr = _n(nt, 'ShaderNodeMapRange'); mr.inputs['From Min'].default_value = 0.012; mr.inputs['From Max'].default_value = 0.0
+    nt.links.new(vo.outputs['Distance'], mr.inputs['Value'])
+    gr = _n(nt, 'ShaderNodeTexGradient'); gr.gradient_type = 'QUADRATIC_SPHERE'
+    mx = _n(nt, 'ShaderNodeMath'); mx.operation = 'MULTIPLY'
+    nt.links.new(mr.outputs['Result'], mx.inputs[0]); nt.links.new(gr.outputs['Fac'], mx.inputs[1])
+    nt.links.new(tc.outputs['Generated'], gr.inputs['Vector'])
+    nt.links.new(mx.outputs['Value'], b.inputs['Alpha'])
+    x, y, z = corner
+    o = plane(name, (size, size), (x, y, z), (math.radians(45), 0, math.radians(45)), m); o.visible_shadow = False
+    return o
+
+def group_new(before, loc=(0, 0, 0), rotz=0.0, roty=0.0, rotx=0.0):
+    """Parent every object created since `before` (a set of names) to an empty and rotate it."""
+    bpy.ops.object.empty_add(location=loc); e = bpy.context.active_object
+    for o in bpy.data.objects:
+        if o.name not in before and o is not e and o.parent is None and o.type not in ('CAMERA', 'LIGHT'):
+            mw = o.matrix_world.copy(); o.parent = e; o.matrix_parent_inverse = e.matrix_world.inverted(); o.matrix_world = mw
+    e.rotation_euler = (rotx, roty, rotz)
+    return e
+
+def key(obj, path, frame, value, interp='BEZIER'):
+    setattr(obj, path, value) if not isinstance(value, tuple) else setattr(obj, path, value)
+    obj.keyframe_insert(data_path=path, frame=frame)
+    if obj.animation_data and obj.animation_data.action:
+        try:
+            for fc in obj.animation_data.action.fcurves:
+                for kp in fc.keyframe_points: kp.interpolation = interp
+        except Exception:
+            pass
+
+def look_rot(loc, target):
+    d = Vector(target) - Vector(loc); return d.to_track_quat('-Z', 'Y').to_euler()
+
+def render_anim(out_prefix, n):
+    """Render frames 1..n to out_prefix####.png"""
+    sc = bpy.context.scene
+    sc.frame_start = 1; sc.frame_end = n
+    sc.render.filepath = out_prefix
+    sc.render.use_motion_blur = False
+    bpy.ops.render.render(animation=True)
+
+def emission(name, color, strength):
+    m = bpy.data.materials.new(name); m.use_nodes = True; nt = m.node_tree
+    nt.nodes.remove(nt.nodes['Principled BSDF'])
+    e = nt.nodes.new('ShaderNodeEmission'); e.inputs['Color'].default_value = (*color, 1); e.inputs['Strength'].default_value = strength
+    nt.links.new(e.outputs[0], nt.nodes['Material Output'].inputs['Surface'])
+    return m

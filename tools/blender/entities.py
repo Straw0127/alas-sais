@@ -75,7 +75,9 @@ def build_kumot(x=0, y=0, cloth_frames=70, peer=False):
     skin = mat_skin('kSkin', (0.28, 0.27, 0.25), (0.42, 0.4, 0.37), sss=0.1)
     # skeleton: hunched spine, long neck bent forward, backward knees
     v = [(0, 0, 1.15), (0, 0.02, 1.55), (0, 0.06, 1.9), (0, -0.05, 2.12), (0, -0.2, 2.22),  # 0-4 spine/neck/head
-         (-0.12, 0.0, 1.1), (-0.13, 0.12, 0.62), (-0.12, -0.02, 0.08),                   # 5-7 left leg (knee back)
+    ] if not peer else [(0, 0, 1.15), (0, 0.02, 1.5), (0, 0.04, 1.82), (0, -0.12, 1.98), (0, -0.3, 1.9)]
+    v += [
+         (-0.12, 0.0, 1.1), (-0.13, 0.12, 0.62), (-0.12, -0.02, 0.08),
          (0.12, 0.0, 1.1), (0.13, 0.12, 0.62), (0.12, -0.02, 0.08),                      # 8-10 right leg
          (-0.2, 0.05, 1.85), (-0.3, -0.05, 1.45), (-0.26, -0.28, 1.2),                    # 11-13 left arm
          (0.2, 0.05, 1.85), (0.3, -0.05, 1.45), (0.24, -0.3, 1.25)]                       # 14-16 right arm
@@ -86,21 +88,31 @@ def build_kumot(x=0, y=0, cloth_frames=70, peer=False):
     apply_mods(body)
     # blanket: draped from above
     blanket = mat_floral('kumotBlanket', (0.17, 0.05, 0.04), (0.33, 0.22, 0.09), (0.1, 0.11, 0.05), scale=7)
-    # add stains: darken via multiply noise
     nt = blanket.node_tree; b = nt.nodes['Principled BSDF']
+    link = [l for l in nt.links if l.to_socket == b.inputs['Base Color']][0]; src = link.from_socket; nt.links.remove(link)
+    tc = nt.nodes.new('ShaderNodeTexCoord'); st = nt.nodes.new('ShaderNodeTexNoise'); st.inputs['Scale'].default_value = 2.2; st.inputs['Detail'].default_value = 10
+    nt.links.new(tc.outputs['Object'], st.inputs['Vector'])
+    sr = nt.nodes.new('ShaderNodeValToRGB'); sr.color_ramp.elements[0].position = 0.45; sr.color_ramp.elements[0].color = (0.12, 0.08, 0.05, 1); sr.color_ramp.elements[1].position = 0.6
+    nt.links.new(st.outputs['Fac'], sr.inputs['Fac'])
+    mx = nt.nodes.new('ShaderNodeMix'); mx.data_type = 'RGBA'; mx.blend_type = 'MULTIPLY'; mx.inputs['Factor'].default_value = 1
+    nt.links.new(src, mx.inputs['A']); nt.links.new(sr.outputs['Color'], mx.inputs['B']); nt.links.new(mx.outputs['Result'], b.inputs['Base Color'])
     cloth = drape_cloth('kumotCloth', [body], 3.4, (x, y - 0.1, 2.42), blanket, frames=cloth_frames, subdiv=56)
-    wrap = sphere('kHeadWrap', 0.15, (x, y - 0.22, 2.2), blanket, scale=(1.0, 1.1, 1.25))
-    dmw = wrap.modifiers.new('d', 'DISPLACE'); tw = bpy.data.textures.new('wrapT', 'CLOUDS'); tw.noise_scale = 0.06; dmw.texture = tw; dmw.strength = 0.03
+    hp = (x, y - 0.22, 2.2) if not peer else (x, y - 0.33, 1.88)
+    wrap = sphere('kHeadWrap', 0.15, hp, blanket, scale=(1.0, 1.1, 1.25))
+    if peer: wrap.rotation_euler = (math.radians(20), math.radians(70), 0)
+    dmw = wrap.modifiers.new('d', 'DISPLACE'); tw = bpy.data.textures.new('wrapT', 'CLOUDS'); tw.noise_scale = 0.035; dmw.texture = tw; dmw.strength = 0.07
+    wrap.modifiers.new('sub', 'SUBSURF').levels = 2
     # moth hole eye + lid
-    eyeM = emission('kEye', (0.95, 0.9, 0.75), 2.2)
-    sphere('kEyeBall', 0.024, (x - 0.02, y - 0.4, 2.15), eyeM)
+    eyeM = mat_basic('kEye', (0.75, 0.62, 0.5), 0.15, emit=(0.6, 0.45, 0.35), emit_str=0.6)
+    ez = 2.15 if not peer else 1.86; ey = -0.405 if not peer else -0.5
+    sphere('kEyeBall', 0.02, (x - 0.02, y + ey, ez), eyeM)
     pupil = mat_basic('kPupil', (0, 0, 0), 0.2)
-    sphere('kPupil', 0.01, (x - 0.02, y - 0.423, 2.15), pupil)
+    sphere('kPupil', 0.006, (x - 0.025, y + ey - 0.019, ez + 0.002), pupil)
     # long grey fingers emerging at the front hem
     for s in (-1, 1):
         for i in range(4):
-            fv = [(0, 0, 0), (0.01 * i - 0.015, -0.06, -0.05), (0.015 * i - 0.02, -0.08, -0.17), (0.02 * i - 0.02, -0.06, -0.27)]
-            fo = skin_body('kFinger%d%d' % (s, i), fv, [(0, 1), (1, 2), (2, 3)], [0.012, 0.011, 0.009, 0.006], skin, sub=1,
+            fv = [(0, 0, 0), (0.012 * i - 0.02, -0.07, -0.08), (0.018 * i - 0.03, -0.1, -0.26), (0.024 * i - 0.03, -0.08, -0.42), (0.026 * i - 0.03, -0.05, -0.47)]
+            fo = skin_body('kFinger%d%d' % (s, i), fv, [(0, 1), (1, 2), (2, 3), (3, 4)], [0.012, 0.011, 0.008, 0.005, 0.002], skin, sub=1,
                            loc=(x + s * 0.26 + 0.025 * i * s, y - 0.32, 1.28))
     return body, cloth
 
@@ -137,12 +149,12 @@ def build_malikmata(x=0, y=0, rotz=0.0):
     body.rotation_euler = (0, 0, rotz)
     # smile: wide thin emissive arc, too wide for the face
     sm = emission('malikSmile', (0.7, 0.98, 1.0), 4.0)
-    bpy.ops.mesh.primitive_torus_add(major_radius=0.12, minor_radius=0.006, location=(x + 0.07, y - 0.15, 2.0), rotation=(math.radians(90), 0, 0))
-    smile = bpy.context.active_object; smile.scale = (1.35, 1, 0.42); smile.data.materials.append(sm)
-    cb = box('smCut', (0.5, 0.4, 0.25), (x + 0.07, y - 0.15, 2.1)); cut(smile, cb)
+    bpy.ops.mesh.primitive_torus_add(major_radius=0.085, minor_radius=0.005, location=(x + 0.07, y - 0.125, 2.0), rotation=(math.radians(90), 0, 0))
+    smile = bpy.context.active_object; smile.scale = (1.4, 1, 0.45); smile.data.materials.append(sm)
+    cb = box('smCut', (0.5, 0.4, 0.25), (x + 0.07, y - 0.125, 2.1)); cut(smile, cb)
     # teeth ticks
     for i in range(9):
-        t = box('tooth%d' % i, (0.006, 0.004, 0.025), (x - 0.06 + i * 0.032, y - 0.155, 1.965 - 0.012 * math.sin(i / 8 * math.pi)), sm)
+        t = box('tooth%d' % i, (0.005, 0.004, 0.018), (x + 0.07 - 0.1 + i * 0.025, y - 0.128, 1.99 - 0.03 * math.sin(i / 8 * math.pi)), sm)
     # loose VHS tape ribbons hanging from arms
     tape = mat_basic('tape', (0.03, 0.02, 0.015), 0.25)
     random.seed(11)
@@ -154,6 +166,9 @@ def build_malikmata(x=0, y=0, rotz=0.0):
         p.scale = (0.012, random.uniform(0.35, 0.8), 1)
         tw = p.modifiers.new('tw', 'SIMPLE_DEFORM'); tw.deform_method = 'TWIST'; tw.angle = random.uniform(1, 3)
         p.data.materials.append(tape)
+    eyeS = emission('malikEyes', (0.6, 0.95, 1.0), 3.0)
+    for ex in (-0.035, 0.045):
+        sphere('mEye%d' % int(ex * 1000), 0.009, (x + 0.07 + ex, y - 0.125, 2.06), eyeS)
     return body
 
 # ---------------------------------------------------------------- KALANSING
@@ -177,10 +192,19 @@ def build_kalansing(x=0, y=0):
     bpy.ops.mesh.primitive_torus_add(major_radius=0.08, minor_radius=0.012, location=(x, y - 0.52, 1.03), rotation=(math.radians(80), 0, 0))
     bpy.context.active_object.data.materials.append(tie)
     thread = mat_basic('thread', (0.12, 0.05, 0.04), 0.8)
+    wire = mat_basic('wire', (0.25, 0.25, 0.24), 0.4, metal=1)
     for i in range(7):
         box('stitch%d' % i, (0.008, 0.016, 0.08), (x - 0.09 + i * 0.03, y - 0.875, 0.99), thread, rot=(0, math.radians(8 * (i - 3)), 0))
     box('mouthSeam', (0.21, 0.012, 0.008), (x, y - 0.877, 0.99), thread)
-    # utensils hanging on wires all over the back and sides
+    tooth = mat_basic('tooth', (0.62, 0.55, 0.4), 0.35)
+    for i in range(9):
+        bpy.ops.mesh.primitive_cone_add(vertices=6, radius1=0.009, radius2=0.0, depth=0.04, location=(x - 0.09 + i * 0.022, y - 0.88, 0.99 + (0.012 if i % 2 else -0.012)), rotation=(math.radians(180 if i % 2 else 0), 0, 0))
+        bpy.context.active_object.data.materials.append(tooth)
+    blade = mat_basic('blade', (0.55, 0.55, 0.53), 0.18, metal=1)
+    for k, (kx, kz) in enumerate(((-0.2, 0.7), (0.18, 0.66), (0.05, 0.62), (-0.08, 0.68))):
+        cyl('knifeW%d' % k, 0.0025, 0.2, (x + kx, y - 0.3 - k * 0.08, kz + 0.25), wire, verts=6)
+        box('knifeH%d' % k, (0.02, 0.012, 0.1), (x + kx, y - 0.3 - k * 0.08, kz + 0.1), mat_basic('kh%d' % k, (0.05, 0.03, 0.02), 0.6))
+        box('knifeB%d' % k, (0.035, 0.003, 0.2), (x + kx, y - 0.3 - k * 0.08, kz - 0.05), blade)
     metal = mat_noise('tin', (0.35, 0.35, 0.33), (0.6, 0.6, 0.57), scale=30, rough=0.3, bump=0.1)
     metal.node_tree.nodes['Principled BSDF'].inputs['Metallic'].default_value = 1.0
     rust = mat_noise('rust', (0.18, 0.07, 0.03), (0.35, 0.16, 0.06), scale=25, rough=0.8)
@@ -255,6 +279,150 @@ def build_silip(x=0, y=0):
     sphere('silEyeP', 0.011, (x - 0.035, y - 0.107, 1.76), eye)
     # long wet hair strands under the hood edge
     hair = mat_basic('hair', (0.01, 0.01, 0.01), 0.3)
-    for i in range(10):
-        cyl('hair%d' % i, 0.004, 0.35, (x - 0.1 + i * 0.022, y - 0.06, 1.58), hair, verts=6)
+    import random as _r; _r.seed(9)
+    for i in range(26):
+        L = _r.uniform(0.35, 0.75); hx = x - 0.11 + i * 0.0088 + _r.uniform(-0.004, 0.004)
+        front = i % 3 == 0
+        cyl('hair%d' % i, 0.0035, L, (hx, y - (0.12 if front else 0.07), 1.82 - L / 2), hair, verts=5)
+    for s_ in (-1, 1):
+        for f in range(4):
+            cyl('sFinger%d%d' % (s_, f), 0.006, 0.16, (x + s_ * (0.26 + 0.012 * f), y - 0.05 + 0.01 * f, 0.22), skin, verts=6)
     return body
+
+# ================================================================ FOLKLORE PASS
+def build_kumot_batibat(x=0, y=0, peer=False):
+    """Kumot as a Batibat: old woman under a white lamay shroud, long white hair, rosary in grey fingers."""
+    body, cloth = build_kumot(x, y, peer=peer)
+    shroud = mat_noise('shroud', (0.42, 0.4, 0.34), (0.6, 0.57, 0.5), scale=5, bump=0.25)
+    nt = shroud.node_tree; b = nt.nodes['Principled BSDF']
+    try: b.inputs['Sheen Weight'].default_value = 0.4
+    except Exception: pass
+    # damp yellow-brown stains on the shroud
+    st = mat_stain('shroudStain', (0.2, 0.14, 0.07), scale=3)
+    cloth.data.materials.clear(); cloth.data.materials.append(shroud)
+    w = bpy.data.objects.get('kHeadWrap')
+    if w: w.data.materials.clear(); w.data.materials.append(shroud)
+    # long white hair spilling from under the shroud at the face
+    hair = mat_basic('whiteHair', (0.55, 0.53, 0.5), 0.45)
+    hx, hy, hz = (x, y - 0.33, 2.02) if not peer else (x, y - 0.42, 1.74)
+    import random as _r; _r.seed(13)
+    for i in range(34):
+        L = _r.uniform(0.45, 1.0); ox = _r.uniform(-0.12, 0.12)
+        h = cyl('wHair%d' % i, 0.0028, L, (hx + ox, hy + _r.uniform(-0.03, 0.03), hz - L / 2 + 0.1), hair, verts=5)
+        h.rotation_euler = (_r.uniform(-0.15, 0.15), _r.uniform(-0.1, 0.1), 0)
+    # black mourning ribbon (luksa) pinned on the shroud
+    blk = mat_basic('luksa', (0.01, 0.01, 0.01), 0.5)
+    box('luksa', (0.05, 0.01, 0.09), (x + 0.12, y - 0.28, 1.6 if not peer else 1.5), blk, rot=(0, 0, 0.3))
+    # rosary hanging from the right fingers
+    bead = mat_basic('rosBead', (0.06, 0.04, 0.03), 0.3)
+    for i in range(18):
+        a_ = i / 18 * math.pi
+        sphere('rb%d' % i, 0.009, (x + 0.29 + 0.05 * math.sin(a_), y - 0.4, 0.88 - 0.2 * math.sin(a_ / 2) - 0.012 * i), bead)
+    box('rosCrossV', (0.008, 0.006, 0.05), (x + 0.3, y - 0.4, 0.62), mat_basic('rosC', (0.5, 0.42, 0.25), 0.3, metal=1))
+    box('rosCrossH', (0.03, 0.006, 0.008), (x + 0.3, y - 0.4, 0.635), mat_basic('rosC2', (0.5, 0.42, 0.25), 0.3, metal=1))
+    return body, cloth
+
+def build_tiyanak(x=0, y=0, z=0.0, crawl=True):
+    """Malikmata as a Tiyanak: baby-sized, grey wrinkled old man's face, needle teeth, static flecks."""
+    skin = mat_skin('tySkin', (0.16, 0.13, 0.11), (0.3, 0.24, 0.2), sss=0.2, rough=0.6)
+    # add static flecks
+    nt = skin.node_tree; b = nt.nodes['Principled BSDF']
+    tc = nt.nodes.new('ShaderNodeTexCoord'); nz = nt.nodes.new('ShaderNodeTexNoise'); nz.inputs['Scale'].default_value = 260
+    nt.links.new(tc.outputs['Object'], nz.inputs['Vector'])
+    cr = nt.nodes.new('ShaderNodeValToRGB'); cr.color_ramp.elements[0].position = 0.68; cr.color_ramp.elements[1].position = 0.72
+    cr.color_ramp.elements[0].color = (0, 0, 0, 1); cr.color_ramp.elements[1].color = (0.5, 0.9, 1.0, 1)
+    nt.links.new(nz.outputs['Fac'], cr.inputs['Fac']); nt.links.new(cr.outputs['Color'], b.inputs['Emission Color'])
+    b.inputs['Emission Strength'].default_value = 1.2
+    if crawl:   # on all fours, head up
+        v = [(0, 0.15, 0.3), (0, -0.05, 0.33), (0, -0.2, 0.38), (0, -0.28, 0.5),
+             (-0.09, -0.15, 0.32), (-0.14, -0.28, 0.16), (-0.13, -0.36, 0.02),
+             (0.09, -0.15, 0.32), (0.14, -0.28, 0.16), (0.13, -0.36, 0.02),
+             (-0.08, 0.15, 0.28), (-0.15, 0.05, 0.12), (-0.14, -0.02, 0.02),
+             (0.08, 0.15, 0.28), (0.15, 0.05, 0.12), (0.14, -0.02, 0.02)]
+        e = [(0, 1), (1, 2), (2, 3), (1, 4), (4, 5), (5, 6), (1, 7), (7, 8), (8, 9), (0, 10), (10, 11), (11, 12), (0, 13), (13, 14), (14, 15)]
+        r = [0.11, 0.12, 0.08, 0.05, 0.045, 0.035, 0.02, 0.045, 0.035, 0.02, 0.05, 0.04, 0.025, 0.05, 0.04, 0.025]
+        head = (0, -0.34, 0.6)
+    else:
+        v = [(0, 0, 0.3), (0, 0, 0.5), (0, 0, 0.62), (-0.07, 0, 0.28), (-0.08, 0, 0.02), (0.07, 0, 0.28), (0.08, 0, 0.02),
+             (-0.12, 0, 0.58), (-0.2, -0.05, 0.38), (0.12, 0, 0.58), (0.2, -0.05, 0.38)]
+        e = [(0, 1), (1, 2), (0, 3), (3, 4), (0, 5), (5, 6), (1, 7), (7, 8), (1, 9), (9, 10)]
+        r = [0.12, 0.13, 0.05, 0.05, 0.03, 0.05, 0.03, 0.04, 0.025, 0.04, 0.025]
+        head = (0, -0.02, 0.76)
+    body = skin_body('tyBody', v, e, r, skin, loc=(x, y, z))
+    hx, hy, hz = x + head[0], y + head[1], z + head[2]
+    hd = sphere('tyHead', 0.12, (hx, hy, hz), skin, scale=(1.0, 0.95, 1.08))
+    d = hd.modifiers.new('wr', 'DISPLACE'); t = bpy.data.textures.new('wrinkles', 'STUCCI'); t.noise_scale = 0.03; d.texture = t; d.strength = 0.012
+    eyeW = mat_basic('tyEyeW', (0.6, 0.55, 0.4), 0.15); pupil = emission('tyPupil', (0.6, 0.95, 1.0), 4)
+    for s_ in (-1, 1):
+        sphere('tyEye%d' % s_, 0.02, (hx + s_ * 0.045, hy - 0.1, hz + 0.02), eyeW)
+        sphere('tyPup%d' % s_, 0.008, (hx + s_ * 0.045, hy - 0.118, hz + 0.02), pupil)
+    # mouth: dark slit with needle teeth
+    box('tyMouth', (0.11, 0.01, 0.025), (hx, hy - 0.112, hz - 0.055), mat_basic('tyMouthM', (0.02, 0.0, 0.0), 0.4))
+    tooth = mat_basic('tyTooth', (0.7, 0.65, 0.5), 0.3)
+    for i in range(10):
+        bpy.ops.mesh.primitive_cone_add(vertices=5, radius1=0.004, depth=0.028, location=(hx - 0.045 + i * 0.01, hy - 0.118, hz - 0.055 + (0.008 if i % 2 else -0.008)), rotation=(math.radians(180 if i % 2 else 0), 0, 0))
+        bpy.context.active_object.data.materials.append(tooth)
+    return body
+
+def build_manananggal(x=0, y=0, z=1.35, wing=1.0):
+    """Silip as a Manananggal: severed upper torso hovering, bat wings, entrails, long hair, cracked capiz-mask face."""
+    skin = mat_skin('mnSkin', (0.42, 0.38, 0.34), (0.55, 0.5, 0.45), sss=0.3, rough=0.45)
+    v = [(0, 0, 0), (0, 0.01, 0.28), (0, 0.0, 0.42), (0, -0.02, 0.52),
+         (-0.17, 0.01, 0.38), (-0.32, -0.08, 0.12), (-0.38, -0.2, -0.18), (-0.36, -0.3, -0.36),
+         (0.17, 0.01, 0.38), (0.32, -0.08, 0.12), (0.38, -0.2, -0.18), (0.36, -0.3, -0.36)]
+    e = [(0, 1), (1, 2), (2, 3), (1, 4), (4, 5), (5, 6), (6, 7), (1, 8), (8, 9), (9, 10), (10, 11)]
+    r = [0.12, 0.13, 0.05, 0.04, 0.045, 0.03, 0.022, 0.012, 0.045, 0.03, 0.022, 0.012]
+    body = skin_body('mnBody', v, e, r, skin, loc=(x, y, z))
+    # head with long wet hair and a cracked capiz mask (kept from the Silip design)
+    hz = z + 0.66
+    sphere('mnHead', 0.11, (x, y, hz), skin, scale=(0.9, 1.0, 1.15))
+    m = bpy.data.materials.new('mnCapiz'); m.use_nodes = True; nt = m.node_tree
+    b = nt.nodes['Principled BSDF']; b.inputs['Base Color'].default_value = (0.8, 0.77, 0.68, 1); b.inputs['Roughness'].default_value = 0.25
+    b.inputs['Emission Color'].default_value = (0.8, 0.78, 0.7, 1); b.inputs['Emission Strength'].default_value = 0.12
+    vo = nt.nodes.new('ShaderNodeTexVoronoi'); vo.feature = 'DISTANCE_TO_EDGE'; vo.inputs['Scale'].default_value = 8
+    cr = nt.nodes.new('ShaderNodeValToRGB'); cr.color_ramp.elements[1].position = 0.03; cr.color_ramp.elements[0].color = (0.03, 0.02, 0.02, 1)
+    nt.links.new(vo.outputs['Distance'], cr.inputs['Fac'])
+    mx = nt.nodes.new('ShaderNodeMix'); mx.data_type = 'RGBA'; mx.blend_type = 'MULTIPLY'; mx.inputs['Factor'].default_value = 1; mx.inputs['A'].default_value = (0.8, 0.77, 0.68, 1)
+    nt.links.new(cr.outputs['Color'], mx.inputs['B']); nt.links.new(mx.outputs['Result'], b.inputs['Base Color'])
+    f = box('mnMask', (0.15, 0.012, 0.19), (x, y - 0.095, hz), m, bevel=0.03); f.modifiers.new('sub', 'SUBSURF').levels = 2
+    sphere('mnEyeW', 0.02, (x - 0.03, y - 0.085, hz + 0.02), mat_basic('mnEW', (0.75, 0.2, 0.15), 0.3))
+    sphere('mnEyeP', 0.009, (x - 0.03, y - 0.105, hz + 0.02), mat_basic('mnEP', (0, 0, 0), 0.2))
+    hair = mat_basic('mnHair', (0.008, 0.008, 0.008), 0.25)
+    import random as _r; _r.seed(17)
+    for i in range(40):
+        L = _r.uniform(0.5, 1.05); a_ = _r.uniform(-1.3, 1.3)
+        hx = x + 0.1 * math.sin(a_); hy = y + 0.06 * math.cos(a_) - (0.05 if abs(a_) < 0.5 and i % 4 == 0 else 0)
+        cyl('mnHairS%d' % i, 0.003, L, (hx, hy, hz + 0.08 - L / 2), hair, verts=5)
+    # entrails hanging from the severed waist
+    gut = mat_skin('mnGut', (0.25, 0.04, 0.035), (0.4, 0.08, 0.06), sss=0.4, rough=0.25)
+    for i in range(7):
+        px = x + _r.uniform(-0.08, 0.08); py = y + _r.uniform(-0.05, 0.05)
+        L = _r.uniform(0.35, 0.9)
+        pts = [(0, 0, 0)] + [(_r.uniform(-0.04, 0.04) * k, _r.uniform(-0.04, 0.04) * k, -L * k / 4) for k in range(1, 5)]
+        skin_body('gut%d' % i, pts, [(k, k + 1) for k in range(4)], [0.03, 0.025, 0.022, 0.018, 0.012], gut, sub=2, loc=(px, py, z - 0.02))
+    # bat wings: membrane planes stretched between finger bones
+    bone = mat_basic('wingBone', (0.08, 0.06, 0.05), 0.5)
+    mem = mat_skin('wingMem', (0.06, 0.04, 0.035), (0.12, 0.08, 0.06), sss=0.5, rough=0.5)
+    mem.node_tree.nodes['Principled BSDF'].inputs['Transmission Weight'].default_value = 0.15
+    for s_ in (-1, 1):
+        root = Vector((x + s_ * 0.14, y + 0.06, z + 0.4))
+        tips = [Vector((x + s_ * 1.0 * wing, y + 0.25, z + 0.95)), Vector((x + s_ * 1.25 * wing, y + 0.3, z + 0.45)), Vector((x + s_ * 1.05 * wing, y + 0.28, z - 0.05)), Vector((x + s_ * 0.55 * wing, y + 0.15, z - 0.25))]
+        for k, tp in enumerate(tips):
+            d = tp - root; o = cyl('wb%d%d' % (s_, k), 0.012 - k * 0.002, d.length, tuple((root + tp) / 2), bone, verts=8)
+            o.rotation_euler = d.to_track_quat('Z', 'Y').to_euler()
+        me = bpy.data.meshes.new('wing%d' % s_)
+        verts = [root] + tips + [Vector((x + s_ * 0.2, y + 0.05, z - 0.05))]
+        faces = [(0, 1, 2), (0, 2, 3), (0, 3, 4), (0, 4, 5)]
+        me.from_pydata([tuple(p) for p in verts], [], faces)
+        wo = bpy.data.objects.new('wing%d' % s_, me); bpy.context.collection.objects.link(wo)
+        wo.modifiers.new('sol', 'SOLIDIFY').thickness = 0.004
+        sb = wo.modifiers.new('sub', 'SUBSURF'); sb.levels = 2
+        dm = wo.modifiers.new('d', 'DISPLACE'); tx = bpy.data.textures.new('wingT%d' % s_, 'CLOUDS'); tx.noise_scale = 0.15; dm.texture = tx; dm.strength = 0.05
+        me.materials.append(mem)
+    return body
+
+def add_aswang_tongue(x, y):
+    """Long thin tongue through Kalansing's stitched mouth (aswang)."""
+    tg = mat_skin('aswTongue', (0.22, 0.05, 0.05), (0.35, 0.1, 0.08), sss=0.3, rough=0.2)
+    pts = [(0, 0, 0), (0.01, -0.12, -0.08), (0.03, -0.22, -0.3), (0.0, -0.28, -0.6), (-0.02, -0.3, -0.85)]
+    return skin_body('aswTongue', pts, [(k, k + 1) for k in range(4)], [0.012, 0.011, 0.009, 0.007, 0.003], tg, sub=2, loc=(x, y - 0.88, 0.99))

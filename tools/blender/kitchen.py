@@ -1,18 +1,27 @@
-import sys, os, math; sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import sys, math; sys.path.insert(0, '/home/claude/render')
 from lib import *
 sc = reset()
 a = sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else []
-out = a[0] if a else 'out/kitchen.png'
+out = a[0] if a else '/home/claude/render/out/kitchen.png'
 sc.cycles.samples = int(a[1]) if len(a) > 1 else 40
 KAL = '--kal' in a
+CAB = '--cabinet' in a
 
 W, D, H = 4.4, 4.0, 2.7
-plaster = mat_noise('plaster', (0.28, 0.3, 0.24), (0.4, 0.42, 0.34), scale=3, bump=0.06)
-ceil = mat_noise('ceil', (0.22, 0.22, 0.2), (0.36, 0.36, 0.33), scale=2)
-floor = mat_planks('floorTile', (0.14, 0.16, 0.13), (0.18, 0.2, 0.16), mortar=(0.04, 0.04, 0.035), scale=0.8, rough=0.3)
+from pinoy import *
+plaster = mat_sawali()
+ceil = mat_plywood('plyKit')
+floor = mat_cement('cementKit')
 room(W, D, H, plaster, floor, ceil)
 tiles = mat_planks('wallTile', (0.32, 0.38, 0.33), (0.36, 0.42, 0.36), mortar=(0.12, 0.12, 0.1), scale=2.2, rough=0.15)
-box('backsplash', (2.6, 0.02, 0.7), (-0.9, D - 0.01, 1.25), tiles)
+gi_roof(W, D, H)
+galon(1.95, 2.6); galon(1.95, 2.95)
+asin_jar(-1.15, D - 0.35, 0.9)
+for _k, (_my, _mz, _c) in enumerate(((1.6, 1.3, (0.6, 0.1, 0.1)), (1.85, 1.45, (0.1, 0.3, 0.6)), (2.0, 1.2, (0.7, 0.6, 0.1)))):
+    box('magnet%d' % _k, (0.01, 0.1, 0.07), (W / 2 - 0.76, _my, _mz), mat_basic('mag%d' % _k, _c, 0.4))
+batya(-1.9, 2.3)
+monobloc(-0.6, 1.0, rotz=math.radians(15))
+
 wood = mat_planks('cab', (0.12, 0.07, 0.03), (0.16, 0.09, 0.04), scale=3, rough=0.5)
 counter = mat_noise('counter', (0.25, 0.25, 0.23), (0.35, 0.35, 0.32), scale=12, rough=0.4)
 
@@ -71,33 +80,32 @@ cyl('cap', 0.016, 0.01, (-1.2, 1.25, 1.025), alum, verts=12)
 gl = mat_basic('bulb', (1, 1, 0.9), 0.1, emit=(0.95, 1.0, 0.8), emit_str=8)
 b = sphere('bulb', 0.05, (-0.3, 2.2, H - 0.45), gl); b.visible_shadow = False
 cyl('cord', 0.005, 0.4, (-0.3, 2.2, H - 0.2), mat_basic('cord', (0.02, 0.02, 0.02), 0.6))
-point('bulbL', (-0.3, 2.2, H - 0.47), 22, color=(0.95, 1.0, 0.82), radius=0.04)
+point('bulbL', (-0.3, 2.2, H - 0.47), 30, color=(0.95, 1.0, 0.82), radius=0.04)
 
-if KAL:
-    sack = mat_noise('sack', (0.32, 0.26, 0.16), (0.45, 0.37, 0.24), scale=60, bump=0.4)
-    skin = mat_basic('kalBody', (0.05, 0.04, 0.035), 0.8)
-    x0, y0 = 1.3, D + 0.35
-    torso = sphere('kTorso', 0.35, (x0, y0, 0.95), skin, scale=(0.9, 0.7, 1.1))
-    torso.rotation_euler = (math.radians(-35), 0, 0)
-    head = sphere('kHead', 0.16, (x0 + 0.05, y0 - 0.32, 1.35), sack, scale=(1, 1.1, 0.9))
-    thread = mat_basic('thread', (0.55, 0.45, 0.3), 0.8)
-    for i in range(5):
-        box('stitch%d' % i, (0.006, 0.01, 0.05), (x0 - 0.05 + i * 0.025, y0 - 0.49, 1.29), thread)
-    for s in (-1, 1):
-        cyl('kArm%d' % s, 0.035, 0.85, (x0 + s * 0.32, y0 - 0.25, 0.5), skin, rot=(math.radians(20), math.radians(s * 12), 0), verts=10)
-    import random; random.seed(3)
-    for i in range(16):
-        ang = random.uniform(-1.2, 1.2); r = random.uniform(0.22, 0.34)
-        px = x0 + math.sin(ang) * r; py = y0 - 0.2 - math.cos(ang) * 0.15; pz = random.uniform(0.75, 1.15)
-        L = random.uniform(0.12, 0.3)
-        cyl('w%d' % i, 0.003, L, (px, py, pz - L / 2), alum, verts=6)
-        if i % 3 == 0:
-            cyl('can%d' % i, 0.035, 0.06, (px, py, pz - L - 0.03), alum, verts=14)
-        elif i % 3 == 1:
-            sphere('cup%d' % i, 0.035, (px, py, pz - L - 0.02), alum, scale=(1, 1, 0.6))
-        else:
-            box('spoon%d' % i, (0.015, 0.004, 0.12), (px, py, pz - L - 0.06), alum)
-    point('kalRim', (x0 + 0.3, y0 + 0.7, 1.7), 14, color=(0.7, 0.8, 0.7), radius=0.2)
-
-camera((-0.2, 0.15, 1.55), (0.1, D, 1.05), lens=21)
+grime(W, D, H, seed=7, n=11, color=(0.04, 0.035, 0.02))
+from entities import build_kalansing, add_aswang_tongue
+if KAL and not CAB:
+    build_kalansing(1.3, D + 0.45); add_aswang_tongue(1.3, D + 0.45)
+    point('kalRim', (1.3, D - 0.4, 1.7), 45, color=(0.7, 0.8, 0.7), radius=0.2)
+if CAB:
+    cut(bpy.data.objects['lowerCab'], box('cc', (0.54, 0.5, 0.76), (-0.45, D - 0.33, 0.43)))
+    for nme in ('door2', 'h2'):
+        bpy.data.objects.remove(bpy.data.objects[nme], do_unlink=True)
+    for k in range(8):
+        box('slat%d' % k, (0.56, 0.012, 0.045), (-0.45, D - 0.61, 0.1 + k * 0.095), wood, rot=(math.radians(-35), 0, 0))
+    if KAL:
+        build_kalansing(-0.1, 1.45); add_aswang_tongue(-0.1, 1.45)
+        point('kalKey', (-0.3, 0.6, 1.8), 25, color=(0.8, 1.0, 0.75), radius=0.2)
+    cam = camera((-0.45, D - 0.25, 0.42), (-0.3, 0.0, 0.62), lens=20)
+    if '--anim=hide' in a:
+        bpy.data.objects.remove(bpy.data.objects['door1'], do_unlink=True) if 'door1' in bpy.data.objects else None
+        N = 14
+        keys = [(1, (-0.2, 0.15, 1.55), (0.1, D, 1.05)), (6, (-0.4, 1.9, 0.75), (-0.45, D, 0.35)), (10, (-0.45, 2.9, 0.42), (-0.45, D, 0.4)), (14, (-0.45, D - 0.25, 0.42), (-0.3, 0.0, 0.62))]
+        for s_ in [o for o in bpy.data.objects if o.name.startswith('slat')]:
+            s_.hide_render = True; key(s_, 'hide_render', 1, True); key(s_, 'hide_render', 11, False)
+        for f, l, tg in keys:
+            key(cam, 'location', f, l); key(cam, 'rotation_euler', f, tuple(look_rot(l, tg)))
+        render_anim(out, N); raise SystemExit
+else:
+    camera((-0.2, 0.15, 1.55), (0.1, D, 1.05), lens=21)
 render(out)

@@ -1,0 +1,31 @@
+
+:root{--bg:#07080a;--panel:#111214;--line:#2a2620;--bone:#e9dfcb;--dim:#a39886;--red:#b3261e;--amber:#e0a24a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--bone);font-family:Inter,system-ui,sans-serif;line-height:1.5}
+header{padding:40px 20px 24px;max-width:1100px;margin:0 auto}
+h1{font-family:Oswald,sans-serif;font-weight:700;letter-spacing:6px;font-size:clamp(34px,8vw,64px);margin:0;line-height:1}
+.sub{font-family:'Special Elite',monospace;color:var(--dim);margin:10px 0 0;font-size:17px}
+nav{position:sticky;top:0;z-index:5;background:#07080aee;backdrop-filter:blur(6px);border-bottom:1px solid var(--line)}
+nav div{max-width:1100px;margin:0 auto;display:flex;gap:4px;overflow-x:auto;padding:0 12px}
+nav a{color:var(--dim);text-decoration:none;font-family:Oswald,sans-serif;letter-spacing:2px;font-size:15px;padding:14px 10px;white-space:nowrap;min-height:44px}
+nav a:hover{color:var(--bone)}
+main{max-width:1100px;margin:0 auto;padding:0 16px 80px}
+h2{font-family:Oswald,sans-serif;font-weight:500;letter-spacing:4px;font-size:24px;margin:48px 0 6px}
+.lead{color:var(--dim);margin:0 0 20px;max-width:720px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,460px),1fr));gap:18px}
+figure{margin:0;background:var(--panel);border:1px solid var(--line)}
+figure a{display:block}
+figure img{display:block;width:100%;height:auto;aspect-ratio:16/9;object-fit:cover;background:#000}
+figcaption{padding:12px 14px 14px}
+figcaption b{font-family:Oswald,sans-serif;letter-spacing:1px;font-weight:500;font-size:17px;display:block}
+figcaption span{color:var(--dim);font-size:14px}
+.sounds{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,340px),1fr));gap:12px}
+.snd{background:var(--panel);border:1px solid var(--line);padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.snd b{font-family:Oswald,sans-serif;letter-spacing:1px;font-weight:500;font-size:16px}
+.snd span{color:var(--dim);font-size:13px}
+.snd audio{width:100%;height:40px}
+.warn{border-left:3px solid var(--red);padding:10px 14px;background:#140807;color:#e6c9bf;font-size:14px;margin:0 0 18px;max-width:720px}
+.tag{display:inline-block;font-size:11px;letter-spacing:1px;color:var(--amber);border:1px solid #4a3a20;padding:1px 6px;margin-left:6px;vertical-align:middle}
+footer{max-width:1100px;margin:0 auto;padding:24px 16px 60px;color:var(--dim);font-size:13px}
+
+figure video{display:block;width:100%;aspect-ratio:16/9;background:#000;object-fit:cover}

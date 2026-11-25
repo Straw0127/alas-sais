@@ -1,16 +1,17 @@
-import sys, os, math; sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import sys, math; sys.path.insert(0, '/home/claude/render')
 from lib import *
 sc = reset()
 a = sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else []
-out = a[0] if a else 'out/living.png'
+out = a[0] if a else '/home/claude/render/out/living.png'
 sc.cycles.samples = int(a[1]) if len(a) > 1 else 40
 MALIK = '--malik' in a
 LIGHTS = '--lights' in a
 
 W, D, H = 5.0, 4.6, 2.8
-plaster = mat_noise('plaster', (0.25, 0.3, 0.27), (0.38, 0.43, 0.38), scale=3, bump=0.06)
-ceil = mat_noise('ceil', (0.3, 0.3, 0.28), (0.45, 0.45, 0.42), scale=2)
-tile = mat_planks('tiles', (0.28, 0.24, 0.2), (0.33, 0.29, 0.24), mortar=(0.05, 0.05, 0.045), scale=0.6, rough=0.35)
+from pinoy import *
+plaster = mat_hollowblock()
+ceil = mat_plywood('plyLiv')
+tile = mat_cement()
 room(W, D, H, plaster, tile, ceil)
 wood = mat_planks('wood', (0.08, 0.04, 0.018), (0.11, 0.055, 0.025), scale=3, rough=0.4)
 
@@ -86,32 +87,19 @@ pc = box('sofaPlastic', (1.96, 0.86, 0.5), (1.3, 1.2, 0.26), plastic, bevel=0.06
 rug = mat_floral('rug', (0.18, 0.06, 0.04), (0.3, 0.2, 0.1), (0.08, 0.1, 0.12), scale=5)
 box('rug', (2.0, 1.4, 0.01), (-0.2, 2.6, 0.005), rug)
 
+grime(W, D, H, seed=5, n=11, color=(0.03, 0.04, 0.035))
+gi_roof(W, D, H)
+framed('lastSupperLiv', (1.85, D - 0.01, 2.15), (0.9, 0.45), '-y', mat_last_supper('ls2'))
+plastic_wardrobe(-2.05, 1.4, color=(0.12, 0.08, 0.06), rotz=math.radians(-90))
+doily(0, D - 0.33, 1.165, 0.2)
+monobloc(-0.9, 1.6, rotz=math.radians(160)); monobloc(-1.5, 2.2, rotz=math.radians(120))
+santo_nino(-1.8, D - 0.25, 1.9)
+galon(2.1, D - 0.4)
+wire_run([(0.95, D - 0.02, 1.36), (0.95, D - 0.02, H - 0.02), (0, D - 0.02, H - 0.02), (0, 2.6, H - 0.02)])
 if MALIK:
-    st = bpy.data.materials.new('malik'); st.use_nodes = True; nt = st.node_tree
-    bs = nt.nodes['Principled BSDF']; bs.inputs['Base Color'].default_value = (0.0005, 0.0008, 0.001, 1); bs.inputs['Roughness'].default_value = 1.0; bs.inputs['Specular IOR Level'].default_value = 0.0
-    tc = nt.nodes.new('ShaderNodeTexCoord'); nz2 = nt.nodes.new('ShaderNodeTexNoise'); nz2.inputs['Scale'].default_value = 300
-    nt.links.new(tc.outputs['Object'], nz2.inputs['Vector'])
-    cr2 = nt.nodes.new('ShaderNodeValToRGB'); cr2.color_ramp.elements[0].position = 0.62; cr2.color_ramp.elements[1].position = 0.7
-    cr2.color_ramp.elements[0].color = (0, 0, 0, 1); cr2.color_ramp.elements[1].color = (0.5, 0.9, 1.0, 1)
-    nt.links.new(nz2.outputs['Fac'], cr2.inputs['Fac']); nt.links.new(cr2.outputs['Color'], bs.inputs['Emission Color'])
-    bs.inputs['Emission Strength'].default_value = 1.5
-    emn = nt.nodes.new('ShaderNodeEmission'); emn.inputs['Strength'].default_value = 1.4
-    nt.links.new(cr2.outputs['Color'], emn.inputs['Color'])
-    nt.links.new(emn.outputs[0], nt.nodes['Material Output'].inputs['Surface'])
-    x0, y0 = 0.62, D - 0.85
-    torso = cyl('mTorso', 0.17, 0.9, (x0, y0, 1.35), st, verts=24); torso.scale = (1, 0.6, 1)
-    cyl('mHips', 0.13, 0.25, (x0, y0, 0.85), st, verts=24)
-    for s in (-1, 1):
-        cyl('mLeg%d' % s, 0.055, 0.85, (x0 + s * 0.08, y0, 0.42), st, verts=12)
-        arm = cyl('mArm%d' % s, 0.035, 1.3, (x0 + s * 0.27, y0 - 0.05, 1.08), st, rot=(math.radians(-10), math.radians(s * 11), 0), verts=12)
-        bd = arm.modifiers.new('bd', 'SIMPLE_DEFORM'); bd.deform_method = 'BEND'; bd.angle = math.radians(s * 35); bd.deform_axis = 'Y'
-        sphere('mHand%d' % s, 0.05, (x0 + s * 0.39, y0 - 0.1, 0.45), st, scale=(0.5, 0.4, 2.2))
-    head = sphere('mHead', 0.14, (x0 + 0.03, y0, 1.98), st, scale=(0.95, 0.85, 1.15))
-    head.rotation_euler = (math.radians(-12), math.radians(32), 0); head.location.x += 0.08
-    sm = mat_basic('smile', (0.6, 0.9, 0.95), 0.3, emit=(0.6, 0.95, 1.0), emit_str=2.2)
-    bpy.ops.mesh.primitive_torus_add(major_radius=0.11, minor_radius=0.005, location=(x0 + 0.1, y0 - 0.125, 1.95), rotation=(math.radians(90), 0, 0))
-    smile = bpy.context.active_object; smile.scale = (1.25, 1, 0.45); smile.rotation_euler = (math.radians(90), math.radians(-25), 0); smile.data.materials.append(sm)
-    cb = box('smileCut', (0.4, 0.4, 0.2), (x0 + 0.1, y0 - 0.125, 2.03)); cut(smile, cb)
+    from entities import build_tiyanak
+    build_tiyanak(0.15, D - 0.75, 0.0, crawl=True)
+    point('tyKey', (0.15, D - 1.6, 0.6), 4, color=(0.55, 0.9, 1.0), radius=0.2)
 
 camera((-0.35, 1.0, 1.55), (0.25, D, 1.1), lens=22)
 render(out)

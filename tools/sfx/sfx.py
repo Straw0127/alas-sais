@@ -4,7 +4,7 @@ from scipy import signal
 from scipy.io import wavfile
 
 SR = 44100
-OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'out')
+OUT = '/home/claude/sfx/out'
 os.makedirs(OUT, exist_ok=True)
 rng = np.random.default_rng(1985)
 
@@ -24,7 +24,9 @@ def env(n, a, r, shape=1.0):
 def expdec(n, tau): return np.exp(-np.arange(n) / (tau * SR))
 def norm(x, peak=0.9): m = np.max(np.abs(x)) or 1; return x / m * peak
 def place(buf, x, at):
-    i = int(at * SR); j = min(len(buf), i + len(x)); buf[i:j] += x[:j - i]; return buf
+    i = max(0, int(at * SR))
+    if i >= len(buf): return buf
+    j = min(len(buf), i + len(x)); buf[i:j] += x[:j - i]; return buf
 def reverb(x, size=1.2, mix=0.3, damp=4000):
     n = int(size * SR); ir = rng.standard_normal(n) * expdec(n, size / 5); ir = lp(ir, damp)
     wet = signal.fftconvolve(x, ir)[:len(x)]; wet = norm(wet, np.max(np.abs(x)) + 1e-9)
@@ -290,6 +292,115 @@ def jumpscare(kind):
     y = reverb(y, 1.3, 0.25)
     return np.stack([y, np.roll(y, 300)], 1)
 
+
+# ---------------------------------------------------------------- pack 2: Filipino night + player sounds
+def step_surface(d=0.35, surface='wood', hard=1.0):
+    t = t_(d); n = noise(d)
+    if surface == 'wood':
+        y = bp(n, 150, 1800) * np.exp(-t / 0.04) + np.sin(2 * np.pi * 95 * t) * np.exp(-t / 0.05) * 0.8
+        y += reso(n, 420, 15) * np.exp(-t / 0.08) * 0.3
+    else:  # cement
+        y = bp(n, 800, 6000) * np.exp(-t / 0.025) * 0.8 + np.sin(2 * np.pi * 70 * t) * np.exp(-t / 0.03) * 0.5
+    return y * hard
+def footsteps(n=8, gap=0.55, surface='wood', run=False):
+    d = n * gap + 0.6; y = np.zeros(int(d * SR))
+    for i in range(n):
+        place(y, step_surface(0.35, surface, 1.4 if run else 1.0) * rng.uniform(0.75, 1.0), i * gap + rng.uniform(-0.02, 0.02))
+    if run:
+        place(y, breath(d, True, False) * 0.25, 0)
+    return reverb(y, 0.7, 0.2)
+def tuko():
+    """Tokay gecko call: a rising 'tu' then a deep 'ko', repeated."""
+    y = np.zeros(int(7.5 * SR)); at = 0.6
+    for k in range(6):
+        for f0, f1, d in ((300, 520, 0.12), (420, 260, 0.2)):
+            t = t_(d); f = np.linspace(f0, f1, len(t)); ph = 2 * np.pi * np.cumsum(f) / SR
+            v = (np.sin(ph) + 0.5 * np.sin(2 * ph) + 0.25 * signal.sawtooth(ph)) * env(len(t), 0.01, 0.06)
+            v = reso(v, 700, 3) + v * 0.3
+            place(y, v * (1 - k * 0.07), at); at += d + 0.06
+        at += 0.55
+    return reverb(lp(y, 3000), 1.6, 0.45)
+def dog_howl():
+    d = 4.0; t = t_(d)
+    f = 520 + 220 * np.sin(np.pi * t / d) - 60 * (t / d) ** 2 + 8 * np.sin(2 * np.pi * 5 * t)
+    ph = 2 * np.pi * np.cumsum(f) / SR
+    v = (np.sin(ph) + 0.4 * np.sin(2 * ph) + 0.2 * np.sin(3 * ph)) * env(len(t), 0.4, 1.2)
+    v += bp(noise(d), 600, 2500) * 0.08 * env(len(t), 0.4, 1.2)
+    return reverb(lp(v, 2200) * 0.5, 2.8, 0.6)
+def tricycle_far(d=9.0):
+    t = t_(d); rpm = 38 + 6 * np.sin(2 * np.pi * t / d)
+    ph = 2 * np.pi * np.cumsum(rpm) / SR
+    eng = (signal.sawtooth(ph) + 0.6 * signal.square(ph * 2)) * 0.3
+    v = lp(eng, 500) * np.sin(np.pi * t / d) ** 2
+    return reverb(v * 0.4, 2.5, 0.5)
+def rooster():
+    y = np.zeros(int(3.2 * SR)); at = 0.2
+    for f0, f1, d in ((700, 900, 0.18), (900, 1150, 0.22), (1150, 950, 0.35), (950, 600, 0.9)):
+        t = t_(d); f = np.linspace(f0, f1, len(t)) * (1 + 0.03 * np.sin(2 * np.pi * 30 * t))
+        ph = 2 * np.pi * np.cumsum(f) / SR
+        v = signal.sawtooth(ph) * env(len(t), 0.02, 0.08)
+        v = reso(v, 1200, 4) + reso(v, 2600, 5) * 0.5
+        place(y, v, at); at += d
+    return reverb(dist(y * 0.6, 2) * 0.6, 2.0, 0.5)
+def phone_text():
+    y = np.zeros(int(1.0 * SR))
+    for k, f in enumerate((1318, 1760)):
+        t = t_(0.12); place(y, np.sin(2 * np.pi * f * t) * env(len(t), 0.005, 0.08) * 0.6, k * 0.14)
+    vib = signal.square(2 * np.pi * 180 * t_(0.5)) * 0.15 * env(int(0.5 * SR), 0.02, 0.1)
+    place(y, lp(vib, 400), 0.35)
+    return y
+def fluorescent(d=10.0):
+    t = t_(d); hum = (np.sin(2 * np.pi * 120 * t) * 0.2 + np.sin(2 * np.pi * 240 * t) * 0.1 + hp(noise(d), 6000) * 0.03)
+    flick = np.ones(len(t))
+    for _ in range(6):
+        i = rng.integers(0, len(t) - 6000); flick[i:i + rng.integers(800, 5000)] = 0.1
+        place(hum, metal_hit(3800, 0.05, damp=0.01) * 0.3, i / SR)
+    return loopify(np.stack([hum * flick, hum * flick], 1), 0.5)
+def clock_tick(d=8.0):
+    y = np.zeros(int(d * SR))
+    for k in range(int(d)):
+        place(y, metal_hit(2600 if k % 2 else 2200, 0.08, damp=0.01) * 0.6, k + 0.0)
+    return reverb(y, 0.8, 0.3)
+def power_down():
+    d = 2.5; t = t_(d); f = 120 * np.exp(-t * 1.4) + 20
+    v = signal.sawtooth(2 * np.pi * np.cumsum(f) / SR) * np.exp(-t / 0.9) * 0.6
+    y = lp(v, 900); place(y, light_switch() * 1.5, 0)
+    return reverb(y, 1.5, 0.3)
+def breaker():
+    d = 0.6; t = t_(d); y = np.sin(2 * np.pi * 90 * t) * np.exp(-t / 0.03) + hp(noise(d), 1500) * np.exp(-t / 0.01) * 1.2
+    place(y, metal_hit(2000, 0.3, damp=0.03) * 0.4, 0)
+    return reverb(y, 0.6, 0.25)
+def cabinet_door(open_=True):
+    c = creak(0.7, rate=(30, 90), res=(500, 1300, 2600)) * 0.7
+    t = t_(0.3); thud = np.sin(2 * np.pi * 140 * t) * np.exp(-t / 0.03)
+    y = np.zeros(int(1.1 * SR)); place(y, c, 0); place(y, thud, 0.72 if not open_ else 0.0)
+    return reverb(y, 0.5, 0.2)
+def plastic_crinkle(d=1.2):
+    y = np.zeros(int(d * SR))
+    for _ in range(int(d * 90)):
+        place(y, hp(noise(0.01), 2500)[:int(0.01 * SR)] * rng.uniform(0.1, 1.0), rng.uniform(0, d - 0.02))
+    return reverb(y * env(len(y), 0.05, 0.3), 0.4, 0.2)
+def breath_hold():
+    y = np.zeros(int(9.0 * SR)); place(y, breath(0.8, True, False) * 0.8, 0)
+    t = t_(7.0); strain = bp(noise(7.0), 200, 900) * 0.05 * (t / 7.0) ** 2
+    place(y, strain, 0.9); place(y, heartbeat(80, 7.0) * 0.6, 0.9)
+    place(y, breath(0.6, False, True) * 1.4, 8.1)  # gasp
+    return y
+def distant_scream():
+    v = scream_voice(2.0, 600, 420, ((900, 1), (1500, .6)), 0.3) * env(int(2.0 * SR), 0.2, 0.9)
+    return reverb(lp(v, 1500) * 0.35, 3.0, 0.7)
+def rain_heavy(d=30):
+    n = int(d * SR)
+    r = bp(noise(d), 400, 9000) * 0.35 + lp(noise(d), 250) * 0.3
+    st = np.stack([r, bp(noise(d), 400, 9000) * 0.35 + lp(noise(d), 250) * 0.3], 1)
+    for at in (7, 21):
+        t = t_(4.0); th = lp(noise(4.0), 120) * np.exp(-t / 1.5) * 2.5
+        place(st, pan(th, rng.uniform(-0.6, 0.6)), at)
+    return loopify(st)
+def kulambo_rustle():
+    y = bp(noise(1.0), 1500, 7000) * env(int(SR), 0.1, 0.5) * (0.5 + 0.5 * np.sin(np.linspace(0, 12, SR)) ** 2)
+    return y * 0.5
+
 if __name__ == '__main__':
     jobs = {
         'amb_house': (amb_house, 0.7), 'amb_garden': (amb_garden, 0.6), 'amb_menu': (amb_menu, 0.7),
@@ -302,6 +413,16 @@ if __name__ == '__main__':
         'light_switch': (light_switch, 0.7), 'flashlight_click': (flashlight_click, 0.6), 'curtain_rings': (curtain_rings, 0.7),
         'jumpscare_kumot': (lambda: jumpscare('kumot'), 0.98), 'jumpscare_malikmata': (lambda: jumpscare('malikmata'), 0.98),
         'jumpscare_kalansing': (lambda: jumpscare('kalansing'), 0.98), 'jumpscare_silip': (lambda: jumpscare('silip'), 0.98),
+        'steps_walk_wood': (lambda: footsteps(8, 0.55, 'wood'), 0.8), 'steps_run_wood': (lambda: footsteps(12, 0.3, 'wood', True), 0.9),
+        'steps_walk_cement': (lambda: footsteps(8, 0.55, 'cement'), 0.8), 'tuko_gecko': (tuko, 0.75), 'dog_howl': (dog_howl, 0.7),
+        'tricycle_far': (tricycle_far, 0.5), 'rooster_dawn': (rooster, 0.8), 'phone_text': (phone_text, 0.7),
+        'fluorescent_hum': (fluorescent, 0.5), 'clock_tick': (clock_tick, 0.6), 'power_down': (power_down, 0.85),
+        'breaker': (breaker, 0.85), 'cabinet_open': (lambda: cabinet_door(True), 0.75), 'cabinet_close': (lambda: cabinet_door(False), 0.8),
+        'plastic_crinkle': (plastic_crinkle, 0.6), 'breath_hold_gasp': (breath_hold, 0.85), 'distant_scream': (distant_scream, 0.6),
+        'rain_heavy': (rain_heavy, 0.75), 'kulambo_rustle': (kulambo_rustle, 0.6),
     }
+    import sys as _s
+    if len(_s.argv) > 1:
+        jobs = {k: v for k, v in jobs.items() if k in _s.argv[1:]}
     for name, (fn, pk) in jobs.items():
         save(name, fn(), pk); print('ok', name)

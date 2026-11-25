@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ALAS-SAIS — Asset Review</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&family=Special+Elite&family=Inter:wght@400;600&display=swap">
+<style>
+:root{--bg:#07080a;--panel:#111214;--line:#2a2620;--bone:#e9dfcb;--dim:#a39886;--red:#b3261e;--amber:#e0a24a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--bone);font-family:Inter,system-ui,sans-serif;line-height:1.5}
+header{padding:40px 20px 24px;max-width:1100px;margin:0 auto}
+h1{font-family:Oswald,sans-serif;font-weight:700;letter-spacing:6px;font-size:clamp(34px,8vw,64px);margin:0;line-height:1}
+.sub{font-family:'Special Elite',monospace;color:var(--dim);margin:10px 0 0;font-size:17px}
+nav{position:sticky;top:0;z-index:5;background:#07080aee;backdrop-filter:blur(6px);border-bottom:1px solid var(--line)}
+nav div{max-width:1100px;margin:0 auto;display:flex;gap:4px;overflow-x:auto;padding:0 12px}
+nav a{color:var(--dim);text-decoration:none;font-family:Oswald,sans-serif;letter-spacing:2px;font-size:15px;padding:14px 10px;white-space:nowrap;min-height:44px}
+nav a:hover{color:var(--bone)}
+main{max-width:1100px;margin:0 auto;padding:0 16px 80px}
+h2{font-family:Oswald,sans-serif;font-weight:500;letter-spacing:4px;font-size:24px;margin:48px 0 6px}
+.lead{color:var(--dim);margin:0 0 20px;max-width:720px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,460px),1fr));gap:18px}
+figure{margin:0;background:var(--panel);border:1px solid var(--line)}
+figure a{display:block}
+figure img{display:block;width:100%;height:auto;aspect-ratio:16/9;object-fit:cover;background:#000}
+figcaption{padding:12px 14px 14px}
+figcaption b{font-family:Oswald,sans-serif;letter-spacing:1px;font-weight:500;font-size:17px;display:block}
+figcaption span{color:var(--dim);font-size:14px}
+.sounds{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,340px),1fr));gap:12px}
+.snd{background:var(--panel);border:1px solid var(--line);padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.snd b{font-family:Oswald,sans-serif;letter-spacing:1px;font-weight:500;font-size:16px}
+.snd span{color:var(--dim);font-size:13px}
+.snd audio{width:100%;height:40px}
+.warn{border-left:3px solid var(--red);padding:10px 14px;background:#140807;color:#e6c9bf;font-size:14px;margin:0 0 18px;max-width:720px}
+.tag{display:inline-block;font-size:11px;letter-spacing:1px;color:var(--amber);border:1px solid #4a3a20;padding:1px 6px;margin-left:6px;vertical-align:middle}
+footer{max-width:1100px;margin:0 auto;padding:24px 16px 60px;color:var(--dim);font-size:13px}
+
+figure video{display:block;width:100%;aspect-ratio:16/9;background:#000;object-fit:cover}
+</style></head><body>
+<header><h1>ALAS-SAIS</h1><p class="sub">Asset review: 3D renders, animations and a 48-sound pack, before we build the game.</p></header>
+<nav><div><a href="#rooms">ROOMS</a><a href="#entities">ENTITIES</a><a href="#jumpscares">JUMPSCARES</a><a href="#anim">ANIMATIONS</a><a href="#ambience">AMBIENCE</a><a href="#night">FILIPINO</a><a href="#cues">ENTITY</a><a href="#player">PLAYER</a><a href="#scares">JUMPSCARE</a></div></nav><main>
+<h2 id="rooms">ROOMS</h2><p class="lead">Pre-rendered 3D (Blender, Cycles), like Sister Location, with a film-grade pass. A poor provincial Filipino house: hollow blocks and an open GI roof, tabla, sawali, cracked cement, kulambo, plastic wardrobes, monobloc chairs, Huling Hapunan on the wall. Tap an image for full size.</p><div class="grid">
+<figure><a href="img/ext_house.jpg"><img loading="lazy" src="img/ext_house.jpg" alt="Main menu: the house from the gate"></a><figcaption><b>Main menu: the house from the gate</b><span>Hollow blocks below, tabla above, GI roof. Someone stands in the red window.</span></figcaption></figure>
+<figure><a href="img/bedroom_empty.jpg"><img loading="lazy" src="img/bedroom_empty.jpg" alt="Bedroom: door view"></a><figcaption><b>Bedroom: door view</b><span>Start room. A single bulb on an exposed wire, kulambo over the bed, plastic wardrobe, Huling Hapunan on the wall.</span></figcaption></figure>
+<figure><a href="img/bedroom_kumot.jpg"><img loading="lazy" src="img/bedroom_kumot.jpg" alt="Bedroom: Kumot in the doorway"></a><figcaption><b>Bedroom: Kumot in the doorway</b><span>Too tall for the door frame, she bends under it to look in.</span></figcaption></figure>
+<figure><a href="img/bedroom_closed.jpg"><img loading="lazy" src="img/bedroom_closed.jpg" alt="Bedroom: door closed"></a><figcaption><b>Bedroom: door closed</b><span>The state while you hold the door shut.</span></figcaption></figure>
+<figure><a href="img/bedroom_window.jpg"><img loading="lazy" src="img/bedroom_window.jpg" alt="Bedroom: capiz window"></a><figcaption><b>Bedroom: capiz window</b><span>Finale: the manananggal&#x27;s shadow on the capiz shells.</span></figcaption></figure>
+<figure><a href="img/bedroom_blackout.jpg"><img loading="lazy" src="img/bedroom_blackout.jpg" alt="Bedroom: blackout"></a><figcaption><b>Bedroom: blackout</b><span>Night 5 finale. Flashlight only.</span></figcaption></figure>
+<figure><a href="img/under_empty.jpg"><img loading="lazy" src="img/under_empty.jpg" alt="Under the bed: hiding view"></a><figcaption><b>Under the bed: hiding view</b><span>Low camera, bed slats overhead.</span></figcaption></figure>
+<figure><a href="img/under_kumot.jpg"><img loading="lazy" src="img/under_kumot.jpg" alt="Under the bed: she&#x27;s in the room"></a><figcaption><b>Under the bed: she&#x27;s in the room</b><span>Hold your breath. Batibat steals it.</span></figcaption></figure>
+<figure><a href="img/hallway_empty.jpg"><img loading="lazy" src="img/hallway_empty.jpg" alt="Hallway"></a><figcaption><b>Hallway</b><span>Family photos, one turned face-down. Listen here.</span></figcaption></figure>
+<figure><a href="img/hallway_kumot.jpg"><img loading="lazy" src="img/hallway_kumot.jpg" alt="Hallway: something at the end"></a><figcaption><b>Hallway: something at the end</b><span>Every trip between rooms passes through here.</span></figcaption></figure>
+<figure><a href="img/living_empty.jpg"><img loading="lazy" src="img/living_empty.jpg" alt="Living room: lights off"></a><figcaption><b>Living room: lights off</b><span>CRT static, santo figures, monobloc chairs, bare hollow blocks, GI roof.</span></figcaption></figure>
+<figure><a href="img/living_lights.jpg"><img loading="lazy" src="img/living_lights.jpg" alt="Living room: lights on"></a><figcaption><b>Living room: lights on</b><span>Fluorescent tube. Safe, unless it&#x27;s already out.</span></figcaption></figure>
+<figure><a href="img/living_malik.jpg"><img loading="lazy" src="img/living_malik.jpg" alt="Living room: the tiyanak is out"></a><figcaption><b>Living room: the tiyanak is out</b><span>It crawled out of the TV. Lights off, hide behind the sofa, do not move.</span></figcaption></figure>
+<figure><a href="img/kitchen_empty.jpg"><img loading="lazy" src="img/kitchen_empty.jpg" alt="Kitchen"></a><figcaption><b>Kitchen</b><span>Sawali walls, empty utensil rail, galon, batya and tabo, the asin jar.</span></figcaption></figure>
+<figure><a href="img/kitchen_kal.jpg"><img loading="lazy" src="img/kitchen_kal.jpg" alt="Kitchen: the aswang in the doorway"></a><figcaption><b>Kitchen: the aswang in the doorway</b><span>Don&#x27;t run. Hide in the cabinet, or throw salt.</span></figcaption></figure>
+<figure><a href="img/cabinet_kal.jpg"><img loading="lazy" src="img/cabinet_kal.jpg" alt="Inside the cabinet"></a><figcaption><b>Inside the cabinet</b><span>Hiding view through the slats. Stay still.</span></figcaption></figure>
+<figure><a href="img/curtain_closed.jpg"><img loading="lazy" src="img/curtain_closed.jpg" alt="Curtain room: closed"></a><figcaption><b>Curtain room: closed</b><span>An old bedsheet on a string. Lola&#x27;s altar. Listen for the crickets.</span></figcaption></figure>
+<figure><a href="img/curtain_silip.jpg"><img loading="lazy" src="img/curtain_silip.jpg" alt="Outside the curtain: manananggal in the yard"></a><figcaption><b>Outside the curtain: manananggal in the yard</b><span>Stage 3 of 4. Flashlight on her to push her back.</span></figcaption></figure>
+<figure><a href="img/curtain_glass.jpg"><img loading="lazy" src="img/curtain_glass.jpg" alt="Outside the curtain: at the glass"></a><figcaption><b>Outside the curtain: at the glass</b><span>Stage 4. Handprints and fog. Keep it shut.</span></figcaption></figure>
+</div><h2 id="entities">ENTITIES</h2><p class="lead">Each one comes from Filipino folklore and keeps its game name and rules.</p><div class="grid">
+<figure><a href="img/hero_kumot.jpg"><img loading="lazy" src="img/hero_kumot.jpg" alt="KUMOT"></a><figcaption><b>KUMOT <span class="tag">BEDROOM · BATIBAT</span></b><span>Rooted in the Ilocano Batibat behind bangungot. An old woman under a white lamay shroud, long white hair, a rosary in her grey fingers. She sits on sleepers and steals their breath.</span></figcaption></figure>
+<figure><a href="img/hero_malikmata.jpg"><img loading="lazy" src="img/hero_malikmata.jpg" alt="MALIKMATA"></a><figcaption><b>MALIKMATA <span class="tag">LIVING ROOM · TIYANAK</span></b><span>A tiyanak: baby-sized, with an old man&#x27;s wrinkled face and needle teeth. It cries through the TV static to lure you, then crawls out of the screen.</span></figcaption></figure>
+<figure><a href="img/hero_kalansing.jpg"><img loading="lazy" src="img/hero_kalansing.jpg" alt="KALANSING"></a><figcaption><b>KALANSING <span class="tag">KITCHEN · ASWANG</span></b><span>The aswang who worked as the family cook. Blind, crawling, hung with ladles, cans and knives. A long tongue through the stitched rice sack. Hunts by smell and sound. Asin (salt) drives her back.</span></figcaption></figure>
+<figure><a href="img/hero_silip.jpg"><img loading="lazy" src="img/hero_silip.jpg" alt="SILIP"></a><figcaption><b>SILIP <span class="tag">CURTAIN · MANANANGGAL</span></b><span>A manananggal: her upper body has split from her legs, bat wings spread, entrails hanging. A cracked capiz mask, long wet hair. She peeks through windows. Light drives her back.</span></figcaption></figure>
+</div><h2 id="jumpscares">JUMPSCARE FRAMES</h2><p class="lead">The close-up key frame of each jumpscare. In-game they get a push-in, shake, flash and distortion, synced to the sounds below.</p><div class="grid">
+<figure><a href="img/scare_kumot.jpg"><img loading="lazy" src="img/scare_kumot.jpg" alt="Kumot"></a><figcaption><b>Kumot</b><span>Batibat</span></figcaption></figure>
+<figure><a href="img/scare_malikmata.jpg"><img loading="lazy" src="img/scare_malikmata.jpg" alt="Malikmata"></a><figcaption><b>Malikmata</b><span>Tiyanak</span></figcaption></figure>
+<figure><a href="img/scare_kalansing.jpg"><img loading="lazy" src="img/scare_kalansing.jpg" alt="Kalansing"></a><figcaption><b>Kalansing</b><span>Aswang</span></figcaption></figure>
+<figure><a href="img/scare_silip.jpg"><img loading="lazy" src="img/scare_silip.jpg" alt="Silip"></a><figcaption><b>Silip</b><span>Manananggal</span></figcaption></figure>
+</div><h2 id="anim">ANIMATIONS</h2><p class="lead">Rendered frame by frame from the same 3D scenes.</p><div class="grid">
+<p class="lead">Rendering now. They will appear here in the next update.</p>
+</div>
+<h2 id="ambience">AMBIENCE</h2><p class="warn">Use headphones and start at low volume. The jumpscare sounds further down are loud on purpose.</p><div class="sounds">
+<div class="snd"><b>House at night (loop)</b><span>Rain on the GI roof, electric fan, low drone, random wood creaks.</span><audio controls preload="none" loop src="sfx/amb_house.mp3"></audio></div>
+<div class="snd"><b>Yard outside the curtain (loop)</b><span>Crickets, frogs, wind in the mango tree. When this goes silent, she is moving.</span><audio controls preload="none" loop src="sfx/amb_garden.mp3"></audio></div>
+<div class="snd"><b>Heavy rain and thunder (loop)</b><span>Night 5. Masks the silence cue.</span><audio controls preload="none" loop src="sfx/rain_heavy.mp3"></audio></div>
+<div class="snd"><b>Main menu drone (loop)</b><span>Detuned low drone with slowed, tuned metal hits.</span><audio controls preload="none" loop src="sfx/amb_menu.mp3"></audio></div>
+<div class="snd"><b>Heartbeat</b><span>Plays when something is close to you.</span><audio controls preload="none" src="sfx/heartbeat.mp3"></audio></div>
+<div class="snd"><b>6:00 AM church bell</b><span>Night survived.</span><audio controls preload="none" src="sfx/bell_6am.mp3"></audio></div>
+<div class="snd"><b>Rooster at dawn</b><span>With the 6 AM bell.</span><audio controls preload="none" src="sfx/rooster_dawn.mp3"></audio></div>
+</div>
+<h2 id="night">FILIPINO NIGHT SOUNDS</h2><div class="sounds">
+<div class="snd"><b>Tuko (tokay gecko)</b><span>The house gecko in the dark. It goes quiet before something happens.</span><audio controls preload="none" src="sfx/tuko_gecko.mp3"></audio></div>
+<div class="snd"><b>Dog howling far away</b><span>Aso umaalulong. Plays before an entity&#x27;s first move of the night.</span><audio controls preload="none" src="sfx/dog_howl.mp3"></audio></div>
+<div class="snd"><b>Tricycle passing far away</b><span>The last normal sound of the night.</span><audio controls preload="none" src="sfx/tricycle_far.mp3"></audio></div>
+<div class="snd"><b>Distant scream</b><span>Rare random event.</span><audio controls preload="none" src="sfx/distant_scream.mp3"></audio></div>
+<div class="snd"><b>Fluorescent tube hum and flicker (loop)</b><span>Living room lights on.</span><audio controls preload="none" loop src="sfx/fluorescent_hum.mp3"></audio></div>
+<div class="snd"><b>Wall clock ticking</b><span>Living room.</span><audio controls preload="none" src="sfx/clock_tick.mp3"></audio></div>
+</div>
+<h2 id="cues">ENTITY WARNING CUES</h2><div class="sounds">
+<div class="snd"><b>Kumot: slipper scuffs (far)</b><span>Hallway, muffled. She is coming.</span><audio controls preload="none" src="sfx/scuffs_far.mp3"></audio></div>
+<div class="snd"><b>Kumot: slipper scuffs (near)</b><span>Right outside the door.</span><audio controls preload="none" src="sfx/scuffs_near.mp3"></audio></div>
+<div class="snd"><b>Kumot: wet wheeze</b><span>Inhale, exhale, throat rattle.</span><audio controls preload="none" src="sfx/wheeze.mp3"></audio></div>
+<div class="snd"><b>Kumot: hummed lullaby</b><span>Original melody, later nights.</span><audio controls preload="none" src="sfx/lullaby_hum.mp3"></audio></div>
+<div class="snd"><b>Kumot: door handle rattle</b><span>Hold the door now.</span><audio controls preload="none" src="sfx/handle_rattle.mp3"></audio></div>
+<div class="snd"><b>Malikmata: static swell</b><span>The TV turning itself on. 8 seconds to switch it off.</span><audio controls preload="none" src="sfx/static_swell.mp3"></audio></div>
+<div class="snd"><b>Malikmata: VHS glitch</b><span>Tape warble and stutter. It is out.</span><audio controls preload="none" src="sfx/vhs_glitch.mp3"></audio></div>
+<div class="snd"><b>Malikmata: giggle</b><span>Bit-crushed child&#x27;s giggle.</span><audio controls preload="none" src="sfx/giggle.mp3"></audio></div>
+<div class="snd"><b>Kalansing: metal clinking</b><span>Utensils swinging, getting closer.</span><audio controls preload="none" src="sfx/clinks.mp3"></audio></div>
+<div class="snd"><b>Kalansing: sniffing</b><span>Hunting by smell.</span><audio controls preload="none" src="sfx/sniff.mp3"></audio></div>
+<div class="snd"><b>Kalansing: knife taps</b><span>Tapping the cabinet doors one by one.</span><audio controls preload="none" src="sfx/knife_taps.mp3"></audio></div>
+<div class="snd"><b>Silip: fingernails on the glass</b><span>Keep the curtain closed.</span><audio controls preload="none" src="sfx/nail_taps.mp3"></audio></div>
+<div class="snd"><b>Silip: whisper</b><span>Under her jumpscare.</span><audio controls preload="none" src="sfx/whisper.mp3"></audio></div>
+</div>
+<h2 id="player">PLAYER AND INTERACTION</h2><div class="sounds">
+<div class="snd"><b>Walking: wood floor</b><span>Bedroom and hallway.</span><audio controls preload="none" src="sfx/steps_walk_wood.mp3"></audio></div>
+<div class="snd"><b>Running: wood floor</b><span>Louder, with heavy breathing.</span><audio controls preload="none" src="sfx/steps_run_wood.mp3"></audio></div>
+<div class="snd"><b>Walking: cement floor</b><span>Kitchen and sala.</span><audio controls preload="none" src="sfx/steps_walk_cement.mp3"></audio></div>
+<div class="snd"><b>Holding breath, then gasping</b><span>Under the bed. Strain and heartbeat build. Gasp too early and she hears.</span><audio controls preload="none" src="sfx/breath_hold_gasp.mp3"></audio></div>
+<div class="snd"><b>Door creak</b><span>Opening slowly.</span><audio controls preload="none" src="sfx/door_creak.mp3"></audio></div>
+<div class="snd"><b>Door slam</b><span>Closing fast. Loud.</span><audio controls preload="none" src="sfx/door_slam.mp3"></audio></div>
+<div class="snd"><b>Cabinet door opening</b><span>Getting in.</span><audio controls preload="none" src="sfx/cabinet_open.mp3"></audio></div>
+<div class="snd"><b>Cabinet door closing</b><span>Shut from the inside.</span><audio controls preload="none" src="sfx/cabinet_close.mp3"></audio></div>
+<div class="snd"><b>Curtain pulled</b><span>The bedsheet along the string.</span><audio controls preload="none" src="sfx/curtain_rings.mp3"></audio></div>
+<div class="snd"><b>Plastic sofa cover</b><span>Moving behind the sofa gives you away.</span><audio controls preload="none" src="sfx/plastic_crinkle.mp3"></audio></div>
+<div class="snd"><b>Kulambo rustle</b><span>Touching the mosquito net.</span><audio controls preload="none" src="sfx/kulambo_rustle.mp3"></audio></div>
+<div class="snd"><b>Light switch</b><span>Click and bulb thunk.</span><audio controls preload="none" src="sfx/light_switch.mp3"></audio></div>
+<div class="snd"><b>Flashlight click</b><span>On and off.</span><audio controls preload="none" src="sfx/flashlight_click.mp3"></audio></div>
+<div class="snd"><b>TV static (loop)</b><span>CRT hiss with whine and crackle.</span><audio controls preload="none" loop src="sfx/tv_static.mp3"></audio></div>
+<div class="snd"><b>Blackout</b><span>Power dies, bulb buzzes out.</span><audio controls preload="none" src="sfx/power_down.mp3"></audio></div>
+<div class="snd"><b>Breaker reset</b><span>Kitchen breaker box.</span><audio controls preload="none" src="sfx/breaker.mp3"></audio></div>
+<div class="snd"><b>Text from Tita Cora</b><span>Night-start instructions.</span><audio controls preload="none" src="sfx/phone_text.mp3"></audio></div>
+<div class="snd"><b>Glass shatter</b><span>Used in the manananggal jumpscare.</span><audio controls preload="none" src="sfx/glass_shatter.mp3"></audio></div>
+</div>
+<h2 id="scares">JUMPSCARE SOUNDS</h2><p class="warn">Loud. Lower your volume first.</p><div class="sounds">
+<div class="snd"><b>Kumot</b><span>Reversed inhale, door creak, layered shriek, sub boom.</span><audio controls preload="none" src="sfx/jumpscare_kumot.mp3"></audio></div>
+<div class="snd"><b>Malikmata</b><span>Static blast, bit-crushed scream, VHS stutter.</span><audio controls preload="none" src="sfx/jumpscare_malikmata.mp3"></audio></div>
+<div class="snd"><b>Kalansing</b><span>Avalanche of clattering metal, guttural scream.</span><audio controls preload="none" src="sfx/jumpscare_kalansing.mp3"></audio></div>
+<div class="snd"><b>Silip</b><span>Whisper, glass shatters, high scream.</span><audio controls preload="none" src="sfx/jumpscare_silip.mp3"></audio></div>
+</div>
+</main><footer>All images rendered in Blender and all sounds synthesized from scratch for ALAS-SAIS. No third-party or FNAF assets are used.</footer></body></html>
