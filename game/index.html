@@ -402,7 +402,7 @@ var STR = {
     ph_calling: 'INCOMING CALL', ph_answer: 'Answer', ph_decline: 'Decline', ph_mute: 'End call', ph_live: 'ON CALL', ph_ended: 'CALL ENDED', ph_who: 'Tita Cora',
     a_close_short: 'Close', a_lights: 'Light switch', a_salt_jar: 'Asin', a_door: 'Door',
     c1_all: 'The door, the curtain, the aparador. All three are awake tonight.', c1_final: 'The power goes out at 4:00 AM. Save your flashlight.',
-    c1_end: 'The bell rings over San Lucio. Sunlight comes through the window bars. Your phone buzzes: "You made it, anak. Tonight you sleep in the sala. Lock the bedroom." (Chapter 2 is coming in the next update.)',
+    c1_end: 'The bell rings over San Lucio. Sunlight comes through the window bars. Your phone buzzes: "You made it, anak. Tonight you sleep in the sala. Lock the bedroom."',
     h_door1: 'Press and HOLD the door to keep it shut',
     chapters: 'Chapters', custom_night: 'Custom Night', soon: 'Coming soon', ch_n: 'Chapter {n}',
     ch_names: { 1: "Lola's Bedroom", 2: 'The Hallway', 3: 'The Whole House' },
@@ -484,7 +484,7 @@ var STR = {
     ph_calling: 'TUMATAWAG', ph_answer: 'Sagutin', ph_decline: 'Tanggihan', ph_mute: 'Ibaba', ph_live: 'KAUSAP', ph_ended: 'TAPOS ANG TAWAG', ph_who: 'Tita Cora',
     a_close_short: 'Isara', a_lights: 'Switch ng ilaw', a_salt_jar: 'Asin', a_door: 'Pinto',
     c1_all: 'Ang pinto, ang kurtina, ang aparador. Gising silang tatlo ngayong gabi.', c1_final: 'Mamamatay ang kuryente pagsapit ng alas-kuwatro. Tipirin ang flashlight.',
-    c1_end: 'Tumunog ang kampana sa San Lucio. Pumasok ang araw sa rehas ng bintana. Nag-text si Tita: "Nakaraos ka, anak. Mamayang gabi, sa sala ka na matulog. I-lock mo ang kwarto." (Malapit na ang Kabanata 2.)',
+    c1_end: 'Tumunog ang kampana sa San Lucio. Pumasok ang araw sa rehas ng bintana. Nag-text si Tita: "Nakaraos ka, anak. Mamayang gabi, sa sala ka na matulog. I-lock mo ang kwarto."',
     h_door1: 'Pindutin at HAWAKAN ang pinto para manatiling sarado',
     chapters: 'Mga Kabanata', custom_night: 'Custom Night', soon: 'Malapit na', ch_n: 'Kabanata {n}',
     ch_names: { 1: 'Ang Kwarto ni Lola', 2: 'Ang Pasilyo', 3: 'Ang Buong Bahay' },
@@ -1925,7 +1925,11 @@ if (typeof module !== 'undefined') module.exports = C1;
   }
   function c1Key() {
     var g = game, p = g.p, H = g.house, k = g.k, s = g.s, b = g.b;
-    if (p.travel) return lastKey || 'c1_hub';
+    if (p.travel) {   // walking away from the door: the door has swung back open, so leave from the ajar view
+      if (swing) { clearTimeout(swing.to); swing = null; }
+      if (lastKey && /^c1_door_(sw|closed)/.test(lastKey)) lastKey = 'c1_door_ajar';
+      return lastKey || 'c1_hub';
+    }
     switch (p.pos) {
       case 'door':
         if (swing) return swing.seq[swing.i];
@@ -2072,6 +2076,7 @@ if (typeof module !== 'undefined') module.exports = C1;
     play(close ? 'door_creak' : 'door_creak', { vol: close ? 0.4 : 0.3 });
     (function step() {
       setView(true, true);
+      if (!swing) return;   // walked away mid-swing
       swing.to = setTimeout(function () {
         if (!swing) return;
         swing.i++;
