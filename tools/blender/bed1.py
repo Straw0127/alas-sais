@@ -362,11 +362,12 @@ elif SIL == 2:   # in the talisay tree, close
     point('silKey2', (tx - 1.3, ty - 1.4, 2.5), 2.5, color=(0.6, 0.7, 1.0), radius=0.3)
 elif SIL == 3:   # at the window grill
     silip_at((W / 2 + 0.55, WY, 1.12), math.radians(-90), 0.55)
-if PEEK > 0:   # what the flashlight finds down the hallway
+KPOS = PEEK if PEEK > 0 else int(OPT.get('kpos', 0))   # --kpos: she is in the hall but no flashlight, only the dim hall light shows her
+if KPOS > 0:   # what the flashlight finds down the hallway
     from entities import build_kumot_batibat
     before = set(o.name for o in bpy.data.objects)
-    build_kumot_batibat(0, 0, peer=(PEEK == 3))
-    kp = {1: ((HXP(3.85), CY, 0), 90), 2: ((HXP(1.7), CY + 0.1, 0), 90), 3: ((HXP(0.8), CY - 0.05, 0), 90)}[PEEK]
+    build_kumot_batibat(0, 0, peer=(KPOS == 3))
+    kp = {1: ((HXP(3.85), CY, 0), 90), 2: ((HXP(1.7), CY + 0.1, 0), 90), 3: ((HXP(0.8), CY - 0.05, 0), 90)}[KPOS]
     group_at(before, kp[0], math.radians(kp[1]))
 if KUMOT:
     from entities import build_kumot_batibat
