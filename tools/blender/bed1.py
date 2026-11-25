@@ -121,7 +121,8 @@ parts.append(decal('scratchesDoor', scr, (dx + 0.1, D - 0.076, 1.25), (0.3, 0.6)
 for p in parts: p.parent = hinge; p.matrix_parent_inverse = hinge.matrix_world.inverted()
 PEEK = int(OPT.get('peek', -1))
 if PEEK >= 0: DOOR = 'peek'
-hinge.rotation_euler = (0, 0, math.radians(int(DOOR[2:]) if DOOR.startswith('sw') else {'ajar': 84, 'gap': 84, 'peek': 84, 'open': 92, 'closed': 0}[DOOR]))
+SWING = 0 if DOOR == 'closed' and VIEW == 'door' else (int(DOOR[2:]) if DOOR.startswith('sw') else None)
+hinge.rotation_euler = (0, 0, math.radians(84 if SWING is not None else {'ajar': 84, 'gap': 84, 'peek': 84, 'open': 92, 'closed': 0}[DOOR]))
 sw = mat_basic('sw', (0.75, 0.7, 0.6), 0.5)
 box('switch', (0.08, 0.02, 0.12), (dx + 0.75, D - 0.01, 1.3), sw, bevel=0.005)
 
@@ -391,13 +392,24 @@ if VIEW == 'hub':
     camera((0.25, -0.15, 1.6), (0.75, 4.4, 1.28), lens=17)
 elif VIEW == 'door':
     # standing beside the door frame, looking diagonally to the left into the hallway (FNAF4's left door)
-    if DOOR == 'closed' or DOOR.startswith('sw'):   # pulled back inside, both hands on the shut door
-        camera((dx - 0.1, D - 1.5, 1.52), (dx - 0.35, D + 1.2, 1.42), lens=24)   # same spot for every frame of the swing
-    else:                  # leaning out of the doorway, head tilted (FNAF4): the hall to the kitchen, the sala door at an angle
-        import mathutils
-        cpos = mathutils.Vector((dx + 0.12, D + 0.3, 1.5)); ctg = mathutils.Vector((HXP(4.3), D + 1.0, 1.32))
-        cam_ = camera(tuple(cpos), tuple(ctg), lens=22)
-        fwd_ = (ctg - cpos).normalized()
+    # every door frame shares one camera: leaning out of the doorway, head tilted (FNAF4). The hall runs to the kitchen,
+    # the sala door is seen at an angle. Holding swings the door shut across this same view (SWING = door angle, 0 = shut).
+    import mathutils
+    cpos = mathutils.Vector((dx + 0.12, D + 0.3, 1.5)); ctg = mathutils.Vector((HXP(4.3), D + 1.0, 1.32))
+    cam_ = camera(tuple(cpos), tuple(ctg), lens=22)
+    fwd_ = (ctg - cpos).normalized()
+    cam_.rotation_euler = (mathutils.Quaternion(fwd_, math.radians(-17)) @ fwd_.to_track_quat('-Z', 'Y')).to_euler()
+    if SWING is not None:
+        bpy.context.view_layer.update()
+        bpy.ops.object.empty_add(location=(0, 0, 0)); sh_ = bpy.context.active_object
+        sh_.parent = cam_; sh_.location = (0.47, 0.0, -0.5); sh_.rotation_euler = (0, math.radians(SWING), math.radians(17))   # undo the head tilt: the door stays upright in the world
+        swm_ = mat_noise('swWood', (0.2, 0.1, 0.045), (0.26, 0.14, 0.065), scale=5, rough=0.5)
+        sp_ = [box('swPanel', (0.9, 2.06, 0.045), (-0.45, 0, 0), swm_, bevel=0.005)]
+        for i_, yy in enumerate((0.4, -0.55)): sp_.append(box('swInset%d' % i_, (0.62, 0.7, 0.02), (-0.44, yy, 0.03), wood_dark, bevel=0.01))
+        sp_.append(sphere('swKnob', 0.03, (-0.78, -0.1, 0.05), brass))
+        sp_.append(decal('swScr', scr, (-0.35, 0.25, 0.031), (0.3, 0.6), 'z'))
+        for o_ in sp_: o_.parent = sh_
+        fl_ = point('swFill', (0, 0, 0), 12, color=(1.0, 0.65, 0.35), radius=0.15); fl_ = fl_ or bpy.data.objects['swFill']; fl_.parent = cam_; fl_.location = (-0.05, 0.3, 0.05)
     if PEEK >= 0:
         import mathutils
         src_ = mathutils.Vector((dx + 0.05, D + 0.25, 1.4)); tg_ = mathutils.Vector((HXP(3.0), D + 0.75, 1.1))
