@@ -1100,7 +1100,7 @@ if (typeof module !== 'undefined') module.exports = C1;
     'ringtone', 'phone_pickup', 'phone_hangup', 'line_static',
     'wing_flap', 'wing_flap_far', 'wind_gust', 'beetles', 'beetle_scatter', 'aparador_creak', 'kumot_breath', 'theme_menu',
     'step_w1', 'step_w2', 'step_w3', 'step_c1', 'step_c2', 'step_c3'];
-  IMG.push('c1_hub', 'c1_hub_open', 'c1_hub_kumot', 'c1_hub_lit', 'c1_door_ajar', 'c1_peek_0', 'c1_peek_1', 'c1_peek_2', 'c1_peek_3', 'c1_door_closed', 'c1_win_closed', 'c1_win_shadow', 'c1_win_open',
+  IMG.push('c1_door_sw40', 'c1_door_sw22', 'c1_door_sw8', 'c1_hub', 'c1_hub_open', 'c1_hub_kumot', 'c1_hub_lit', 'c1_door_ajar', 'c1_peek_0', 'c1_peek_1', 'c1_peek_2', 'c1_peek_3', 'c1_door_closed', 'c1_win_closed', 'c1_win_shadow', 'c1_win_open',
     'c1_win_s1', 'c1_win_s2', 'c1_win_s3', 'c1_scare_barang', 'hero_barang', 'c1_under', 'c1_under_kumot');
   for (var _i = 0; _i < 5; _i++) IMG.push('c1_cab_' + _i, 'c1_cab_' + _i + '_lit');
   var VOICE = [];
@@ -1735,7 +1735,7 @@ if (typeof module !== 'undefined') module.exports = C1;
     var g = game, p = g.p, H = g.house, k = g.k, s = g.s, b = g.b;
     if (p.travel) return lastKey || 'c1_hub';
     switch (p.pos) {
-      case 'door': return p.holdDoor ? 'c1_door_closed' : (p.peek > 0 ? 'c1_peek_' + peekSt : 'c1_door_ajar');
+      case 'door': if (swing) return swing.seq[swing.i]; return p.holdDoor ? 'c1_door_closed' : (p.peek > 0 ? 'c1_peek_' + peekSt : 'c1_door_ajar');
       case 'window':
         if (!H.curtain) return (s.st === 3) ? 'c1_win_shadow' : 'c1_win_closed';
         return s.st >= 1 ? 'c1_win_s' + Math.min(3, s.st) : 'c1_win_open';
@@ -1812,11 +1812,11 @@ if (typeof module !== 'undefined') module.exports = C1;
       case 'cue': play(d.id, { room: d.room, vol: d.vol || 1, delay: d.delay || 0 }); break;
       case 'travel': c1Travel(d); break;
       case 'arrive': if (d.to !== 'bed' && d.from !== 'bed') c1Arrive(d); break;
-      case 'door_shut': play('door_close_shut', { vol: 0.85 }); setView(true, true); jolt(); break;
+      case 'door_shut': if (isC1()) { c1Swing(true); break; } play('door_close_shut', { vol: 0.85 }); setView(true, true); jolt(); break;
       case 'peek': peekSt = d.st; play('flashlight_on', { vol: 0.5 }); play('door_creak', { vol: 0.3 }); setView(true, true); if (d.st === 3) { play('wheeze', { vol: 1 }); jolt(); flashRed(); } break;
       case 'kumot_startled': play('door_slam', { vol: 0.5, delay: 0.3 }); break;
       case 'silip_tear': play('curtain_open_pull', { vol: 1 }); break;
-      case 'door_release': play('door_creak', { vol: 0.35 }); setView(true, true); break;
+      case 'door_release': if (isC1()) { c1Swing(false); break; } play('door_creak', { vol: 0.35 }); setView(true, true); break;
       case 'kumot_leave': if (d.inside) play('door_creak', { vol: 0.6 }); play('scuffs_far', { room: 'hall', vol: 0.45 }); break;
       case 'kumot_enter': play('door_slam', { vol: 1 }); play('door_creak', { vol: 0.6, delay: 0.15 }); jolt(); flashRed(); setView(true, true); break;
       case 'kumot_search': play('lullaby_hum', { vol: 0.55 }); break;
@@ -1853,6 +1853,25 @@ if (typeof module !== 'undefined') module.exports = C1;
     // her breathing: only audible when you are at the door (that is the listening mechanic)
     if (g.k.on && !amb.kbreath) amb.kbreath = play('kumot_breath', { bus: 'amb', loop: true, vol: 0 });
     if (amb.kbreath) setLoopVol(amb.kbreath, g.k.st === 3 && pos === 'door' && !p.travel ? (p.holdDoor ? 0.6 : 0.9) : 0);
+  }
+  // the door swinging shut (or back open) in three pre-rendered frames, then the held/ajar view
+  var swing = null;
+  function c1Swing(close) {
+    var all = ['c1_door_sw40', 'c1_door_sw22', 'c1_door_sw8'], seq = close ? all : all.slice().reverse(), start = 0;
+    if (swing) { clearTimeout(swing.to); var cur = swing.seq[swing.i]; start = Math.max(0, seq.indexOf(cur)); }
+    swing = { seq: seq, i: start, close: close };
+    play(close ? 'door_creak' : 'door_creak', { vol: close ? 0.4 : 0.3 });
+    (function step() {
+      setView(true, true);
+      swing.to = setTimeout(function () {
+        if (!swing) return;
+        swing.i++;
+        if (swing.i >= swing.seq.length) {
+          var c = swing.close; swing = null; setView(true, true);
+          if (c) { play('door_close_shut', { vol: 0.85 }); jolt(); }
+        } else step();
+      }, close ? 75 : 95);
+    })();
   }
   function c1Hold() {
     var p = game.p, t = performance.now() / 1000, tr = '';
