@@ -407,7 +407,7 @@ elif VIEW == 'kitchen':     # in the kitchen doorway area looking at the counter
 elif VIEW == 'kitchen_hide':   # inside the low cabinet on the kitchen's side wall: the hall door is on the left
     camera(KW(-2.0, 2.55, 1.32), KW(1.3, 2.95, 1.05), lens=20)
 elif VIEW == 'curtain':     # facing the back door at the start of the hall
-    cf_ = point('curtainFill', (CX + 0.1, D + 0.35, 2.2), 6, color=(1.0, 0.62, 0.32), radius=0.25); cf_.visible_glossy = False   # the hall bulb's spill on the cloth
+    if OPT.get('hcurtain', 'closed') != 'open': point('curtainFill', (CX + 0.1, D + 0.35, 2.2), 6, color=(1.0, 0.62, 0.32), radius=0.25)   # the hall bulb's spill on the cloth (off when the glass would mirror it)
     camera((CX + 0.02, D + 0.12, 1.5), (CX - 0.03, HY1 + 4.0, 1.4), lens=19)
 elif VIEW == 'living':
     camera(LW(-0.35, 1.0, 1.55), LW(0.25, LDIM[1], 1.1), lens=22)
