@@ -193,6 +193,7 @@ input[type=range]{width:100%;accent-color:#b3261e;height:30px}
       <img id="bgA" class="bg" alt="">
       <img id="bgB" class="bg" alt="" style="opacity:0">
       <img id="litImg" class="bg" alt="" style="opacity:0;transition:none">
+      <div id="ovl" class="layer" style="pointer-events:none"></div>
       <div id="fx" class="layer"></div>
       <div id="fog" class="layer"><div class="hand" style="left:500px;top:230px"></div><div class="hand" style="left:690px;top:260px;transform:rotate(12deg)"></div></div>
     </div>
@@ -1100,7 +1101,7 @@ if (typeof module !== 'undefined') module.exports = C1;
     'ringtone', 'phone_pickup', 'phone_hangup', 'line_static',
     'wing_flap', 'wing_flap_far', 'wind_gust', 'beetles', 'beetle_scatter', 'aparador_creak', 'kumot_breath', 'theme_menu',
     'step_w1', 'step_w2', 'step_w3', 'step_c1', 'step_c2', 'step_c3'];
-  IMG.push('c1_door_sw80', 'c1_door_sw62', 'c1_door_sw46', 'c1_door_sw32', 'c1_door_sw18', 'c1_hub', 'c1_hub_open', 'c1_hub_kumot', 'c1_hub_lit', 'c1_door_ajar', 'c1_peek_0', 'c1_peek_1', 'c1_peek_2', 'c1_peek_3', 'c1_door_closed', 'c1_win_closed', 'c1_win_shadow', 'c1_win_open',
+  IMG.push('c1_door_k3', 'c1_win_shadow2', 'c1_door_sw80', 'c1_door_sw62', 'c1_door_sw46', 'c1_door_sw32', 'c1_door_sw18', 'c1_hub', 'c1_hub_open', 'c1_hub_kumot', 'c1_hub_lit', 'c1_door_ajar', 'c1_peek_0', 'c1_peek_2', 'c1_peek_3', 'c1_door_closed', 'c1_win_closed', 'c1_win_shadow', 'c1_win_open',
     'c1_win_s1', 'c1_win_s2', 'c1_win_s3', 'c1_scare_barang', 'hero_barang', 'c1_under', 'c1_under_kumot');
   for (var _i = 0; _i < 5; _i++) IMG.push('c1_cab_' + _i, 'c1_cab_' + _i + '_lit');
   var VOICE = [];
@@ -1146,6 +1147,7 @@ if (typeof module !== 'undefined') module.exports = C1;
     var total = IMG.length + SFX.length + VOICE.length, done = 0;
     function tick() { done++; onProgress(done / total); }
     var jobs = [];
+    ['hubx_k3', 'hubx_s2c', 'hubx_s3c', 'hubx_s2o', 'hubx_s3o', 'hubx_b2', 'hubx_b3', 'hubx_b4'].forEach(function (k) { var i = new Image(); i.src = 'assets/img/' + k + '.webp'; imgs[k] = i; });
     IMG.forEach(function (k) { jobs.push(new Promise(function (res) { var i = new Image(); i.onload = i.onerror = function () { tick(); res(); }; i.src = 'assets/img/' + k + '.jpg'; imgs[k] = i; })); });
     SFX.forEach(function (k) { jobs.push(fetch('assets/sfx/' + k + '.mp3').then(function (r) { return r.ok ? r.arrayBuffer() : null; }).then(function (b) { rawAudio[k] = b; tick(); }).catch(function () { tick(); })); });
     VOICE.forEach(function (k) { jobs.push(fetch('assets/voice/' + k + '.mp3').then(function (r) { return r.ok ? r.arrayBuffer() : null; }).then(function (b) { rawAudio['v_' + k] = b; tick(); }).catch(function () { tick(); })); });
@@ -1563,6 +1565,7 @@ if (typeof module !== 'undefined') module.exports = C1;
       var m = 'radial-gradient(circle at ' + beam[0] + 'px ' + beam[1] + 'px, #000 0, #000 120px, rgba(0,0,0,.6) 190px, transparent 280px)';
       li.style.webkitMaskImage = li.style.maskImage = m; li.style.opacity = 1;
     } else li.style.opacity = 0;
+    if (isC1()) c1Overlays(); else if (ovlSig) { ovlSig = ''; $('ovl').innerHTML = ''; }
     // flashlight beam follows the finger
     var dk = $('dark'), lit = g.p.light;
     var needDark = dark || (g.p.room === 'curtain' && g.house.curtain) || g.p.room === 'hall' && !g.house.power || (isC1() && g.p.pos === 'cabinet');
@@ -1735,9 +1738,13 @@ if (typeof module !== 'undefined') module.exports = C1;
     var g = game, p = g.p, H = g.house, k = g.k, s = g.s, b = g.b;
     if (p.travel) return lastKey || 'c1_hub';
     switch (p.pos) {
-      case 'door': if (swing) return swing.seq[swing.i]; return p.holdDoor ? 'c1_door_closed' : (p.peek > 0 ? 'c1_peek_' + peekSt : 'c1_door_ajar');
+      case 'door':
+        if (swing) return swing.seq[swing.i];
+        if (p.holdDoor) return 'c1_door_closed';
+        if (p.peek > 0) return 'c1_peek_' + peekSt;                           // the flashlight shows exactly where she is
+        return k.on && k.st === 3 ? 'c1_door_k3' : 'c1_door_ajar';   // without it: only a dim shape once she is right at the door
       case 'window':
-        if (!H.curtain) return (s.st === 3) ? 'c1_win_shadow' : 'c1_win_closed';
+        if (!H.curtain) return s.st >= 3 ? 'c1_win_shadow' : (s.st === 2 ? 'c1_win_shadow2' : 'c1_win_closed');
         return s.st >= 1 ? 'c1_win_s' + Math.min(3, s.st) : 'c1_win_open';
       case 'cabinet': return 'c1_cab_' + b.st;
       case 'bed': return k.st === 4 && k.search > 0 ? 'c1_under_kumot' : 'c1_under';
@@ -1747,6 +1754,19 @@ if (typeof module !== 'undefined') module.exports = C1;
     return H.curtain ? 'c1_hub_open' : 'c1_hub';
   }
   var peekSt = 0;
+  // what the room shows from the middle, one cut-out per entity: Kumot at the doorway, Silip at the window, Barang's aparador
+  var ovlSig = '';
+  function c1Overlays() {
+    var g = game, p = g.p, H = g.house, k = g.k, s = g.s, b = g.b, keys = [];
+    if (g.chapter === 1 && p.pos === 'center' && !p.travel && !p.hidden && H.power && k.st !== 4) {
+      if (k.on && k.st === 3) keys.push('hubx_k3');
+      if (s.on && s.st >= 2) keys.push('hubx_s' + Math.min(3, s.st) + (H.curtain ? 'o' : 'c'));
+      if (b.on && b.st >= 2) keys.push('hubx_b' + Math.min(4, b.st));
+    }
+    var sig = keys.join(','); if (sig === ovlSig) return; ovlSig = sig;
+    var box = $('ovl'); box.innerHTML = '';
+    keys.forEach(function (key) { var im = document.createElement('img'); im.className = 'bg'; im.alt = ''; im.src = 'assets/img/' + key + '.webp'; box.appendChild(im); });
+  }
   function c1LitKey() {   // the flashlight-lit render that the beam reveals
     var p = game.p; if (!p.light || p.travel) return null;
     if (p.pos === 'cabinet') return 'c1_cab_' + game.b.st + '_lit';
@@ -1813,7 +1833,7 @@ if (typeof module !== 'undefined') module.exports = C1;
       case 'travel': c1Travel(d); break;
       case 'arrive': if (d.to !== 'bed' && d.from !== 'bed') c1Arrive(d); break;
       case 'door_shut': if (isC1()) { c1Swing(true); break; } play('door_close_shut', { vol: 0.85 }); setView(true, true); jolt(); break;
-      case 'peek': peekSt = d.st; play('flashlight_on', { vol: 0.5 }); play('door_creak', { vol: 0.3 }); setView(true, true); if (d.st === 3) { play('wheeze', { vol: 1 }); jolt(); flashRed(); } break;
+      case 'peek': peekSt = d.st >= 2 ? d.st : 0;   /* Chapter 1 has two sightings: down the hall (2) and at the door (3) */ play('flashlight_on', { vol: 0.5 }); play('door_creak', { vol: 0.3 }); setView(true, true); if (d.st === 3) { play('wheeze', { vol: 1 }); jolt(); flashRed(); } break;
       case 'kumot_startled': play('door_slam', { vol: 0.5, delay: 0.3 }); break;
       case 'silip_tear': play('curtain_open_pull', { vol: 1 }); break;
       case 'door_release': if (isC1()) { c1Swing(false); break; } play('door_creak', { vol: 0.35 }); setView(true, true); break;
