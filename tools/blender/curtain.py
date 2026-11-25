@@ -1,4 +1,4 @@
-import sys, os, math, random; sys.path.insert(0, '/home/claude/render')
+import sys, os, math, random; sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from lib import *
 sc = reset()
 a = sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else []
@@ -60,7 +60,7 @@ flame = mat_basic('flame', (1, 0.6, 0.2), 0.5, emit=(1.0, 0.45, 0.12), emit_str=
 for i, (x, hh) in enumerate(((-1.5, 0.18), (-1.2, 0.12))):
     cyl('candle%d' % i, 0.025, hh, (x, 0.85, 0.92 + hh / 2), wax, verts=16)
     f = sphere('flame%d' % i, 0.012, (x, 0.85, 0.94 + hh), flame, scale=(1, 1, 2.2)); f.visible_shadow = False
-    point('candleL%d' % i, (x, 0.85, 0.97 + hh), 9, color=(1.0, 0.5, 0.2), radius=0.02)
+    point('candleL%d' % i, (x, 0.85, 0.97 + hh), 16, color=(1.0, 0.5, 0.2), radius=0.02)
 box('frame', (0.2, 0.02, 0.26), (-1.35, 1.05, 1.06), wood, rot=(math.radians(-12), 0, 0))
 box('photo', (0.16, 0.005, 0.21), (-1.35, 1.035, 1.06), mat_noise('photoM', (0.2, 0.18, 0.15), (0.45, 0.4, 0.33), scale=30), rot=(math.radians(-12), 0, 0))
 

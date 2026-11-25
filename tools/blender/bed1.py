@@ -260,6 +260,19 @@ if KUMOT:
     from entities import build_kumot_batibat
     build_kumot_batibat(-0.2, 3.45)
 
+if 'morning' in OPT:   # 6:00 AM: bulb off, sun through the open window, the yard bright
+    for n_ in ('bulbLight', 'fill', 'hallGlow', 'roomSpill'): bpy.data.objects[n_].data.energy = 0
+    bpy.data.objects['bulb'].active_material.node_tree.nodes['Principled BSDF'].inputs['Emission Strength'].default_value = 0
+    sun = bpy.data.objects['moonSun']; sun.data.energy = 4.5; sun.data.color = (1.0, 0.82, 0.6); sun.rotation_euler = (math.radians(70), 0, math.radians(95))
+    bpy.data.objects['moonWin'].data.energy = 0
+    area('dawnWin', (W / 2 + 0.6, WY, 1.7), (0, math.radians(100), 0), 2200, size=(1.1, 1.0), color=(1.0, 0.8, 0.55))
+    area('dawnFill', (0.0, 2.0, H - 0.15), (0, 0, 0), 160, size=(2.5, 2.5), color=(1.0, 0.86, 0.7))
+    sc.view_settings.exposure = 0.25
+    sc.world.node_tree.nodes['Background'].inputs[0].default_value = (0.35, 0.45, 0.6, 1); sc.world.node_tree.nodes['Background'].inputs[1].default_value = 0.8
+    skyN = bpy.data.materials['skyDrop'].node_tree.nodes
+    for n_ in skyN:
+        if n_.type == 'VALTORGB': n_.color_ramp.elements[0].color = (1.0, 0.75, 0.5, 1); n_.color_ramp.elements[1].color = (0.45, 0.6, 0.85, 1)
+        if n_.type == 'EMISSION': n_.inputs['Strength'].default_value = 3.0
 # ---------------------------------------------------------------- cameras
 if VIEW == 'hub':
     camera((0.25, -0.15, 1.6), (0.75, 4.4, 1.28), lens=17)
