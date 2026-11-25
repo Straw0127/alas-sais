@@ -167,11 +167,11 @@ def build_barang(loc=(0, 0, 0), rotz=0.0, stage=4, glow=1.0):
             sphere('brCheek%d' % s, 0.032, (hx + s * 0.058, hy - 0.055, hz - 0.035), mat_basic('brHollow', (0.02, 0.014, 0.01), 0.85), scale=(0.6, 0.45, 1.3))
             sphere('brCheekB%d' % s, 0.022, (hx + s * 0.07, hy - 0.065, hz + 0.0), skin, scale=(0.8, 0.6, 0.7))
         tooth = mat_basic('brTooth', (0.32, 0.27, 0.18), 0.4)
-        hair = mat_basic('brHair', (0.35, 0.33, 0.3), 0.6)   # thin grey hair, Lola's
+        hair = mat_basic('brHair', (0.1, 0.095, 0.085), 0.45)   # thin grey-black wet hair
         rnd = random.Random(4)
         for i in range(60):
             L = rnd.uniform(0.3, 0.8); a = rnd.uniform(-1.5, 1.5); front = i % 5 == 0
-            cyl('brHairS%d' % i, 0.0022, L, (hx + 0.09 * math.sin(a), hy - (0.1 if front else -0.05 * math.cos(a) - 0.02), hz + 0.1 - L / 2), hair, verts=5)
+            cyl('brHairS%d' % i, 0.0014, L, (hx + 0.09 * math.sin(a), hy - (0.1 if front else -0.05 * math.cos(a) - 0.02), hz + 0.1 - L / 2), hair, verts=5)
         # neck and body inside the dark, wrapped in an old daster dress
         dress = mat_noise('brDress', (0.05, 0.04, 0.035), (0.1, 0.08, 0.06), scale=12, rough=0.95, bump=0.1)
         skin_body('brBody', [(hx, hy + 0.08, hz - 0.15), (hx, hy + 0.12, hz - 0.45), (hx, hy + 0.15, hz - 1.0)], [(0, 1), (1, 2)], [0.04, 0.16, 0.2], dress, sub=2)
