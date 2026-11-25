@@ -70,7 +70,23 @@ framed('lolaPortrait', (-W / 2 + 0.012, 1.6, 1.75), (0.42, 0.55), '+x', lola)
 framed('lastSupper', (-W / 2 + 0.01, 3.1, 1.85), (1.0, 0.5), '+x', mat_last_supper())
 
 # ---------------------------------------------------------------- bed with kulambo (left)
-box('bedFrame', (1.1, 2.0, 0.35), (-1.4, 1.4, 0.2), wood_dark, bevel=0.01)
+if VIEW == 'under':   # an open bed frame you can lie under: legs, rails, slats
+    for lx_ in (-1.92, -0.88):
+        for ly_ in (0.43, 2.37): box('bedLeg%d%d' % (int(lx_ * 10), int(ly_ * 10)), (0.06, 0.06, 0.38), (lx_, ly_, 0.19), wood_dark)
+    for lx_ in (-1.93, -0.87): box('bedRail%d' % int(lx_ * 10), (0.04, 2.0, 0.12), (lx_, 1.4, 0.32), wood_dark)
+    for k_ in range(9): box('slat%d' % k_, (1.06, 0.09, 0.02), (-1.4, 0.5 + k_ * 0.23, 0.37), mat_planks('slatW', (0.1, 0.06, 0.03), (0.14, 0.08, 0.04), scale=4))
+    box('mattUnder', (1.0, 1.9, 0.04), (-1.4, 1.4, 0.4), mat_basic('mattU', (0.3, 0.27, 0.22), 0.95))
+    # the blanket hanging down over the open side
+    bpy.ops.mesh.primitive_grid_add(x_subdivisions=50, y_subdivisions=8, size=1, location=(0, 0, 0))
+    hb_ = bpy.context.active_object; hb_.scale = (1.7, 0.42, 1); bpy.ops.object.transform_apply(scale=True)
+    t_ = bpy.data.textures.new('hangT', 'WOOD'); t_.wood_type = 'BANDS'; t_.noise_basis_2 = 'SIN'; t_.noise_scale = 0.12
+    dm_ = hb_.modifiers.new('d', 'DISPLACE'); dm_.texture = t_; dm_.strength = 0.04; dm_.texture_coords = 'OBJECT'
+    hb_.rotation_euler = (math.radians(90), 0, math.radians(90)); hb_.location = (-0.84, 1.25, 0.43)
+    hb_.data.materials.append(mat_floral('blanketHang', (0.22, 0.05, 0.045), (0.42, 0.26, 0.08), (0.12, 0.14, 0.06)))
+    scatter = mat_noise('dust', (0.05, 0.04, 0.03), (0.09, 0.07, 0.05), scale=30)
+    box('slipperU', (0.1, 0.26, 0.03), (-0.5, 2.0, 0.015), mat_basic('slipU', (0.32, 0.26, 0.2), 0.9), rot=(0, 0, 0.6), bevel=0.02)
+else:
+    box('bedFrame', (1.1, 2.0, 0.35), (-1.4, 1.4, 0.2), wood_dark, bevel=0.01)
 box('headboard', (1.1, 0.06, 1.0), (-1.4, 2.42, 0.5), wood_dark, bevel=0.01)
 box('mattress', (1.0, 1.9, 0.2), (-1.4, 1.4, 0.47), mat_basic('matt', (0.55, 0.5, 0.42), 0.9), bevel=0.04)
 bl = box('blanket', (1.16, 1.5, 0.08), (-1.4, 1.15, 0.6), mat_floral('blanket', (0.22, 0.05, 0.045), (0.42, 0.26, 0.08), (0.12, 0.14, 0.06)), bevel=0.04)
@@ -271,7 +287,8 @@ elif SIL == 3:   # at the window grill
     silip_at((W / 2 + 0.55, WY, 1.12), math.radians(-90), 0.55)
 if KUMOT:
     from entities import build_kumot_batibat
-    build_kumot_batibat(-0.2, 3.45)
+    if VIEW == 'under': build_kumot_batibat(-0.45, 1.9)   # standing right beside the bed, searching
+    else: build_kumot_batibat(-0.2, 3.45)
 
 if 'morning' in OPT:   # 6:00 AM: bulb off, sun through the open window, the yard bright
     for n_ in ('bulbLight', 'fill', 'hallGlow', 'roomSpill'): bpy.data.objects[n_].data.energy = 0
@@ -294,6 +311,9 @@ elif VIEW == 'door':
     point('viewFill', (dx + 0.5, D - 1.6, 1.9), 5, color=(1.0, 0.65, 0.35), radius=0.3)
 elif VIEW == 'window':
     camera((0.15, WY - 0.05, 1.52), (W / 2 + 1, WY, 1.48), lens=22)
+elif VIEW == 'under':
+    camera((-1.45, 0.75, 0.15), (0.6, 3.4, 0.32), lens=20)
+    point('underFill', (-0.6, 1.3, 0.25), 3, color=(1.0, 0.65, 0.35), radius=0.2)
 elif VIEW == 'scare':
     camera((fx - 0.85, AY + 0.05, 1.4), (fx + 0.1, AY + 0.14, 1.36), lens=30); OPT['lit'] = '1'
 elif VIEW == 'hero':
