@@ -18,7 +18,7 @@ def build_kitchen(KAL=False, LIT=False, KALIN=False):
     asin_jar(-1.15, D - 0.35, 0.9)
     for _k, (_my, _mz, _c) in enumerate(((1.6, 1.3, (0.6, 0.1, 0.1)), (1.85, 1.45, (0.1, 0.3, 0.6)), (2.0, 1.2, (0.7, 0.6, 0.1)))):
         box('magnet%d' % _k, (0.01, 0.1, 0.07), (W / 2 - 0.76, _my, _mz), mat_basic('mag%d' % _k, _c, 0.4))
-    batya(-1.9, 2.3)
+    batya(-1.9, 1.2)
     monobloc(0.5, 0.7, rotz=math.radians(15))
 
     wood = mat_planks('cab', (0.12, 0.07, 0.03), (0.16, 0.09, 0.04), scale=3, rough=0.5)
@@ -72,14 +72,15 @@ def build_kitchen(KAL=False, LIT=False, KALIN=False):
             box('leg', (0.05, 0.05, 0.74), (-0.2 + sx * 0.48, 1.2 + sy * 0.33, 0.37), wood)
     cyl('bottle', 0.035, 0.24, (0.0, 1.25, 0.9), mat_basic('bottleG', (0.1, 0.35, 0.15), 0.05, trans=0.9), verts=16)
     cyl('cap', 0.016, 0.01, (0.0, 1.25, 1.025), alum, verts=12)
-    # the hiding cabinet (paminggalan): against the left wall, slatted doors facing the room and the hall door
-    PX, PY = -1.95, 0.9
-    box('pamBack', (0.03, 0.95, 0.9), (PX - 0.24, PY, 0.45), wood); box('pamTop', (0.52, 1.0, 0.04), (PX, PY, 0.92), wood, bevel=0.005)
+    # the hiding cupboard (paminggalan): tall, against the left wall beside the counter, slatted doors facing the room;
+    # from inside you see over the counter to the hall door on your left
+    PX, PY = -1.95, 2.55
+    box('pamBack', (0.03, 0.95, 1.75), (PX - 0.24, PY, 0.875), wood); box('pamTop', (0.52, 1.0, 0.04), (PX, PY, 1.77), wood, bevel=0.005)
     box('pamBottom', (0.5, 0.95, 0.03), (PX, PY, 0.05), wood)
-    for sy_ in (-1, 1): box('pamSide%d' % sy_, (0.5, 0.03, 0.9), (PX, PY + sy_ * 0.475, 0.45), wood)
-    for j_ in range(7): box('pamSlat%d' % j_, (0.012, 0.9, 0.035), (PX + 0.24, PY, 0.12 + j_ * 0.11), wood, rot=(0, math.radians(-25), 0))
-    box('pamMid', (0.02, 0.03, 0.85), (PX + 0.25, PY, 0.46), wood)
-    cyl('pamKnob', 0.012, 0.03, (PX + 0.27, PY + 0.06, 0.5), brass, rot=(0, math.radians(90), 0), verts=10)
+    for sy_ in (-1, 1): box('pamSide%d' % sy_, (0.5, 0.03, 1.75), (PX, PY + sy_ * 0.475, 0.875), wood)
+    for j_ in range(13): box('pamSlat%d' % j_, (0.012, 0.9, 0.04), (PX + 0.24, PY, 0.14 + j_ * 0.12), wood, rot=(0, math.radians(-25), 0))
+    box('pamMid', (0.02, 0.03, 1.7), (PX + 0.25, PY, 0.88), wood)
+    cyl('pamKnob', 0.012, 0.03, (PX + 0.27, PY + 0.06, 0.95), brass, rot=(0, math.radians(90), 0), verts=10)
 
     # bare bulb
     gl = mat_basic('kbulb', (1, 1, 0.9), 0.1, emit=(0.95, 1.0, 0.8), emit_str=8 if LIT else 0)

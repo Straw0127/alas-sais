@@ -402,7 +402,7 @@ if VIEW == 'hall':          # Chapter 2 hub: standing at the back-door end of th
 elif VIEW == 'kitchen':     # in the kitchen doorway area looking at the counter wall (the hall door on the right)
     camera(KW(-0.2, 0.15, 1.55), KW(0.1, KDIM[1], 1.05), lens=21)
 elif VIEW == 'kitchen_hide':   # inside the low cabinet on the kitchen's side wall: the hall door is on the left
-    camera(KW(-2.0, 0.9, 0.45), KW(1.3, 2.4, 0.7), lens=20)
+    camera(KW(-2.0, 2.55, 1.32), KW(1.3, 2.95, 1.05), lens=20)
 elif VIEW == 'curtain':     # facing the back door at the start of the hall
     point('curtainFill', (CX + 0.1, D + 0.35, 2.2), 6, color=(1.0, 0.62, 0.32), radius=0.25)   # the hall bulb's spill on the cloth
     camera((CX + 0.02, D + 0.12, 1.5), (CX - 0.03, HY1 + 4.0, 1.4), lens=19)
