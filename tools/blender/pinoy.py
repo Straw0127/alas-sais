@@ -259,25 +259,53 @@ def plastic_wardrobe(x, y, w=0.75, d=0.5, h=1.55, color=(0.12, 0.42, 0.48), rotz
     e.rotation_euler = (0, 0, rotz)
     return e
 
-def gi_roof(W, D, H, rise=0.9):
-    """Remove the ceiling: wooden trusses + corrugated GI sheets above the hollow-block walls."""
+def gi_roof(W, D, H, rise=0.9, over=0.35):
+    """Closed gable roof seen from inside: wall plates, trusses, purlins, corrugated GI sheets that rest on the walls,
+    and solid gable ends, so no sky shows through."""
     if 'Ceil' in bpy.data.objects: bpy.data.objects.remove(bpy.data.objects['Ceil'], do_unlink=True)
     wood = mat_planks('truss', (0.08, 0.05, 0.025), (0.1, 0.06, 0.03), scale=3, rough=0.7)
     yero = mat_noise('yeroIn', (0.1, 0.09, 0.08), (0.3, 0.26, 0.22), scale=3, rough=0.45, bump=0.2)
     yero.node_tree.nodes['Principled BSDF'].inputs['Metallic'].default_value = 0.7
-    rust = mat_stain('rustIn', (0.18, 0.07, 0.02), scale=4)
-    for i in range(int(D / 1.0) + 1):
-        y = 0.4 + i * 1.0
-        box('tie%d' % i, (W + 0.2, 0.06, 0.12), (0, y, H + 0.05), wood)
+    gable = mat_tabla('gableIn', paint=(0.16, 0.18, 0.15))
+    ang = math.atan(rise / (W / 2)); L = math.hypot(W / 2 + over, rise + over * math.tan(ang))
+    # wall plates on both long walls
+    for s_ in (-1, 1): box('plate%d' % s_, (0.12, D, 0.1), (s_ * (W / 2 - 0.06), D / 2, H + 0.05), wood)
+    # trusses: tie beam, two rafters, king post, two struts
+    n = max(2, int(D / 1.1) + 1)
+    for i in range(n):
+        y = 0.25 + i * (D - 0.5) / (n - 1)
+        box('tie%d' % i, (W, 0.07, 0.12), (0, y, H + 0.06), wood)
         for s_ in (-1, 1):
-            r = box('raft%d%d' % (i, s_), (W / 2 + 0.3, 0.06, 0.1), (s_ * W / 4, y, H + rise / 2 + 0.05), wood, rot=(0, s_ * -math.atan(rise / (W / 2)), 0))
-        box('king%d' % i, (0.06, 0.06, rise), (0, y, H + rise / 2), wood)
+            box('raft%d%d' % (i, s_), (math.hypot(W / 2, rise) + 0.1, 0.07, 0.11), (s_ * W / 4, y, H + rise / 2 + 0.06), wood, rot=(0, s_ * ang, 0))
+        box('king%d' % i, (0.07, 0.07, rise), (0, y, H + rise / 2 + 0.06), wood)
+    # purlins along the length
     for s_ in (-1, 1):
-        sh = box('yero%d' % s_, (W / 2 + 0.4, D + 1.0, 0.01), (s_ * W / 4, D / 2, H + rise / 2 + 0.17), yero, rot=(0, s_ * -math.atan(rise / (W / 2)), 0))
+        for k in range(1, 4):
+            t = k / 4.0; x = s_ * (W / 2) * (1 - t); z = H + 0.12 + rise * t + 0.04
+            box('purlin%d%d' % (s_, k), (0.06, D + 2 * over, 0.06), (x, D / 2, z), wood)
+    box('ridge', (0.08, D + 2 * over, 0.1), (0, D / 2, H + rise + 0.12), wood)
+    # GI sheets: from ridge down past the wall (eave overhang), resting on the purlins
+    for s_ in (-1, 1):
+        cx = s_ * (W / 2 + over) / 2; cz = H + 0.2 + rise - (rise + over * math.tan(ang)) / 2
+        sh = box('yero%d' % s_, (L + 0.06, D + 2 * over, 0.008), (cx, D / 2, cz), yero, rot=(0, s_ * ang, 0))
         d = sh.modifiers.new('corr', 'DISPLACE'); t = bpy.data.textures.new('corrIn%d' % s_, 'WOOD'); t.wood_type = 'BANDS'; t.noise_basis_2 = 'SIN'; t.noise_scale = 0.03
-        d.texture = t; d.strength = 0.025; d.direction = 'Z'
+        d.texture = t; d.strength = 0.022; d.direction = 'Z'
         sb = sh.modifiers.new('sub', 'SUBSURF'); sb.levels = 3; sb.subdivision_type = 'SIMPLE'
         sh.modifiers.move(1, 0)
+    # solid gable ends (triangles) closing the front and back
+    for yy in (0.0, D):
+        me = bpy.data.meshes.new('gable%d' % int(yy * 10))
+        me.from_pydata([(-W / 2, yy, H), (W / 2, yy, H), (0, yy, H + rise + 0.2)], [], [(0, 1, 2)])
+        go = bpy.data.objects.new('gable%d' % int(yy * 10), me); bpy.context.collection.objects.link(go)
+        go.modifiers.new('sol', 'SOLIDIFY').thickness = 0.03
+        me.materials.append(gable)
+    # close the strip between the wall top and the sheet underside
+    for s_ in (-1, 1): box('eaveSeal%d' % s_, (0.04, D, 0.3), (s_ * (W / 2 - 0.02), D / 2, H + 0.15), gable)
+    # rust runs on the sheets
+    rust = mat_stain('rustIn', (0.18, 0.07, 0.02), scale=4)
+    for s_ in (-1, 1):
+        for k in range(3):
+            decal('rustRun%d%d' % (s_, k), rust, (s_ * W / 4 + s_ * (k - 1) * 0.3, D * (0.2 + 0.3 * k), H + rise / 2 + 0.12), (0.5, 0.9), '-z')
 
 def window_curtains(x, y, z, width, normal='-x', color=(0.45, 0.12, 0.14)):
     m = mat_floral('winCurtain', color, (0.6, 0.45, 0.3), (0.3, 0.05, 0.08), scale=10)
