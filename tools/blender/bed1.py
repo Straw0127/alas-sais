@@ -14,6 +14,26 @@ SIL = int(OPT.get('silip', 0)); BAR = int(OPT.get('barang', 0)); KUMOT = 'kumot'
 W, D, H = 4.0, 4.4, 2.75
 from pinoy import *
 from entities2 import build_barang, scatter_beetles, beetle_mat, group_at
+# ---------------------------------------------------------------- the rest of the house: ONE house for every view
+# The kitchen and the living room are built first (so their scripts find their own walls by name), renamed with a
+# prefix, and placed once the hallway below is laid out. --hall=lit: the house lights are on (Chapter 2/3).
+from rooms import build_kitchen, build_living
+HOUSE_LIT = OPT.get('hall', 'dark') == 'lit'
+SALA = OPT.get('sala', 'dark')
+def _built(fn, prefix, **kw):
+    before = set(o.name for o in bpy.data.objects)
+    dims = fn(**kw)
+    objs = [o for o in bpy.data.objects if o.name not in before]
+    for o in objs: o.name = prefix + o.name
+    bpy.ops.object.empty_add(location=(0, 0, 0)); e = bpy.context.active_object; e.name = prefix + 'root'
+    for o in objs:
+        if o.parent is None: o.parent = e; o.matrix_parent_inverse = e.matrix_world.inverted()
+    return e, dims
+KIT, KDIM = _built(build_kitchen, 'k_', KAL='kal' in OPT, LIT=HOUSE_LIT)
+LIV, LDIM = _built(build_living, 'l_', MALIK='malik' in OPT, LIGHTS=SALA == 'lights', TVOFF=SALA != 'tv', LIT=HOUSE_LIT)
+bpy.data.objects.remove(bpy.data.objects['l_WallFront'], do_unlink=True)      # the hallway wall is the living room's front wall
+bpy.data.objects['l_WallL'].location.x += 0.1                                  # back to back with the kitchen wall, not overlapping
+bpy.data.objects['k_WallFront'].location.y = -0.05
 plaster = mat_tabla('tablaBed', paint=(0.2, 0.27, 0.22))
 floor = mat_planks('floor', (0.16, 0.08, 0.035), (0.22, 0.12, 0.05), scale=1.2)
 room(W, D, H, plaster, floor, mat_plywood('plyBed'))
@@ -43,7 +63,6 @@ LX = HXP(1.4); CX = HXP(-1.2)          # sala door and the curtained back door, 
 cut(opp, box('salaDoor', (0.85, 0.5, 2.05), (LX, HY1 + 0.05, 1.02))); cut(opp, box('backDoor', (0.85, 0.5, 2.05), (CX, HY1 + 0.05, 1.02)))
 box('hallNearL', ((-W / 2) - XK, 0.1, 2.7), ((XK - W / 2) / 2, HY0 - 0.05, 1.35), hallW)
 box('hallNearR', (XB - W / 2, 0.1, 2.7), ((XB + W / 2) / 2, HY0 - 0.05, 1.35), hallW)
-endK = box('hallEndK', (0.1, HY1 - HY0, 2.7), (XK - 0.05, CY, 1.35), hallW); cut(endK, box('kd', (0.5, 0.85, 2.05), (XK - 0.05, CY, 1.02)))
 box('hallEndB', (0.1, HY1 - HY0, 2.7), (XB + 0.05, CY, 1.35), hallW)
 frame = mat_planks('hframe', (0.07, 0.035, 0.015), (0.1, 0.05, 0.02), scale=3, rough=0.45)
 photo = mat_noise('hphoto', (0.1, 0.09, 0.08), (0.35, 0.3, 0.25), scale=25)
@@ -58,51 +77,9 @@ HALL_LIT = OPT.get('hall', 'dark') == 'lit'
 hb = sphere('hallBulb', 0.045, (HXP(1.0), CY, 2.3), gl if HALL_LIT else mat_basic('hbDead', (0.5, 0.45, 0.35), 0.1)); hb.visible_shadow = False
 if HALL_LIT: point('hallBulbL', (HXP(1.0), CY, 2.28), 10, color=(1.0, 0.6, 0.3), radius=0.04)
 wire_run([(XB, HY1 - 0.02, 2.68), (XK, HY1 - 0.02, 2.68)])
-# the kitchen at the end, dark at night: the green tiles, the counter with the sink and stove, the fridge; only faint moonlight
-KB = XK - 2.4
-kitW = mat_sawali('kitSaw')
-box('kitBack', (0.1, 3.4, 2.7), (KB, CY, 1.35), kitW)
-box('kitSideA', (KB - XK, 0.1, 2.7), ((KB + XK) / 2, CY - 1.7, 1.35), kitW); box('kitSideB', (KB - XK, 0.1, 2.7), ((KB + XK) / 2, CY + 1.7, 1.35), kitW)
-box('kitFloor', (XK - KB, 3.4, 0.1), ((KB + XK) / 2, CY, -0.05), mat_cement('kitCem'))
-box('kitCeil', (XK - KB, 3.4, 0.1), ((KB + XK) / 2, CY, 2.7), mat_plywood('kitPly'))
-ktile = mat_planks('kitTile', (0.32, 0.38, 0.33), (0.36, 0.42, 0.36), mortar=(0.12, 0.12, 0.1), scale=2.2, rough=0.15)
-box('kitTiles', (0.02, 2.8, 0.7), (KB + 0.06, CY, 1.25), ktile)
-kwood = mat_planks('kitCab', (0.12, 0.07, 0.03), (0.16, 0.09, 0.04), scale=3, rough=0.5)
-box('kitLower', (0.6, 2.6, 0.85), (KB + 0.35, CY - 0.1, 0.425), kwood, bevel=0.01)
-box('kitCounter', (0.65, 2.7, 0.05), (KB + 0.37, CY - 0.1, 0.875), mat_noise('kitCnt', (0.25, 0.25, 0.23), (0.35, 0.35, 0.32), scale=12, rough=0.4))
-box('kitSink', (0.45, 0.6, 0.06), (KB + 0.37, CY + 0.3, 0.88), mat_basic('kitSinkM', (0.5, 0.5, 0.5), 0.2, metal=1))
-box('kitStove', (0.45, 0.6, 0.1), (KB + 0.37, CY - 0.8, 0.95), mat_basic('kitIron', (0.06, 0.06, 0.06), 0.5, metal=0.6), bevel=0.01)
-cyl('kitPot', 0.13, 0.12, (KB + 0.37, CY - 0.8, 1.06), mat_basic('kitPotM', (0.35, 0.33, 0.3), 0.3, metal=0.9))
-box('kitRail', (0.02, 1.4, 0.02), (KB + 0.08, CY, 1.75), mat_basic('kitRailM', (0.4, 0.4, 0.4), 0.3, metal=1))
-box('kitFridge', (0.7, 0.7, 1.6), (XK - 0.5, CY + 1.25, 0.8), mat_noise('kitFr', (0.25, 0.3, 0.25), (0.4, 0.45, 0.38), scale=6, rough=0.4), bevel=0.04)
-if HALL_LIT: point('kitDim', (KB + 1.0, CY, 2.0), 10, color=(0.5, 0.65, 1.0), radius=0.3)
-if HALL_LIT: area('kitMoon', (KB + 1.2, CY - 1.6, 2.2), (math.radians(-60), 0, 0), 45, size=(1.0, 0.6), color=(0.45, 0.6, 1.0))
-# the sala through its door, the same room as the living room: hollow blocks, the CRT on its cabinet, the clock, the santo shelf.
-# Dark in Chapter 1; --sala=tv lights the TV (seen from the bedroom door in Chapter 3), --sala=lights turns on the tube light
-SALA = OPT.get('sala', 'dark')
-SX0, SX1, SY0, SY1 = LX - 2.6, LX + 1.6, HY1 + 0.1, HY1 + 3.6
-salaW = mat_hollowblock('salaHB')
-box('salaFloor', (SX1 - SX0, SY1 - SY0, 0.1), ((SX0 + SX1) / 2, (SY0 + SY1) / 2, -0.05), mat_cement('salaCem'))
-box('salaBack', (SX1 - SX0, 0.1, 2.7), ((SX0 + SX1) / 2, SY1, 1.35), salaW)
-box('salaL', (0.1, SY1 - SY0, 2.7), (SX0, (SY0 + SY1) / 2, 1.35), salaW); box('salaR', (0.1, SY1 - SY0, 2.7), (SX1, (SY0 + SY1) / 2, 1.35), salaW)
-box('salaCeil', (SX1 - SX0, SY1 - SY0, 0.1), ((SX0 + SX1) / 2, (SY0 + SY1) / 2, 2.7), mat_plywood('salaPly'))
-TVX = LX - 0.3
-box('tvCab', (1.3, 0.5, 0.6), (TVX, SY1 - 0.3, 0.3), frame, bevel=0.01)
-box('tvBox', (0.74, 0.55, 0.56), (TVX, SY1 - 0.33, 0.88), mat_basic('tvShell', (0.04, 0.035, 0.03), 0.45), bevel=0.04)
-box('tvScr', (0.56, 0.02, 0.42), (TVX, SY1 - 0.62, 0.9), emission('tvScrE', (0.55, 0.85, 1.0), 3.0) if SALA == 'tv' else mat_basic('tvDead', (0.02, 0.025, 0.025), 0.15))
-for s_ in (-1, 1): cyl('ant%d' % s_, 0.005, 0.6, (TVX + s_ * 0.12, SY1 - 0.33, 1.38), mat_basic('antM', (0.5, 0.5, 0.5), 0.3, metal=1), rot=(0, math.radians(s_ * 30), 0), verts=8)
-cyl('salaClock', 0.17, 0.05, (TVX + 1.2, SY1 - 0.03, 2.0), frame, rot=(math.radians(90), 0, 0))
-cyl('salaClockF', 0.14, 0.01, (TVX + 1.2, SY1 - 0.06, 2.0), mat_basic('clkF', (0.75, 0.7, 0.6), 0.6), rot=(math.radians(90), 0, 0))
-box('salaShelf', (0.9, 0.4, 1.9), (TVX - 1.6, SY1 - 0.25, 0.95), frame, bevel=0.01)
-sofaM = mat_noise('sofaM', (0.08, 0.05, 0.04), (0.14, 0.09, 0.06), scale=8)
-box('sofaSeat', (1.8, 0.8, 0.42), (TVX + 0.2, SY0 + 1.0, 0.21), sofaM, bevel=0.04)
-if HALL_LIT: area('salaMoon', (SX1 - 0.2, (SY0 + SY1) / 2, 2.0), (0, math.radians(-75), 0), 10, size=(1.2, 1.0), color=(0.4, 0.55, 1.0))
-if SALA == 'tv':
-    area('tvGlow', (TVX, SY1 - 0.75, 0.9), (math.radians(-90), 0, 0), 70, size=(0.56, 0.42), color=(0.5, 0.8, 1.0))
-    point('tvSpill', (LX, HY1 + 0.6, 1.0), 12, color=(0.5, 0.8, 1.0), radius=0.3)
-if SALA == 'lights':
-    box('salaTube', (1.2, 0.05, 0.04), ((SX0 + SX1) / 2, (SY0 + SY1) / 2, 2.64), emission('tubeE', (0.9, 1.0, 0.95), 8))
-    area('salaTubeL', ((SX0 + SX1) / 2, (SY0 + SY1) / 2, 2.6), (0, 0, 0), 260, size=(1.2, 0.2), color=(0.85, 1.0, 0.92))
+# place the real kitchen (its hall doorway on the hall's axis) and the real living room (behind the sala door)
+KIT.rotation_euler = (0, 0, math.radians(-90)); KIT.location = (XK - KDIM[1] - 0.1, CY + 1.3, 0)
+LIV.location = (LX - 0.4, HY1 + 0.1, 0)
 # the back door with the same red floral curtain as the bedroom window (behind you when you lean out)
 bcm = mat_floral('backCurtain', (0.45, 0.12, 0.14), (0.6, 0.45, 0.3), (0.3, 0.05, 0.08), scale=10)
 for s_ in (-1, 1):
@@ -392,7 +369,15 @@ if 'morning' in OPT:   # 6:00 AM: bulb off, sun through the open window, the yar
         if n_.type == 'VALTORGB': n_.color_ramp.elements[0].color = (1.0, 0.75, 0.5, 1); n_.color_ramp.elements[1].color = (0.45, 0.6, 0.85, 1)
         if n_.type == 'EMISSION': n_.inputs['Strength'].default_value = 3.0
 # ---------------------------------------------------------------- cameras
-if VIEW == 'hub':
+if VIEW == 'plan':   # debug: the whole house from above, cut at ceiling height
+    c_ = camera((dx - 2.0, D + 0.8, 12), (dx - 2.0, D + 0.8, 0), lens=30)
+    c_.data.type = 'ORTHO'; c_.data.ortho_scale = 15; c_.data.clip_start = 9.5
+    bpy.context.view_layer.update()
+    import mathutils
+    for o_ in bpy.data.objects:
+        if o_.type == 'MESH' and min((o_.matrix_world @ mathutils.Vector(c)).z for c in o_.bound_box) > 2.5: o_.hide_render = True
+    sun_ = bpy.data.lights.new('planSun', 'SUN'); sun_.energy = 3; o_ = bpy.data.objects.new('planSun', sun_); bpy.context.collection.objects.link(o_)
+elif VIEW == 'hub':
     camera((0.25, -0.15, 1.6), (0.75, 4.4, 1.28), lens=17)
 elif VIEW == 'door':
     # standing beside the door frame, looking diagonally to the left into the hallway (FNAF4's left door)
