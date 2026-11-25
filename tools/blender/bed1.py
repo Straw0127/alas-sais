@@ -77,6 +77,8 @@ HALL_LIT = OPT.get('hall', 'dark') == 'lit'
 hb = sphere('hallBulb', 0.045, (HXP(1.0), CY, 2.3), gl if HALL_LIT else mat_basic('hbDead', (0.5, 0.45, 0.35), 0.1)); hb.visible_shadow = False
 if HALL_LIT: point('hallBulbL', (HXP(1.0), CY, 2.28), 10, color=(1.0, 0.6, 0.3), radius=0.04)
 wire_run([(XB, HY1 - 0.02, 2.68), (XK, HY1 - 0.02, 2.68)])
+if 'tv' in OPT or SALA == 'tv':   # the TV's flicker spills out of the living room door into the hall
+    point('tvSpill', (LX, HY1 + 0.7, 1.0), 30, color=(0.5, 0.78, 1.0), radius=0.35)
 # place the real kitchen (its hall doorway on the hall's axis) and the real living room (behind the sala door)
 KIT.rotation_euler = (0, 0, math.radians(-90)); KIT.location = (XK - KDIM[1] - 0.1, CY + 1.3, 0)
 LIV.location = (LX - 0.4, HY1 + 0.1, 0)
@@ -402,6 +404,7 @@ elif VIEW == 'kitchen':     # in the kitchen doorway area looking at the counter
 elif VIEW == 'kitchen_hide':   # inside the low cabinet on the kitchen's side wall: the hall door is on the left
     camera(KW(-2.0, 0.9, 0.45), KW(1.3, 2.4, 0.7), lens=20)
 elif VIEW == 'curtain':     # facing the back door at the start of the hall
+    point('curtainFill', (CX + 0.1, D + 0.35, 2.2), 6, color=(1.0, 0.62, 0.32), radius=0.25)   # the hall bulb's spill on the cloth
     camera((CX + 0.02, D + 0.12, 1.5), (CX - 0.03, HY1 + 4.0, 1.4), lens=19)
 elif VIEW == 'living':
     camera(LW(-0.35, 1.0, 1.55), LW(0.25, LDIM[1], 1.1), lens=22)
