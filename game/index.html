@@ -1100,7 +1100,7 @@ if (typeof module !== 'undefined') module.exports = C1;
     'ringtone', 'phone_pickup', 'phone_hangup', 'line_static',
     'wing_flap', 'wing_flap_far', 'wind_gust', 'beetles', 'beetle_scatter', 'aparador_creak', 'kumot_breath', 'theme_menu',
     'step_w1', 'step_w2', 'step_w3', 'step_c1', 'step_c2', 'step_c3'];
-  IMG.push('c1_door_sw40', 'c1_door_sw22', 'c1_door_sw8', 'c1_hub', 'c1_hub_open', 'c1_hub_kumot', 'c1_hub_lit', 'c1_door_ajar', 'c1_peek_0', 'c1_peek_1', 'c1_peek_2', 'c1_peek_3', 'c1_door_closed', 'c1_win_closed', 'c1_win_shadow', 'c1_win_open',
+  IMG.push('c1_door_sw80', 'c1_door_sw62', 'c1_door_sw46', 'c1_door_sw32', 'c1_door_sw18', 'c1_hub', 'c1_hub_open', 'c1_hub_kumot', 'c1_hub_lit', 'c1_door_ajar', 'c1_peek_0', 'c1_peek_1', 'c1_peek_2', 'c1_peek_3', 'c1_door_closed', 'c1_win_closed', 'c1_win_shadow', 'c1_win_open',
     'c1_win_s1', 'c1_win_s2', 'c1_win_s3', 'c1_scare_barang', 'hero_barang', 'c1_under', 'c1_under_kumot');
   for (var _i = 0; _i < 5; _i++) IMG.push('c1_cab_' + _i, 'c1_cab_' + _i + '_lit');
   var VOICE = [];
@@ -1857,7 +1857,7 @@ if (typeof module !== 'undefined') module.exports = C1;
   // the door swinging shut (or back open) in three pre-rendered frames, then the held/ajar view
   var swing = null;
   function c1Swing(close) {
-    var all = ['c1_door_sw40', 'c1_door_sw22', 'c1_door_sw8'], seq = close ? all : all.slice().reverse(), start = 0;
+    var all = ['c1_door_sw80', 'c1_door_sw62', 'c1_door_sw46', 'c1_door_sw32', 'c1_door_sw18'], seq = close ? all : all.slice().reverse(), start = 0;
     if (swing) { clearTimeout(swing.to); var cur = swing.seq[swing.i]; start = Math.max(0, seq.indexOf(cur)); }
     swing = { seq: seq, i: start, close: close };
     play(close ? 'door_creak' : 'door_creak', { vol: close ? 0.4 : 0.3 });
@@ -1870,7 +1870,7 @@ if (typeof module !== 'undefined') module.exports = C1;
           var c = swing.close; swing = null; setView(true, true);
           if (c) { play('door_close_shut', { vol: 0.85 }); jolt(); }
         } else step();
-      }, close ? 75 : 95);
+      }, close ? 70 : 80);
     })();
   }
   function c1Hold() {
