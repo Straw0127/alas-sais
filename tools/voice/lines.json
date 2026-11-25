@@ -1,44 +1,44 @@
 {
   "voice": "fil-PH-BlessicaNeural",
+  "prologue": {
+    "c1": [
+      {"fil": "Hello? Migo? Si Tita Cora 'to. Nakarating ka na ba sa bahay ni Lola?", "en": "Hello? Migo? It's Tita Cora. Did you make it to Lola's house?"},
+      {"fil": "Pasensya ka na, anak, ha. Ikaw lang talaga ang puwedeng magbantay diyan habang nasa probinsya kami.", "en": "I'm sorry, anak. You're the only one who can watch the house while we're in the province."},
+      {"fil": "Hindi puwedeng walang tao diyan hangga't hindi pa tapos ang apatnapung araw ni Lola. Alam mo naman ang pamahiin.", "en": "Someone has to be there until Lola's forty days are over. You know the old belief."},
+      {"fil": "Noong bata pa ako, ayaw ni Lola na may natutulog nang bukas ang pinto. Gabi-gabi, siya mismo ang nagsasara ng lahat. Ang pinto, ang kurtina, pati ang aparador niya.", "en": "When I was little, Lola never let anyone sleep with the door open. Every night she closed everything herself. The door, the curtain, even her aparador."},
+      {"fil": "Ang aparador na 'yan, bigay raw ng dati niyang kumare sa San Lucio. Mula nang dumating 'yan, may naririnig na kaming kaluskos sa loob. Parang may gumagapang.", "en": "That aparador was a gift from an old friend of hers in San Lucio. Ever since it came, we'd hear scratching inside. Like something crawling."},
+      {"fil": "Noong huling linggo bago siya nawala, sabi niya may babaeng nakaputi raw na nakatayo sa pasilyo tuwing alas-tres. At may lumilipad daw sa may bintana.", "en": "In her last week, she said a woman in white stood in the hallway every night at three. And that something flew past the window."},
+      {"fil": "Akala namin, dahil lang sa gamot niya. Pero noong lamay, nakita ng Tito mo na bukas ang kurtina, at may mga kalmot sa rehas.", "en": "We thought it was just her medicine. But during the wake, your Tito found the curtain open, and claw marks on the window bars."},
+      {"fil": "Migo, makinig ka. Hindi ako nagbibiro.", "en": "Migo, listen to me. I'm not joking."},
+      {"fil": "Kapag may narinig kang humihinga sa likod ng pinto, isara mo, at huwag mong bitawan hangga't hindi siya umaalis.", "en": "If you hear breathing behind the door, close it, and don't let go until she leaves."},
+      {"fil": "Kapag nakapasok siya, magtago ka sa ilalim ng kama. At kapag iniangat niya ang kumot, huwag kang hihinga.", "en": "If she gets in, hide under the bed. And when she lifts the blanket, don't breathe."},
+      {"fil": "Huwag mong iiwanang bukas ang kurtina. Kapag tumahimik ang mga kuliglig sa labas, malapit na siya.", "en": "Never leave the curtain open. When the crickets outside go quiet, she's close."},
+      {"fil": "At kapag may kaluskos sa aparador, ilawan mo agad. Ayaw nila sa liwanag.", "en": "And if something rustles in the aparador, shine a light on it right away. They hate the light."},
+      {"fil": "Pagsapit ng alas-sais, tutunog ang kampana ng simbahan. Saka ka lang ligtas.", "en": "At six, the church bell will ring. Only then are you safe."},
+      {"fil": "Sige na, anak. Matulog ka na. Teka, sino 'yang kasama mo diyan? Bakit may naririnig akong humihinga sa tabi mo?", "en": "Go on, anak. Get some sleep. Wait, who's there with you? Why do I hear someone breathing right next to you?"}
+    ]
+  },
   "calls": {
-    "1": [
-      {"fil": "Hello? Migo? Si Tita Cora 'to. Pasensya na, gabi na akong tumawag.", "en": "Hello? Migo? It's Tita Cora. Sorry for calling so late."},
-      {"fil": "Hindi ako makakauwi ngayong gabi. Ikaw muna ang bahala sa bahay hanggang umaga, ha?", "en": "I can't come home tonight. You're in charge of the house until morning, okay?"},
-      {"fil": "Makinig kang mabuti. Isara mo agad ang pinto ng kwarto mo. Pindutin mo lang ang pinto.", "en": "Listen carefully. Close your bedroom door right away. Just tap the door.", "focus": "door"},
-      {"fil": "Kapag may narinig kang kumakaladkad sa pasilyo, tapos gumalaw ang seradura, huwag kang bibitaw. Diinan mo nang matagal ang pinto.", "en": "If you hear something dragging down the hallway and the handle starts to turn, don't let go. Press and hold the door.", "focus": "door"},
-      {"fil": "Kapag nakapasok siya, magtago ka agad sa ilalim ng kama.", "en": "If she gets in, hide under the bed right away.", "focus": "bed"},
-      {"fil": "At kapag inangat niya ang kumot, pigilan mo ang hininga mo. Pindutin mo nang matagal ang screen. Huwag kang gagalaw.", "en": "And if she lifts the blanket, hold your breath. Press and hold the screen. Don't move."},
-      {"fil": "Hindi siya nakakakita. Nakikinig lang siya.", "en": "She can't see. She only listens."},
-      {"fil": "Puwede kang lumabas ng kwarto. Pindutin mo lang ang ibaba ng screen para pumunta sa pasilyo. Pero huwag kang lalayo nang matagal.", "en": "You can leave the room. Tap the bottom of the screen to go to the hallway. But don't stay away for long.", "focus": "exit"},
-      {"fil": "Pagsapit ng alas-sais, tutunog ang kampana ng simbahan. Doon ka lang ligtas.", "en": "At six, the church bell will ring. Only then are you safe."},
-      {"fil": "Sige na. Mag-iingat ka, anak. At kung may kumatok, huwag mong bubuksan.", "en": "Go on. Be careful, anak. And if someone knocks, don't open the door."}
+    "c1n1": [
+      {"fil": "Migo, gising ka pa? Huwag mong kalimutan ang pinto.", "en": "Migo, still awake? Don't forget the door."},
+      {"fil": "Pakinggan mo muna bago mo isiping ligtas ka. Kapag may humihinga sa kabila, huwag kang bibitaw.", "en": "Listen first before you think you're safe. If something is breathing on the other side, don't let go."}
     ],
-    "2": [
-      {"fil": "Migo? Buhay ka pa. Salamat sa Diyos.", "en": "Migo? You're still alive. Thank God."},
-      {"fil": "Ngayong gabi, bantayan mo rin ang sala. Kapag nag-static ang TV, patayin mo agad.", "en": "Tonight, watch the living room too. When the TV turns to static, switch it off right away.", "focus": "tv"},
-      {"fil": "Kapag may narinig kang umiiyak na sanggol, hindi 'yon sanggol.", "en": "If you hear a baby crying, that is not a baby."},
-      {"fil": "Patayin mo ang ilaw, tapos magtago ka sa likod ng sofa. Huwag kang sisilip.", "en": "Turn off the lights, then hide behind the sofa. Don't peek.", "focus": "sofa"},
-      {"fil": "Huwag mong kakalimutan ang pinto ng kwarto. Gising pa rin siya.", "en": "Don't forget the bedroom door. She's still awake."}
+    "c1n2": [
+      {"fil": "Malakas daw ang hangin ngayong gabi. Baka bumukas ang kurtina.", "en": "They say the wind is strong tonight. The curtain might blow open."},
+      {"fil": "Kapag tumahimik ang mga kuliglig, isara mo agad. Huwag mong hintaying nasa bintana na siya.", "en": "When the crickets go quiet, close it right away. Don't wait until she's at the window."}
     ],
-    "3": [
-      {"fil": "Migo, may naririnig ka bang kalansing sa kusina? Parang mga kutsara?", "en": "Migo, do you hear clinking in the kitchen? Like spoons?"},
-      {"fil": "Huwag kang maingay. Kapag tumakbo ka, naaamoy ka niya.", "en": "Stay quiet. If you run, she can smell you."},
-      {"fil": "Magtago ka sa kabinet sa ilalim ng lababo. Habang nandiyan siya, huwag kang gagalaw.", "en": "Hide in the cabinet under the sink. While she's there, don't move.", "focus": "cabinet"},
-      {"fil": "May asin sa garapon. Isaboy mo sa kanya at aatras siya. Dalawa lang 'yan, kaya tipirin mo.", "en": "There's salt in the jar. Throw it at her and she'll back off. You only have two, so save them.", "focus": "salt"},
-      {"fil": "At kapag nawalan ng kuryente, nasa kusina ang breaker.", "en": "And if the power goes out, the breaker is in the kitchen."}
+    "c1n3": [
+      {"fil": "Migo, may narinig ka bang gumagapang sa loob ng aparador?", "en": "Migo, have you heard something crawling inside the aparador?"},
+      {"fil": "Ilawan mo. Paulit-ulit. Huwag mong hayaang bumukas nang tuluyan ang pinto niyan.", "en": "Shine your light on it. Again and again. Don't let that door swing all the way open."}
     ],
-    "4": [
-      {"fil": "Migo, makinig ka. Kapag tumahimik ang mga kuliglig sa labas, nandiyan na siya.", "en": "Migo, listen. When the crickets outside go quiet, she's there."},
-      {"fil": "Buksan mo ang kurtina at ilawan mo siya. Pindutin mo nang matagal ang dilim.", "en": "Open the curtain and shine your light on her. Press and hold on the dark."},
-      {"fil": "Pero kapag nasa salamin na siya, isara mo ang kurtina at hawakan mo. Huwag mong bibitawan.", "en": "But once she's at the glass, shut the curtain and hold it. Don't let go.", "focus": "curtain"},
-      {"fil": "Kalahati lang ng katawan niya ang lumilipad. Ang kalahati, nasa bakuran.", "en": "Only half of her flies. The other half is in the yard."}
+    "c1n4": [
+      {"fil": "Gising silang lahat ngayong gabi. Ang pinto, ang kurtina, ang aparador.", "en": "They're all awake tonight. The door, the curtain, the aparador."},
+      {"fil": "Makinig ka lang. Sila mismo ang magsasabi sa'yo kung nasaan sila.", "en": "Just listen. They'll tell you where they are."}
     ],
-    "5": [
-      {"fil": "Migo, huling gabi na 'to. Gising silang lahat ngayong gabi.", "en": "Migo, this is the last night. All of them are awake tonight."},
-      {"fil": "Uulan nang malakas. Hindi mo sila masyadong maririnig. Mag-ingat ka.", "en": "It's going to rain hard. You won't hear them well. Be careful."},
-      {"fil": "Pagsapit ng alas-singko, mamamatay ang kuryente. Alam mo na ang gagawin.", "en": "At five, the power will die. You know what to do."},
-      {"fil": "Malapit na akong umuwi, anak. Hintayin mo ako.", "en": "I'm almost home, anak. Wait for me."},
-      {"fil": "Migo, ikaw ba 'yan sa bintana?", "en": "Migo... is that you at the window?"}
+    "c1n5": [
+      {"fil": "Migo, papatayin daw ang kuryente sa barangay mamayang alas-kuwatro.", "en": "Migo, they said the barangay will cut the power at four."},
+      {"fil": "Tipirin mo ang flashlight. Kahit anong marinig mo, huwag kang lalabas ng kwarto.", "en": "Save your flashlight. Whatever you hear, don't leave the room."},
+      {"fil": "Migo? Bakit bukas ang ilaw diyan? Akala ko wala nang kuryente.", "en": "Migo? Why is the light on over there? I thought the power was out."}
     ]
   }
 }

@@ -13,15 +13,17 @@ async def edge(text, path):
 
 def phone(src, dst):
     # band-limit like a cheap phone, soft saturation, a little room
-    af = 'highpass=f=280,lowpass=f=3600,acompressor=threshold=-18dB:ratio=3,aecho=0.8:0.5:22:0.12,volume=1.6'
+    # telephone band, gentle saturation, short room, then loudness-normalised so the voice sits above the house ambience
+    af = 'highpass=f=260,lowpass=f=3700,acompressor=threshold=-20dB:ratio=3:makeup=3,aecho=0.8:0.4:18:0.08,loudnorm=I=-14:TP=-1.5:LRA=7'
     subprocess.run(['ffmpeg', '-v', 'error', '-y', '-i', src, '-af', af, '-ar', '24000', '-ac', '1', '-b:a', '48k', dst], check=True)
 
 async def main():
-    for night, lines in data['calls'].items():
+    groups = dict(data.get('calls', {})); groups.update({'pro_' + k: v for k, v in data.get('prologue', {}).items()})
+    for key, lines in groups.items():
         for i, ln in enumerate(lines):
-            raw = os.path.join('/tmp', 'raw_%s_%02d.mp3' % (night, i))
+            raw = os.path.join('/tmp', 'raw_%s_%02d.mp3' % (key, i))
             await edge(ln['fil'], raw)
-            phone(raw, os.path.join(OUT, 'n%s_%02d.mp3' % (night, i)))
-            print('ok', night, i, flush=True)
+            phone(raw, os.path.join(OUT, '%s_%02d.mp3' % (key, i)))
+            print('ok', key, i, flush=True)
 
 asyncio.run(main())
