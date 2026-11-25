@@ -100,7 +100,9 @@ for s_ in (-1, 1):
     cc.rotation_euler = (math.radians(90), 0, 0); cc.location = (CX + s_ * 0.21, HY1 - 0.02, 1.02)
     if OPT.get('hcurtain', 'closed') == 'open': cc.scale = (0.45, 1, 1); cc.location.x = CX + s_ * 0.52   # drawn aside
 # the back door itself: a jalousie-glass door, shut; beyond it the back yard (Chapter 2: Silip comes from there)
-jal_ = mat_basic('bdJal', (0.7, 0.75, 0.75), 0.05, trans=0.92)
+jal_ = mat_basic('bdJal', (0.55, 0.6, 0.62), 0.05, trans=1.0)
+for _in in ('Specular IOR Level', 'Specular'):   # see-through without mirroring the torch or the lamps
+    if _in in jal_.node_tree.nodes['Principled BSDF'].inputs: jal_.node_tree.nodes['Principled BSDF'].inputs[_in].default_value = 0.0
 bdf_ = mat_planks('bdFrame', (0.18, 0.12, 0.07), (0.22, 0.15, 0.09), scale=3)
 for sx_ in (-1, 1): box('bdStile%d' % sx_, (0.07, 0.05, 2.04), (CX + sx_ * 0.39, HY1 + 0.08, 1.02), bdf_)
 box('bdRailT', (0.85, 0.05, 0.08), (CX, HY1 + 0.08, 2.0), bdf_); box('bdRailB', (0.85, 0.05, 0.5), (CX, HY1 + 0.08, 0.25), bdf_)
