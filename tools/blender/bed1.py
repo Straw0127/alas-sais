@@ -369,7 +369,19 @@ if 'morning' in OPT:   # 6:00 AM: bulb off, sun through the open window, the yar
         if n_.type == 'VALTORGB': n_.color_ramp.elements[0].color = (1.0, 0.75, 0.5, 1); n_.color_ramp.elements[1].color = (0.45, 0.6, 0.85, 1)
         if n_.type == 'EMISSION': n_.inputs['Strength'].default_value = 3.0
 # ---------------------------------------------------------------- cameras
-if VIEW == 'plan':   # debug: the whole house from above, cut at ceiling height
+def KW(kx, ky, z):   # kitchen-local (as in kitchen.py) -> house
+    return (ky + XK - KDIM[1] - 0.1, -kx + CY + 1.3, z)
+def LW(lx, ly, z):   # living-local (as in living.py) -> house
+    return (lx + LX - 0.4, ly + HY1 + 0.1, z)
+if VIEW == 'hall':          # Chapter 2 hub: standing at the back-door end of the hall, looking to the kitchen
+    camera((HXP(-2.0), D + 0.75, 1.58), (HXP(4.3), D + 0.62, 1.35), lens=24)
+elif VIEW == 'kitchen':     # in the kitchen doorway area looking at the counter wall (the hall door on the right)
+    camera(KW(-0.2, 0.15, 1.55), KW(0.1, KDIM[1], 1.05), lens=21)
+elif VIEW == 'kitchen_hide':   # inside the low cabinet on the kitchen's side wall: the hall door is on the left
+    camera(KW(-1.75, 2.75, 0.42), KW(1.3, 3.2, 0.75), lens=20)
+elif VIEW == 'living':
+    camera(LW(-0.35, 1.0, 1.55), LW(0.25, LDIM[1], 1.1), lens=22)
+elif VIEW == 'plan':   # debug: the whole house from above, cut at ceiling height
     c_ = camera((dx - 2.0, D + 0.8, 12), (dx - 2.0, D + 0.8, 0), lens=30)
     c_.data.type = 'ORTHO'; c_.data.ortho_scale = 15; c_.data.clip_start = 9.5
     bpy.context.view_layer.update()
