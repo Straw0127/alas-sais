@@ -29,12 +29,24 @@ box('jambL', (0.06, 0.16, 2.14), (dx - 0.49, D, 1.07), wood_dark)
 box('jambR', (0.06, 0.16, 2.14), (dx + 0.49, D, 1.07), wood_dark)
 box('jambT', (1.04, 0.16, 0.07), (dx, D, 2.14), wood_dark)
 dim = mat_noise('hall', (0.035, 0.032, 0.03), (0.07, 0.06, 0.055), scale=3)
-box('hallFloor', (3, 4, 0.1), (dx, D + 2.0, -0.05), floor)
-box('hallBack', (3, 0.1, 2.8), (dx, D + 3.8, 1.4), dim)
-box('hallL', (0.1, 4, 2.8), (dx - 0.9, D + 2.0, 1.4), dim)
-box('hallR', (0.1, 4, 2.8), (dx + 0.9, D + 2.0, 1.4), dim)
-box('hallC', (3, 4, 0.1), (dx, D + 2.0, 2.8), dim)
-point('hallGlow', (dx + 0.7, D + 3.3, 2.2), 2.5, color=(0.6, 0.7, 1.0), radius=0.3)
+# the hallway behind the door: narrow, tabla walls, a far doorway to the sala, a few things on the walls
+hallW = mat_tabla('tablaHallB', paint=(0.26, 0.23, 0.18))
+HL = 5.0
+box('hallFloor', (3, HL, 0.1), (dx, D + HL / 2, -0.05), mat_cement('hallCem'))
+box('hallBack', (3, 0.1, 2.8), (dx, D + HL, 1.4), hallW)
+box('hallL', (0.1, HL, 2.8), (dx - 0.75, D + HL / 2, 1.4), hallW)
+box('hallR', (0.1, HL, 2.8), (dx + 0.75, D + HL / 2, 1.4), hallW)
+box('hallC', (3, HL, 0.1), (dx, D + HL / 2, 2.8), mat_plywood('hallPly'))
+cut(bpy.data.objects['hallBack'], box('hc1', (0.85, 0.5, 2.05), (dx + 0.1, D + HL, 1.02)))
+box('salaBeyond', (2.5, 0.1, 2.8), (dx, D + HL + 1.6, 1.4), mat_noise('salaDark', (0.02, 0.02, 0.025), (0.04, 0.04, 0.05), scale=3))
+point('hallGlow', (dx + 0.2, D + HL + 1.0, 1.6), 3.0, color=(0.45, 0.7, 1.0), radius=0.3)   # TV glow from the sala, far away
+for i_, yy in enumerate((D + 1.4, D + 2.9)):
+    framed('hallPhoto%d' % i_, (dx - 0.69, yy, 1.6), (0.32, 0.42), '+x', mat_noise('hp%d' % i_, (0.04, 0.03, 0.02), (0.18, 0.14, 0.1), scale=5 + i_, bump=0.0))
+box('hallCal', (0.01, 0.3, 0.42), (dx + 0.69, D + 2.2, 1.5), mat_noise('hcal', (0.55, 0.5, 0.42), (0.7, 0.65, 0.55), scale=20))
+cyl('hallBulbCord', 0.005, 0.4, (dx, D + 2.4, 2.6), mat_basic('cordH', (0.02, 0.02, 0.02), 0.6))
+sphere('hallBulbDead', 0.045, (dx, D + 2.4, 2.37), mat_basic('deadBulb', (0.4, 0.38, 0.32), 0.2))
+box('hallStool', (0.32, 0.32, 0.45), (dx + 0.5, D + 3.6, 0.22), mat_planks('stool', (0.1, 0.06, 0.03), (0.13, 0.08, 0.04), scale=3))
+decal('hallStainF', mat_stain('hstain', (0.04, 0.03, 0.02), scale=3), (dx, D + 1.6, 0.004), (0.9, 1.4), 'z')
 door_mat = mat_planks('door', (0.2, 0.1, 0.045), (0.24, 0.13, 0.06), scale=2.5, rough=0.5)
 bpy.ops.object.empty_add(location=(dx - 0.45, D - 0.05, 0)); hinge = bpy.context.active_object
 parts = [box('doorPanel', (0.88, 0.045, 2.06), (dx - 0.01, D - 0.05, 1.03), door_mat, bevel=0.005)]
@@ -45,7 +57,9 @@ parts.append(sphere('knob', 0.03, (dx + 0.35, D - 0.1, 1.0), brass))
 scr = mat_stain('scratch', (0.02, 0.012, 0.006), scale=40, lo=0.55, hi=0.6)
 parts.append(decal('scratchesDoor', scr, (dx + 0.1, D - 0.076, 1.25), (0.3, 0.6), '-y'))
 for p in parts: p.parent = hinge; p.matrix_parent_inverse = hinge.matrix_world.inverted()
-hinge.rotation_euler = (0, 0, math.radians({'ajar': -34, 'open': -80, 'closed': 0}[DOOR]))
+PEEK = int(OPT.get('peek', -1))
+if PEEK >= 0: DOOR = 'open'
+hinge.rotation_euler = (0, 0, math.radians({'ajar': -34, 'gap': -30, 'open': -78, 'closed': 0}[DOOR]))
 sw = mat_basic('sw', (0.75, 0.7, 0.6), 0.5)
 box('switch', (0.08, 0.02, 0.12), (dx + 0.75, D - 0.01, 1.3), sw, bevel=0.005)
 
@@ -285,6 +299,10 @@ elif SIL == 2:   # in the talisay tree, close
     point('silKey2', (tx - 1.3, ty - 1.4, 2.5), 2.5, color=(0.6, 0.7, 1.0), radius=0.3)
 elif SIL == 3:   # at the window grill
     silip_at((W / 2 + 0.55, WY, 1.12), math.radians(-90), 0.55)
+if PEEK > 0:   # what the flashlight finds down the hallway
+    from entities import build_kumot_batibat
+    yk = {1: D + HL - 0.55, 2: D + 2.3, 3: D + 0.42}[PEEK]
+    build_kumot_batibat(dx + (0.12 if PEEK == 3 else -0.05), yk, peer=(PEEK == 3))
 if KUMOT:
     from entities import build_kumot_batibat
     if VIEW == 'under': build_kumot_batibat(-0.45, 1.9)   # standing right beside the bed, searching
@@ -308,6 +326,10 @@ if VIEW == 'hub':
     camera((0.25, -0.15, 1.6), (0.75, 4.4, 1.28), lens=17)
 elif VIEW == 'door':
     camera((dx + 0.08, D - 1.25, 1.56), (dx, D + 3.6, 1.42), lens=24)
+    if PEEK >= 0:
+        import mathutils
+        src_ = mathutils.Vector((dx + 0.25, D - 1.05, 1.42)); tg_ = mathutils.Vector((dx, D + 3.0, 1.2))
+        spot('peekTorch', tuple(src_), (tg_ - src_).to_track_quat('-Z', 'Y').to_euler(), 520, angle=math.radians(46), color=(1.0, 0.93, 0.8), blend=0.85)
     point('viewFill', (dx + 0.5, D - 1.6, 1.9), 5, color=(1.0, 0.65, 0.35), radius=0.3)
 elif VIEW == 'window':
     camera((0.15, WY - 0.05, 1.52), (W / 2 + 1, WY, 1.48), lens=22)
