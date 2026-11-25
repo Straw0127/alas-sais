@@ -82,6 +82,10 @@ if 'tv' in OPT or SALA == 'tv':   # the TV's flicker spills out of the living ro
 # place the real kitchen (its hall doorway on the hall's axis) and the real living room (behind the sala door)
 KIT.rotation_euler = (0, 0, math.radians(-90)); KIT.location = (XK - KDIM[1] - 0.1, CY + 1.3, 0)
 LIV.location = (LX - 0.4, HY1 + 0.1, 0)
+def KW(kx, ky, z):   # kitchen-local (as in kitchen.py) -> house
+    return (ky + XK - KDIM[1] - 0.1, -kx + CY + 1.3, z)
+def LW(lx, ly, z):   # living-local (as in living.py) -> house
+    return (lx + LX - 0.4, ly + HY1 + 0.1, z)
 # the back door with the same red floral curtain as the bedroom window (behind you when you lean out)
 bcm = mat_floral('backCurtain', (0.45, 0.12, 0.14), (0.6, 0.45, 0.3), (0.3, 0.05, 0.08), scale=10)
 _bn = bcm.node_tree; _bt = _bn.nodes.new('ShaderNodeBsdfTranslucent'); _bt.inputs['Color'].default_value = (0.55, 0.2, 0.18, 1)   # same see-through cloth as the bedroom curtain
@@ -392,14 +396,26 @@ if 'morning' in OPT:   # 6:00 AM: bulb off, sun through the open window, the yar
     for n_ in skyN:
         if n_.type == 'VALTORGB': n_.color_ramp.elements[0].color = (1.0, 0.75, 0.5, 1); n_.color_ramp.elements[1].color = (0.45, 0.6, 0.85, 1)
         if n_.type == 'EMISSION': n_.inputs['Strength'].default_value = 3.0
+# ---------------------------------------------------------------- Chapter 3 nights 6-7: a real brownout, three candles
+if 'candles' in OPT:
+    os.environ['LIGHTS_OFF'] = '1'            # every bulb and tube off (lib.render)
+    for n_ in ('k_fridgeLight', 'tvSpill', 'curtainFill'):
+        if n_ in bpy.data.objects: bpy.data.objects[n_].data.energy = 0
+    wax_ = mat_basic('wax', (0.85, 0.82, 0.7), 0.4)
+    flame_ = mat_basic('flame', (1.0, 0.7, 0.3), 0.5, emit=(1.0, 0.55, 0.15), emit_str=40)
+    def candle(name, x, y, z):
+        cyl(name + 'Wax', 0.018, 0.13, (x, y, z + 0.065), wax_, verts=12)
+        cyl(name + 'Dish', 0.05, 0.012, (x, y, z + 0.006), mat_basic(name + 'DishM', (0.4, 0.4, 0.38), 0.3, metal=0.8), verts=16)
+        f_ = sphere(name + 'Flame', 0.011, (x, y, z + 0.15), flame_, scale=(1, 1, 2.2)); f_.visible_shadow = False
+        point(name + 'L', (x, y, z + 0.17), 6, color=(1.0, 0.55, 0.2), radius=0.01)
+    box('bangkito', (0.32, 0.32, 0.4), (-0.75, 2.75, 0.2), wood_dark, bevel=0.01)      # a stool by the head of the bed
+    candle('candleBed', -0.75, 2.75, 0.4)
+    candle('candleLiv', *LW(0.5, LDIM[1] - 0.3, 0.6)[:2], 0.6)                         # on the TV cabinet
+    candle('candleKit', *KW(-0.4, 1.1, 0.78)[:2], 0.78)                                 # on the kitchen table
 # lamps light the house but are never seen as glowing shapes themselves (the bulbs are their own meshes)
 for o_ in bpy.data.objects:
     if o_.type == 'LIGHT' and o_.data.type in ('AREA', 'POINT', 'SPOT') and o_.name != 'moonWin': o_.visible_camera = False
 # ---------------------------------------------------------------- cameras
-def KW(kx, ky, z):   # kitchen-local (as in kitchen.py) -> house
-    return (ky + XK - KDIM[1] - 0.1, -kx + CY + 1.3, z)
-def LW(lx, ly, z):   # living-local (as in living.py) -> house
-    return (lx + LX - 0.4, ly + HY1 + 0.1, z)
 if VIEW == 'hall':          # Chapter 2 hub: standing at the back-door end of the hall, looking to the kitchen
     camera((HXP(-2.0), D + 0.75, 1.58), (HXP(4.3), D + 0.62, 1.35), lens=24)
 elif VIEW == 'kitchen':     # in the kitchen doorway area looking at the counter wall (the hall door on the right)
