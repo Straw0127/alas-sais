@@ -181,7 +181,20 @@ def cut(target, cutter):
     bpy.ops.object.modifier_apply(modifier=md.name)
     bpy.data.objects.remove(cutter, do_unlink=True)
 
+def lights_off():
+    """Menu 'blink' frames: switch off the house bulbs, keep moonlight and appliance glow."""
+    for o in bpy.data.objects:
+        n = o.name.lower()
+        if o.type == 'LIGHT' and ('bulb' in n or n in ('fill', 'hallglow') or 'fluor' in n or 'tube' in n):
+            o.data.energy = 0
+        if o.type == 'MESH' and ('bulb' in n or 'tube' in n or 'fluor' in n):
+            for m in o.data.materials:
+                if m and m.use_nodes and 'Principled BSDF' in m.node_tree.nodes:
+                    m.node_tree.nodes['Principled BSDF'].inputs['Emission Strength'].default_value = 0
+
 def render(path):
+    import os
+    if os.environ.get('LIGHTS_OFF'): lights_off()
     bpy.context.scene.render.filepath = path
     bpy.ops.render.render(write_still=True)
 

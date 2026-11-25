@@ -1,4 +1,4 @@
-import sys, math; sys.path.insert(0, '/home/claude/render')
+import sys, math; sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from lib import *
 sc = reset()
 a = sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else []
@@ -66,7 +66,7 @@ c = box('c', (0.5, 1.5, 1.2), (W / 2, 2.6, 1.6)); cut(wr, c)
 jal = mat_basic('jal', (0.6, 0.65, 0.65), 0.15, trans=0.6)
 for j in range(10):
     box('slat%d' % j, (0.02, 1.48, 0.11), (W / 2, 2.6, 1.06 + j * 0.12), jal, rot=(math.radians(25), 0, 0))
-area('moon', (W / 2 + 1.0, 2.6, 2.0), (0, math.radians(-75), 0), 50, size=(1.5, 1.2), color=(0.4, 0.55, 1.0))
+area('moon', (W / 2 + 1.0, 2.6, 2.0), (0, math.radians(75), 0), 90, size=(1.5, 1.2), color=(0.4, 0.55, 1.0))
 
 # light switch on back wall + fluorescent tube
 box('switch', (0.08, 0.02, 0.12), (0.95, D - 0.01, 1.3), mat_basic('sw', (0.7, 0.68, 0.6), 0.5), bevel=0.005)
