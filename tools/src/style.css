@@ -272,3 +272,8 @@ img.w6am{display:block;height:120px;width:auto;margin:0 auto;filter:drop-shadow(
 .spot.left .dot::after{transform:rotate(-45deg)}
 .spot.right .dot::after{transform:rotate(135deg)}
 .spot.downarrow .dot::after{transform:rotate(225deg)}
+
+/* Chapter 1 keeps its words on screen while you learn */
+#hot.c1 .spot .lbl{opacity:.92}
+#hot.c1 .spot.gesture .lbl{display:block;top:auto;bottom:6%;transform:translateX(-50%);background:rgba(0,0,0,.55);font:500 15px Oswald,sans-serif;letter-spacing:2px}
+#hot.c1 .spot.exit .lbl{opacity:.85}

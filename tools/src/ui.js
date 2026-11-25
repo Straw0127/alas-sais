@@ -3,7 +3,7 @@
   'use strict';
   var $ = function (id) { return document.getElementById(id); };
   // preload only what Chapter 1 and the menu need (the house rooms load when Chapter 2 opens)
-  var IMG = ['scare_kumot', 'scare_silip', 'hero_kumot', 'hero_silip', 'menu_bed_off', 'menu_bed_off_lit', 'menu_morning'];
+  var IMG = ['hero_kumot', 'hero_silip', 'menu_bed_off', 'menu_bed_off_lit', 'menu_morning'];
   var SFX = ['amb_house', 'amb_garden', 'amb_menu', 'rain_heavy', 'heartbeat', 'bell_6am', 'rooster_dawn', 'tuko_gecko', 'dog_howl', 'tricycle_far', 'distant_scream',
     'fluorescent_hum', 'scuffs_far', 'scuffs_near', 'wheeze', 'lullaby_hum', 'handle_rattle', 'static_swell', 'vhs_glitch', 'giggle', 'baby_cry', 'clinks', 'sniff', 'knife_taps',
     'nail_taps', 'steps_walk_wood', 'steps_run_wood', 'steps_walk_cement', 'breath_hold_gasp', 'door_creak', 'door_slam', 'cabinet_open', 'cabinet_close', 'curtain_rings',
@@ -15,13 +15,13 @@
     'wing_flap', 'wing_flap_far', 'wind_gust', 'beetles', 'beetle_scatter', 'aparador_creak', 'kumot_breath', 'theme_menu',
     'step_w1', 'step_w2', 'step_w3', 'step_c1', 'step_c2', 'step_c3'];
   IMG.push('c1_door_k3', 'c1_win_shadow2', 'c1_door_sw80', 'c1_door_sw62', 'c1_door_sw46', 'c1_door_sw32', 'c1_door_sw18', 'c1_hub', 'c1_hub_open', 'c1_hub_kumot', 'c1_hub_lit', 'c1_door_ajar', 'c1_peek_0', 'c1_peek_2', 'c1_peek_3', 'c1_door_closed', 'c1_win_closed', 'c1_win_shadow', 'c1_win_open',
-    'c1_win_s1', 'c1_win_s2', 'c1_win_s3', 'c1_scare_barang', 'hero_barang', 'c1_under', 'c1_under_kumot');
+    'c1_win_s1', 'c1_win_s2', 'c1_win_s3', 'hero_barang', 'c1_under', 'c1_under_kumot');
   for (var _i = 0; _i < 5; _i++) IMG.push('c1_cab_' + _i, 'c1_cab_' + _i + '_lit');
   var VOICE = [];
   function pad2(i) { return (i < 10 ? '0' : '') + i; }
   if (typeof CALLS !== 'undefined') Object.keys(CALLS).forEach(function (n) { CALLS[n].forEach(function (_, i) { VOICE.push(n + '_' + pad2(i)); }); });
   if (typeof PROLOGUE !== 'undefined') Object.keys(PROLOGUE).forEach(function (n) { PROLOGUE[n].forEach(function (_, i) { VOICE.push('pro_' + n + '_' + pad2(i)); }); });
-  var WHO_IMG = { kumot: 'scare_kumot', malik: 'scare_malikmata', kal: 'scare_kalansing', silip: 'scare_silip', barang: 'c1_scare_barang' };
+  var WHO_IMG = { kumot: 'js_kumot_7', malik: 'js_malikmata_7', kal: 'js_kalansing_7', silip: 'js_silip_7', barang: 'js_barang_7' };
   var WHO_SFX = { kumot: 'jumpscare_kumot', malik: 'jumpscare_malikmata', kal: 'jumpscare_kalansing', silip: 'jumpscare_silip', barang: 'jumpscare_barang' };
   var WORDS = ['cont', 'new_game', 'chapters', 'custom_night', 'settings', 'credits', 'quit', 'resume', 'restart', 'main_menu'];
   var lightLatch = false;   // a flashlight switched on by double-tap stays on after the finger lifts
@@ -258,12 +258,12 @@
     play('dog_howl', { bus: 'amb', vol: 0.5 });
   }
   var C2_IMG = ['hallway_empty', 'hallway_salatv', 'living_tvoff', 'living_empty', 'living_lights', 'living_lights_off_tv', 'living_malik', 'kitchen_empty', 'kitchen_kal',
-    'cabinet_empty', 'cabinet_kal', 'curtain_closed', 'curtain_shadow', 'curtain_open', 'curtain_s1', 'curtain_s2', 'curtain_silip', 'curtain_glass', 'scare_malikmata', 'scare_kalansing', 'scare_silip'];
+    'cabinet_empty', 'cabinet_kal', 'curtain_closed', 'curtain_shadow', 'curtain_open', 'curtain_s1', 'curtain_s2', 'curtain_silip', 'curtain_glass'];
   var C3_LIT = ['c3_bed_c', 'c3_bed_closed_c', 'c3_bed_kumot_c', 'hallway_empty_c', 'hallway_kumot_c', 'living_tvoff_c', 'living_malik_c', 'kitchen_empty_c', 'kitchen_kal_c',
     'curtain_closed_c', 'curtain_shadow_c', 'curtain_open_c', 'curtain_s1_c', 'curtain_s2_c', 'curtain_silip_c', 'curtain_glass_c'];
   var C3_IMG = ['c3_bed', 'c3_bed_closed', 'c3_bed_kumot', 'hallway_kumot', 'c3_look', 'c3_look_tv', 'c3_look_k2', 'c3_look_k3', 'c3_bed_c', 'c3_bed_closed_c', 'c3_bed_kumot_c',
     'hallway_empty_c', 'hallway_kumot_c', 'living_tvoff_c', 'living_malik_c', 'kitchen_empty_c', 'kitchen_kal_c', 'cabinet_empty_c', 'cabinet_kal_c', 'curtain_closed_c', 'curtain_shadow_c',
-    'curtain_open_c', 'curtain_s1_c', 'curtain_s2_c', 'curtain_silip_c', 'curtain_glass_c', 'c1_under', 'c1_under_kumot', 'c1_peek_0', 'c1_peek_2', 'c1_peek_3', 'hero_barang', 'scare_kumot'];
+    'curtain_open_c', 'curtain_s1_c', 'curtain_s2_c', 'curtain_silip_c', 'curtain_glass_c', 'c1_under', 'c1_under_kumot', 'c1_peek_0', 'c1_peek_2', 'c1_peek_3', 'hero_barang'];
   function beginNight() {
     if (curCh === 3) C2_IMG.concat(C3_IMG, C3_LIT.map(function (k) { return k + 'l'; })).forEach(function (k) { if (!imgs[k]) { var i = new Image(); i.src = IMGDIR() + k + '.jpg'; imgs[k] = i; } });
     if (curCh === 2) C2_IMG.forEach(function (k) { if (!imgs[k]) { var i = new Image(); i.src = IMGDIR() + k + '.jpg'; imgs[k] = i; } });
@@ -745,6 +745,7 @@
     var sig = (p.room || p.pos) + p.hidden + S.map(function (s) { return s.id + s.label + (s.cls || ''); }).join('|') + lightAllowed();
     if (sig === hotSig) return;
     hotSig = sig; releaseHolds(); box.innerHTML = '';
+    box.classList.toggle('c1', isC1());   // Chapter 1 teaches the controls: its names and hints stay visible
     box.classList.add('reveal'); clearTimeout(box._rv); box._rv = setTimeout(function () { box.classList.remove('reveal'); }, 1400);
     box.classList.toggle('dim', g.night >= 3);
     // background: hold for flashlight (dark places) or breath (under the bed)
@@ -846,13 +847,13 @@
         S.push({ id: 'bed', x: 0, y: 66, w: 25, h: 34, label: T('s_bed'), tap: function () { act('hide'); } });
         break;
       case 'door':     // anywhere: double-tap = flashlight down the hall (again = off), hold = shut the door and keep it shut
-        S.push({ id: 'door', x: 0, y: 0, w: 100, h: 85, cls: 'gesture', gesture: true, label: '', hold: 'door', dbl: function () { act('peek'); } });
+        S.push({ id: 'door', x: 0, y: 0, w: 100, h: 85, cls: 'gesture', gesture: true, label: T('s_door_use'), hold: 'door', dbl: function () { act('peek'); } });
         S.push(back); break;
       case 'window':   // double-tap = open / close the curtain to look, hold = pull it shut and hold it
-        S.push({ id: 'curtain', x: 0, y: 0, w: 100, h: 85, cls: 'gesture', gesture: true, label: '', hold: 'curtain', preHold: function () { if (game && game.house.curtain) act('curtain'); }, dbl: function () { act('curtain'); } });
+        S.push({ id: 'curtain', x: 0, y: 0, w: 100, h: 85, cls: 'gesture', gesture: true, label: T('s_curtain_use'), hold: 'curtain', preHold: function () { if (game && game.house.curtain) act('curtain'); }, dbl: function () { act('curtain'); } });
         S.push(back); break;
       case 'cabinet':  // double-tap = flashlight on the aparador (again = off)
-        S.push({ id: 'cabinet', x: 0, y: 0, w: 100, h: 85, cls: 'gesture', gesture: true, label: '', dbl: lightToggle });
+        S.push({ id: 'cabinet', x: 0, y: 0, w: 100, h: 85, cls: 'gesture', gesture: true, label: T('s_cab_use'), dbl: lightToggle });
         S.push(back); break;
       case 'bed':
         S.push({ id: 'out', x: 36, y: 86, w: 28, h: 14, cls: 'exit up', label: T('s_out').toUpperCase(), tap: function () { act('unhide'); } });
