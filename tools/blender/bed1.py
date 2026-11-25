@@ -52,8 +52,11 @@ for i_, (sv, z) in enumerate(((2.2, 1.6), (2.7, 1.55))):     # family photos on 
     f_ = box('hpf%d' % i_, (0.26, 0.02, 0.32), (HXP(sv), HY0 + 0.015, z), frame, rot=(0, math.radians(rr.uniform(-6, 6)), 0))
     box('hpp%d' % i_, (0.2, 0.005, 0.26), (HXP(sv), HY0 + 0.028, z), photo, rot=f_.rotation_euler)
 gl = mat_basic('hbulb', (1, 0.85, 0.6), 0.1, emit=(1.0, 0.6, 0.3), emit_str=6)
-hb = sphere('hallBulb', 0.045, (HXP(1.0), CY, 2.3), gl); hb.visible_shadow = False
-point('hallBulbL', (HXP(1.0), CY, 2.28), 10, color=(1.0, 0.6, 0.3), radius=0.04)
+# Chapter 1: the rest of the house is dark, only the bedroom light spills out and the flashlight finds the rest.
+# --hall=lit (Chapter 3, nights 1-4): the hall bulb, and the moon in the kitchen and sala windows
+HALL_LIT = OPT.get('hall', 'dark') == 'lit'
+hb = sphere('hallBulb', 0.045, (HXP(1.0), CY, 2.3), gl if HALL_LIT else mat_basic('hbDead', (0.5, 0.45, 0.35), 0.1)); hb.visible_shadow = False
+if HALL_LIT: point('hallBulbL', (HXP(1.0), CY, 2.28), 10, color=(1.0, 0.6, 0.3), radius=0.04)
 wire_run([(XB, HY1 - 0.02, 2.68), (XK, HY1 - 0.02, 2.68)])
 # the kitchen at the end, dark at night: the green tiles, the counter with the sink and stove, the fridge; only faint moonlight
 KB = XK - 2.4
@@ -72,8 +75,8 @@ box('kitStove', (0.45, 0.6, 0.1), (KB + 0.37, CY - 0.8, 0.95), mat_basic('kitIro
 cyl('kitPot', 0.13, 0.12, (KB + 0.37, CY - 0.8, 1.06), mat_basic('kitPotM', (0.35, 0.33, 0.3), 0.3, metal=0.9))
 box('kitRail', (0.02, 1.4, 0.02), (KB + 0.08, CY, 1.75), mat_basic('kitRailM', (0.4, 0.4, 0.4), 0.3, metal=1))
 box('kitFridge', (0.7, 0.7, 1.6), (XK - 0.5, CY + 1.25, 0.8), mat_noise('kitFr', (0.25, 0.3, 0.25), (0.4, 0.45, 0.38), scale=6, rough=0.4), bevel=0.04)
-point('kitDim', (KB + 1.0, CY, 2.0), 10, color=(0.5, 0.65, 1.0), radius=0.3)
-area('kitMoon', (KB + 1.2, CY - 1.6, 2.2), (math.radians(-60), 0, 0), 45, size=(1.0, 0.6), color=(0.45, 0.6, 1.0))
+if HALL_LIT: point('kitDim', (KB + 1.0, CY, 2.0), 10, color=(0.5, 0.65, 1.0), radius=0.3)
+if HALL_LIT: area('kitMoon', (KB + 1.2, CY - 1.6, 2.2), (math.radians(-60), 0, 0), 45, size=(1.0, 0.6), color=(0.45, 0.6, 1.0))
 # the sala through its door, the same room as the living room: hollow blocks, the CRT on its cabinet, the clock, the santo shelf.
 # Dark in Chapter 1; --sala=tv lights the TV (seen from the bedroom door in Chapter 3), --sala=lights turns on the tube light
 SALA = OPT.get('sala', 'dark')
@@ -93,7 +96,7 @@ cyl('salaClockF', 0.14, 0.01, (TVX + 1.2, SY1 - 0.06, 2.0), mat_basic('clkF', (0
 box('salaShelf', (0.9, 0.4, 1.9), (TVX - 1.6, SY1 - 0.25, 0.95), frame, bevel=0.01)
 sofaM = mat_noise('sofaM', (0.08, 0.05, 0.04), (0.14, 0.09, 0.06), scale=8)
 box('sofaSeat', (1.8, 0.8, 0.42), (TVX + 0.2, SY0 + 1.0, 0.21), sofaM, bevel=0.04)
-area('salaMoon', (SX1 - 0.2, (SY0 + SY1) / 2, 2.0), (0, math.radians(-75), 0), 10, size=(1.2, 1.0), color=(0.4, 0.55, 1.0))
+if HALL_LIT: area('salaMoon', (SX1 - 0.2, (SY0 + SY1) / 2, 2.0), (0, math.radians(-75), 0), 10, size=(1.2, 1.0), color=(0.4, 0.55, 1.0))
 if SALA == 'tv':
     area('tvGlow', (TVX, SY1 - 0.75, 0.9), (math.radians(-90), 0, 0), 70, size=(0.56, 0.42), color=(0.5, 0.8, 1.0))
     point('tvSpill', (LX, HY1 + 0.6, 1.0), 12, color=(0.5, 0.8, 1.0), radius=0.3)
