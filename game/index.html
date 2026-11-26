@@ -1585,6 +1585,16 @@ if (typeof module !== 'undefined') module.exports = C1;
   // a long press anywhere (also on the black bars beside the game) must not open the browser's menu
   window.addEventListener('contextmenu', function (e) { e.preventDefault(); }, { capture: true });
   document.addEventListener('selectstart', function (e) { e.preventDefault(); }, { capture: true });
+  // Some phone browsers (and the itch app) open their own menu on a long press, without any contextmenu event: stop the
+  // touch's default everywhere except on things you tap (they still get their click; the game itself uses pointer events)
+  (function () {
+    var add = EventTarget.prototype.addEventListener;
+    EventTarget.prototype.addEventListener = function (type) { if (type === 'click' && this.setAttribute) this.setAttribute('data-click', ''); return add.apply(this, arguments); };
+    add.call(document, 'touchstart', function (e) {
+      var t = e.target; if (t && t.closest && t.closest('button, a, input, select, textarea, label, [data-click], .scroll, #intro-rules, #cred, .credits')) return;
+      if (e.cancelable) e.preventDefault();
+    }, { passive: false, capture: true });
+  })();
   var $ = function (id) { return document.getElementById(id); };
   // preload only what Chapter 1 and the menu need (the house rooms load when Chapter 2 opens)
   var IMG = ['hero_kumot', 'hero_silip', 'menu_bed', 'menu_bed_off', 'menu_bed_off_lit', 'menu_morning', 'menu_living_on', 'menu_living_tvoff', 'c1_hub_off', 'c1_hub_off_lit'];
