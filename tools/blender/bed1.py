@@ -97,7 +97,7 @@ for s_ in (-1, 1):
     cc = bpy.context.active_object; cc.scale = (0.46, 1.9, 1); bpy.ops.object.transform_apply(scale=True)
     tt = bpy.data.textures.new('bct%d' % s_, 'WOOD'); tt.wood_type = 'BANDS'; tt.noise_basis_2 = 'SIN'; tt.noise_scale = 0.06
     dmm = cc.modifiers.new('d', 'DISPLACE'); dmm.texture = tt; dmm.strength = 0.05; dmm.texture_coords = 'OBJECT'
-    cc.modifiers.new('s', 'SOLIDIFY').thickness = 0.004; cc.data.materials.append(bcm)
+    cc.modifiers.new('s', 'SOLIDIFY').thickness = 0.004; cc.data.materials.append(bcm); cc.name = 'bcCurtain%d' % s_
     cc.rotation_euler = (math.radians(90), 0, 0); cc.location = (CX + s_ * 0.21, HY1 - 0.02, 1.02)
     if OPT.get('hcurtain', 'closed') == 'open': cc.scale = (0.45, 1, 1); cc.location.x = CX + s_ * 0.52   # drawn aside
 # the back door itself: a jalousie-glass door, shut; beyond it the back yard (Chapter 2: Silip comes from there)
@@ -169,7 +169,7 @@ if VIEW == 'under':   # an open bed frame you can lie under: legs, rails, slats
     hb_.rotation_euler = (math.radians(90), 0, math.radians(90)); hb_.location = (-0.84, 1.25, 0.43)
     hb_.data.materials.append(mat_floral('blanketHang', (0.22, 0.05, 0.045), (0.42, 0.26, 0.08), (0.12, 0.14, 0.06)))
     scatter = mat_noise('dust', (0.05, 0.04, 0.03), (0.09, 0.07, 0.05), scale=30)
-    box('slipperU', (0.1, 0.26, 0.03), (-0.5, 2.0, 0.015), mat_basic('slipU', (0.32, 0.26, 0.2), 0.9), rot=(0, 0, 0.6), bevel=0.02)
+    if False: box('slipperU', (0.1, 0.26, 0.03), (-0.5, 2.0, 0.015), mat_basic('slipU', (0.32, 0.26, 0.2), 0.9), rot=(0, 0, 0.6), bevel=0.02)
 else:
     box('bedFrame', (1.1, 2.0, 0.35), (-1.4, 1.4, 0.2), wood_dark, bevel=0.01)
 box('headboard', (1.1, 0.06, 1.0), (-1.4, 2.42, 0.5), wood_dark, bevel=0.01)
@@ -514,14 +514,29 @@ if JS:
     f = max(0, min(7, int(OPT.get('frame', 0)))); k = PROG[f]
     # who: (builder, start position, its face relative to its origin when facing -y, how close the face ends up)
     before = set(o.name for o in bpy.data.objects)
-    if JS == 'kumot':      build_kumot_batibat(0, 0); P0 = (dx - 0.15, D + 0.45, 0); FL = (0, -0.5, 2.12); DC = 0.6
-    elif JS == 'malikmata': build_tiyanak(0, 0, 0.0, crawl=True); P0 = LW(0.35, LDIM[1] - 1.0, 0); FL = (0, -0.34, 0.6); DC = 0.5
-    elif JS == 'kalansing': build_kalansing(0, 0); add_aswang_tongue(0, 0); P0 = KW(0.2, KDIM[1] - 0.9, 0); FL = (0, -0.66, 1.0); DC = 0.85
-    elif JS == 'silip':    build_manananggal(0, 0, 0, wing=0.8); P0 = (W / 2 + 0.6, WY, 1.05); FL = (0, -0.1, 0.66); DC = 0.8
-    elif JS == 'bangungot': build_kumot_batibat(0, 0); P0 = (-1.4, 0.05, 0.0); FL = (0, -0.5, 2.12); DC = 0.55
+    WPS = []; BREAK = (); LEAP = 0.0; WG = 0.8 if f < 2 else 0.22   # wings spread outside, folded to come through
+    DROP = 0.3; OP = None; LENS1 = 30
+    if JS == 'kumot':      build_kumot_batibat(0, 0); P0 = (dx + 0.3, D - 0.62, 0); FL = (0, -0.5, 2.12); DC = 0.5; DROP = 0.0   # forced in: already past the jambs and the flung-open door
+    elif JS == 'malikmata':
+        build_tiyanak(0, 0, 0.0, crawl=True); P0 = LW(0.35, LDIM[1] - 1.0, 0); FL = (0, -0.34, 0.6)   # leaps up over the stand fan in front of you and comes down at your face
+        OP = [(0.0, LW(0.35, LDIM[1] - 1.0, 0), 0, 1), (0.16, LW(0.1, 2.9, 0), 0, 1), (0.34, LW(-0.15, 2.3, 0.5), 0, 1), (0.56, LW(-0.3, 2.0, 1.5), 0, 1), (1.0, LW(-0.35, 1.8, 1.5), 0, 1)]
+    elif JS == 'kalansing':   # from the counter end she leaps onto the table (the bottle goes flying) and lunges off its edge
+        build_kalansing(0, 0); add_aswang_tongue(0, 0); FL = (0, -0.66, 1.0); P0 = KW(0.35, 2.75, 0); BREAK = ('k_bottle', 'k_cap')
+        OP = [(0.0, KW(0.35, 2.75, 0), 0, 1), (0.16, KW(0.15, 2.5, 0.95), 0, 1), (0.34, KW(-0.35, 1.75, 0.85), 0, 1), (0.56, KW(-0.6, 1.5, 0.82), 0, 1), (1.0, KW(-0.6, 1.35, 0.82), 0, 1)]
+    elif JS == 'kalh':     build_kalansing(0, 0); add_aswang_tongue(0, 0); P0 = KW(-0.75, 2.35, 0); FL = (0, -0.66, 1.0); DC = 0.75; LEAP = 0.3; BREAK = ('k_pamSlat', 'k_pamMid', 'k_pamKnob')   # tears the slatted doors off
+    elif JS == 'silip':    # dives through the window head first (her body pitched flat, wings folded, entrails trailing), then rises at you
+        build_manananggal(0, 0, 0, wing=WG); P0 = (W / 2 + 0.6, WY, 1.05); FL = (0, -0.1, 0.66); BREAK = ('bar', 'barH', 'cz', 'sashV')
+        OP = [(0.0, (W / 2 + 0.6, WY, 1.05), 0, 1), (0.16, (W / 2 + 0.55, WY, 1.5), 80, 1), (0.34, (W / 2 - 0.3, WY, 1.5), 80, 1), (0.56, (1.2, WY - 0.05, 1.3), 35, 1), (1.0, (1.0, WY - 0.05, 0.95), 0, 1)]
+    elif JS == 'silipc':   # smashes the jalousie door in (door and curtain gone), wings folded to fit the frame, then down the hall at you
+        WG = 0.6 if f < 2 else 0.22
+        build_manananggal(0, 0, 0, wing=WG); P0 = (CX + 0.35, HY1 + 0.9, 1.0); FL = (0, -0.1, 0.66); BREAK = ('bdStile', 'bdRail', 'bdSlat', 'bcCurtain')
+        OP = [(0.0, (CX + 0.35, HY1 + 0.9, 1.0), 0, 1), (0.16, (CX + 0.1, HY1 + 0.7, 1.0), 0, 1), (0.34, (CX, HY1, 1.0), 0, 1), (0.56, (CX + 0.01, HY1 - 0.5, 1.05), 0, 1), (1.0, (CX + 0.02, HY0 + 0.87, 1.0), 0, 1)]
+    elif JS == 'bangungot':   # beside the bed; then she is on it, hunched over you (the kulambo torn down), creeping up to your face
+        build_kumot_batibat(0, 0); P0 = (0.1, 1.1, 0.0); FL = (0, -0.5, 2.12); BREAK = ('kulambo',)
+        OP = [(0.0, (0.1, 1.1, 0), 0, 1), (0.16, (-1.25, 0.75, 0.78), 0, 0.55), (1.0, (-1.25, 1.25, 0.78), 0, 0.55)]
     elif JS == 'kumotu':   build_kumot_batibat(0, 0); P0 = (-0.15, 1.75, 0); FL = (0, -0.5, 2.12); DC = 0.42   # at the gap under the bed
     elif JS == 'malikh':   build_tiyanak(0, 0, 0.0, crawl=True); P0 = LW(0.3, 2.15, 0); FL = (0, -0.34, 0.6); DC = 0.42   # round the end of the sofa
-    elif JS == 'barang':   build_barang((0, 0, 0), 0.0, stage=4, glow=1.0); P0 = (fx - 0.05, AY + 0.1, 0); FL = (0, -0.23, 1.45); DC = 0.42
+    elif JS == 'barang':   build_barang((0, 0, 0), 0.0, stage=4, glow=1.0); P0 = (fx - 0.45, AY + 0.1, 0); FL = (0, -0.23, 1.45); DC = 0.42
     e = group_at(before, (0, 0, 0), 0.0)
     def aim(cam_, F_, tilt_, lens_):   # turn the camera to the face (with a lurch) and narrow the lens
         fwd_ = (F_ - cam_.location).normalized()
@@ -532,7 +547,7 @@ if JS:
         # Caught under the bed. She stands right at the gap with the blanket up; then she drags you out by the ankles (you
         # slide out along the floor, under the rail) and bends down over you. Nothing goes through the bed or the floor.
         cam = bpy.context.scene.camera; C0 = cam.location.copy(); lens0 = cam.data.lens; fwd0 = cam.matrix_world.to_quaternion() @ mathutils.Vector((0, 0, -1))
-        KA = mathutils.Vector((-0.15, 1.75, 0)); KB = mathutils.Vector((0.0, 2.4, 0)); C1 = mathutils.Vector((0.6, 0.75, 0.24))   # she steps back as she bends; you end 1.8 m from her feet
+        KA = mathutils.Vector((-0.15, 1.75, 0)); KB = mathutils.Vector((-0.15, 2.5, 0)); C1 = mathutils.Vector((0.05, 0.7, 0.24))   # she steps back as she bends; you end 1.8 m from her feet
         if f < 2:
             e.location = (-0.15 + SIDE[f], 1.75, 0); e.rotation_euler = (0, 0, math.radians(-52))
             aim(cam, C0 + fwd0 * 3, 0, lens0); F = face_at()
@@ -542,35 +557,61 @@ if JS:
             KP = KA.lerp(KB, min(1.0, qe * 1.5)); d_ = C1 - KP; e.location = KP; e.rotation_euler = (math.radians(56 * qe), 0, math.atan2(d_.x, -d_.y))
             F = face_at(); aim(cam, (cam.location + fwd0 * 3).lerp(F, min(1, 0.35 + qe)), TILT[f], lens0 + (30 - lens0) * qe)
         point('jsKey', tuple(F + mathutils.Vector((0.2, 0.15, 0.45))), 6 + 12 * k, color=(1.0, 0.75, 0.55), radius=0.15)
-    elif JS == 'malikh':
-        # Behind the sofa. It comes out from behind the arm to the left (never through the sofa), then springs at your face.
+    if OP is None and JS == 'malikh':   # behind the sofa: it goes round to the front, hops onto the seat and looms over the back at you
+        OP = [(0.0, LW(0.3, 2.15, 0), 0, 1), (0.16, LW(0.75, 2.1, 0), 0, 1), (0.34, LW(0.75, 2.1, 0.62), 0, 1), (0.56, LW(0.75, 1.45, 0.62), 0, 1), (1.0, LW(0.75, 1.4, 0.62), 0, 1)]; LENS1 = 44
+    if OP is not None:   # a path of (k, origin, pitch, height scale); it always faces you
         cam = bpy.context.scene.camera; C = cam.location.copy(); lens0 = cam.data.lens; fwd0 = cam.matrix_world.to_quaternion() @ mathutils.Vector((0, 0, -1))
-        P0v = mathutils.Vector(LW(0.3, 2.15, 0)); WP = mathutils.Vector(LW(-0.16, 1.65, 0)); Ch = mathutils.Vector((C.x, C.y, 0))
-        dirv = (WP - Ch).normalized(); P1 = Ch + dirv * 0.78 + mathutils.Vector((0, 0, 0.12))
-        if k < 0.4: O = P0v.lerp(WP, k / 0.4)
-        else: O = WP.lerp(P1, (k - 0.4) / 0.6)
-        O = O + mathutils.Vector((-dirv.y, dirv.x, 0)) * SIDE[f]
-        v_ = Ch - O; e.location = O; e.rotation_euler = (0, 0, math.atan2(-v_.x, v_.y) + math.pi)
-        F = face_at(); aim(cam, (C + fwd0 * 3).lerp(F, min(1, k * 1.4)), TILT[f], lens0 + (30 - lens0) * k)
-        point('jsKey', tuple(F + mathutils.Vector((0.15, 0.25, 0.4))), 4 + 8 * k, color=(0.6, 0.9, 1.0), radius=0.15)
-    if JS in ('kumotu', 'malikh') and f >= 3:
+        for i_ in range(len(OP) - 1):
+            if k <= OP[i_ + 1][0] or i_ == len(OP) - 2: a0, a1 = OP[i_], OP[i_ + 1]; break
+        u = max(0.0, min(1.0, (k - a0[0]) / max(1e-6, a1[0] - a0[0])))
+        if f < 2: a0, a1, u = OP[0], OP[0], 0.0   # frames 0-1: still where it was (only the twitch)
+        O = mathutils.Vector(a0[1]).lerp(mathutils.Vector(a1[1]), u); pit = a0[2] + (a1[2] - a0[2]) * u; zs = a0[3] + (a1[3] - a0[3]) * u
+        vv = C - O; yaw = math.atan2(vv.x, -vv.y)
+        side_ = mathutils.Vector((math.cos(yaw), math.sin(yaw), 0)) * SIDE[f]
+        e.location = O + side_; e.rotation_euler = (math.radians(pit), 0, yaw); e.scale = (1, 1, zs)
+        F = face_at(); aim(cam, (C + fwd0 * 3).lerp(F, min(1, k * 1.4)), TILT[f], lens0 + (LENS1 - lens0) * k)
+        point('jsKey', tuple(F + mathutils.Vector((0.2, 0.2, 0.45))), 5 + 9 * k, color=(1.0, 0.75, 0.55), radius=0.15)
+        if f >= 2 and BREAK:
+            for o in bpy.data.objects:
+                if o.name.startswith(BREAK): o.hide_render = True
+    if (JS == 'kumotu' or OP is not None) and f >= 3:
         src = cam.location + mathutils.Vector((0.05, 0, -0.05)); spot('jsTorch', tuple(src), (F - src).to_track_quat('-Z', 'Y').to_euler(), 5 + 12 * k, angle=math.radians(38), color=(1.0, 0.92, 0.8), blend=0.6)
-    if JS not in ('kumotu', 'malikh'):
+    if JS != 'kumotu' and OP is None:
+        # The lunge never goes through anything: it follows waypoints round furniture (WPS), what it breaks through is
+        # gone from frame 2 (BREAK), wings fold to pass an opening, and a walker stays on the floor and bends toward you
+        # instead of sinking into it (a leaper may leave the floor a little).
         cam = bpy.context.scene.camera; C = cam.location.copy(); bpy.context.view_layer.update()
         fwd0 = cam.matrix_world.to_quaternion() @ mathutils.Vector((0, 0, -1)); lens0 = cam.data.lens
+        FLv = mathutils.Vector(FL); GROUND = P0[2] <= 0.001
         def face_rot(F):   # turn so its front (-y) faces the camera
             v = C - F; return math.atan2(-v.x, v.y) + math.pi
         def place(F):
-            r = face_rot(F); e.rotation_euler = (0, 0, r)
-            off = mathutils.Matrix.Rotation(r, 3, 'Z') @ mathutils.Vector(FL); e.location = F - off
-        r0 = face_rot(mathutils.Vector(P0) + mathutils.Vector(FL)); F0 = mathutils.Vector(P0) + mathutils.Matrix.Rotation(r0, 3, 'Z') @ mathutils.Vector(FL)
-        d = (F0 - C); dh = mathutils.Vector((d.x, d.y, 0)).normalized()
+            r = face_rot(F); a_ = 0.0
+            if GROUND and F.z < FLv.z:   # bend forward from the feet until the face is at that height
+                lo, hi = 0.0, math.radians(85)
+                for _ in range(40):
+                    mid = (lo + hi) / 2
+                    if FLv.y * math.sin(mid) + FLv.z * math.cos(mid) > F.z: lo = mid
+                    else: hi = mid
+                a_ = (lo + hi) / 2
+            loc = mathutils.Vector((0, FLv.y * math.cos(a_) - FLv.z * math.sin(a_), FLv.y * math.sin(a_) + FLv.z * math.cos(a_)))
+            e.rotation_euler = (a_, 0, r); e.location = F - mathutils.Matrix.Rotation(r, 3, 'Z') @ loc
+            if GROUND and e.location.z < 0: e.location.z = 0
+        r0 = face_rot(mathutils.Vector(P0) + FLv); F0 = mathutils.Vector(P0) + mathutils.Matrix.Rotation(r0, 3, 'Z') @ FLv
+        pts = [F0] + [mathutils.Vector(w_) for w_ in WPS]
+        d = (pts[-1] - C); dh = mathutils.Vector((d.x, d.y, 0)).normalized()
         F1 = C + dh * DC + mathutils.Vector((0, 0, 0.04))
+        if GROUND: F1.z = max(FLv.z - DROP, min(F1.z, FLv.z + LEAP))   # a walker bends a little at most, a leaper leaves the floor a little
+        pts.append(F1)
+        segs = [(pts[i + 1] - pts[i]).length for i in range(len(pts) - 1)]; tot = sum(segs) or 1; t_ = k * tot
+        for i, L_ in enumerate(segs):
+            if t_ <= L_ or i == len(segs) - 1: F = pts[i].lerp(pts[i + 1], min(1, t_ / max(L_, 1e-6))); break
+            t_ -= L_
         side = mathutils.Vector((-dh.y, dh.x, 0)) * SIDE[f]
-        F = F0.lerp(F1, k) + side; place(F)
-        if JS == 'silip' and f >= 2:   # she comes through the window: grill and capiz give way
+        F = F + side; place(F)
+        if f >= 2 and BREAK:   # what it smashes through
             for o in bpy.data.objects:
-                if o.name.startswith(('bar', 'barH', 'cz', 'sashV')): o.hide_render = True
+                if o.name.startswith(BREAK): o.hide_render = True
         # a sick key light rides with it; from frame 3 your own light catches the face
         point('jsKey', tuple(F + mathutils.Vector((0.25, 0, 0.55))), 6 + 10 * k, color=(1.0, 0.75, 0.55), radius=0.15)
         if f >= 3:
@@ -580,6 +621,12 @@ if JS:
         fwd = (tgt - C).normalized()
         cam.rotation_euler = (mathutils.Quaternion(fwd, math.radians(TILT[f])) @ fwd.to_track_quat('-Z', 'Y')).to_euler()
         cam.data.lens = lens0 + (30 - lens0) * k
+    bpy.context.view_layer.update()
+    def _minz():
+        def kids(o): return [o] + [c for ch in o.children for c in kids(ch)]
+        return min((o.matrix_world @ mathutils.Vector(c)).z for o in kids(e) if o.type == 'MESH' for c in o.bound_box)
+    HEM = -0.2 if JS in ('kumot', 'kumotu', 'bangungot') else 0.0
+    if e.location.z < 0.05 and _minz() < HEM - 0.01: e.location.z += HEM - _minz()   # bending forward lifts the heels, it never sinks into the floor
     for o in bpy.data.objects:   # the bulb stutters as it comes
         if o.type == 'LIGHT' and f >= 2: o.data.energy *= (1.25 if f % 2 else 0.8)
 if 'lit' in OPT:   # the player's flashlight, from the camera
@@ -727,5 +774,33 @@ if 'pano' in OPT and VIEW in ('hub', 'living', 'kitchen'):
                 print('PROBE', pat, [round(min(xs), 1), round(min(ys), 1), round(max(xs) - min(xs), 1), round(max(ys) - min(ys), 1)])
         raise SystemExit
 
+if os.environ.get('CHECK') and JS:   # does the entity go through anything this frame? (instead of rendering)
+    import mathutils
+    from mathutils.bvhtree import BVHTree
+    bpy.context.view_layer.update(); dg = bpy.context.evaluated_depsgraph_get()
+    def kids(o): return [o] + [c for ch in o.children for c in kids(ch)]
+    ent = [o for o in kids(e) if o.type == 'MESH' and not o.hide_render]
+    def aabb(o):
+        vs = [o.matrix_world @ mathutils.Vector(c) for c in o.bound_box]
+        return [min(v[i] for v in vs) for i in range(3)], [max(v[i] for v in vs) for i in range(3)]
+    def ov(a, b, m=0.0): return all(a[0][i] - m <= b[1][i] and b[0][i] - m <= a[1][i] for i in range(3))
+    FLOORS = ('floor', 'hallfloor', 'yard', 'rug')
+    stat = [o for o in bpy.data.objects if o.type == 'MESH' and o not in ent and not o.hide_render and o.visible_get() and not any(o.name.lower().endswith(x) or o.name.lower() == x for x in FLOORS)]
+    ebox = {o.name: aabb(o) for o in ent}; hits = set(); minz = min(b[0][2] for b in ebox.values())
+    def bvh(o):
+        oe = o.evaluated_get(dg); me = oe.to_mesh(); me.transform(o.matrix_world)
+        t = BVHTree.FromPolygons([v.co.copy() for v in me.vertices], [tuple(p.vertices) for p in me.polygons]); oe.to_mesh_clear(); return t
+    cache = {}
+    for so in stat:
+        sb = aabb(so)
+        cand = [o for o in ent if ov(ebox[o.name], sb)]
+        if not cand: continue
+        try: ts = bvh(so)
+        except Exception: continue
+        for o in cand:
+            if o.name not in cache: cache[o.name] = bvh(o)
+            if cache[o.name].overlap(ts): hits.add(so.name + ('<' + o.name if os.environ.get('CHECK') == '2' else ''))
+    print('CHECK', JS, OPT.get('frame'), 'minz %.2f' % minz, sorted(hits))
+    raise SystemExit
 if OPT.get("pct"): bpy.context.scene.render.resolution_percentage = int(OPT["pct"])
 render(out)

@@ -91,7 +91,7 @@ def build_kitchen(KAL=False, LIT=False, KALIN=False):
     grime(W, D, H, seed=7, n=11, color=(0.04, 0.035, 0.02))
     from entities import build_kalansing, add_aswang_tongue
     if KALIN:   # inside the kitchen, searching beside the table (seen from the hiding cabinet)
-        build_kalansing(-0.6, 1.9); add_aswang_tongue(-0.6, 1.9)
+        build_kalansing(-0.9, 2.35); add_aswang_tongue(-0.9, 2.35)   # clear of the table
     elif KAL:   # in the doorway from the hall
         build_kalansing(1.3, D + 0.45); add_aswang_tongue(1.3, D + 0.45)
         import mathutils as _mu   # a tight rim on her only: the kitchen itself must not brighten when she arrives
