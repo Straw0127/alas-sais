@@ -612,13 +612,25 @@ if VIEW == 'walk':
         cam.location = mathutils.Vector((pos.x, pos.y, EYE - 0.02 + bob)) + side * sway
         cam.rotation_euler = rot_to(hv, -4 + 1.2 * walking * math.sin(ph), 1.4 * walking * math.sin(ph / 2))
         cam.keyframe_insert('location', frame=fr); cam.keyframe_insert('rotation_euler', frame=fr)
+    # the moon patch on the bedroom's back wall reads as a cold white slab when you walk past it: keep it soft and warm it
+    if 'moonWin' in bpy.data.objects: bpy.data.objects['moonWin'].data.energy *= 0.22
+    # which room each frame is in (the game grades every frame like that room's pictures)
+    def room_of(p):
+        if a_.startswith('c1'): return 'c1'
+        if p.y < D - 0.05: return 'bedroom'
+        if p.y > HY1 + 0.05: return 'living' if abs(p.x - LX) < 3.5 else 'curtain'
+        if p.x < XK - 0.1: return 'kitchen'
+        return 'hallway'
+    ROOMF = []
+    for fr in range(1, N + 1):
+        bpy.context.scene.frame_set(fr); ROOMF.append(room_of(mathutils.Vector((cam.location.x, cam.location.y))))
     # the room's own light follows you a little (so a dark hall is not black): a faint torch-less fill at the eye
     fill = point('walkFill', (pts[0].x, pts[0].y, 2.2), 2.5, color=(1.0, 0.75, 0.5), radius=0.3)
     for fr in range(1, N + 1, 4):
         sc.frame_set(fr); fill.location = (cam.location.x, cam.location.y, 2.3); fill.keyframe_insert('location', frame=fr)
     out_ = A_[0] if (A_ := [a for a in sys.argv if a.endswith('.png')]) else '/tmp/walk.png'
     base_ = out_[:-4]
-    json.dump({'route': OPT['route'], 'frames': N, 'fps': FPS, 'dur': round(N / FPS, 3), 'len': round(L, 2)}, open(base_ + '.json', 'w'))
+    json.dump({'route': OPT['route'], 'frames': N, 'fps': FPS, 'dur': round(N / FPS, 3), 'len': round(L, 2), 'rooms': ROOMF}, open(base_ + '.json', 'w'))
     if os.environ.get('WALK_INFO'): print('WALK', OPT['route'], round(L, 2), round(T, 2)); raise SystemExit
     sc.render.filepath = base_ + '_'; sc.render.image_settings.file_format = 'JPEG'; sc.render.image_settings.quality = 92
     bpy.ops.render.render(animation=True)

@@ -33,7 +33,7 @@ jobs:
         run: |
           mkdir -p out
           python tools/blender/bed1.py -- out/${{ matrix.name }}.png ${{ inputs.samples }} --view=walk --route=${{ matrix.route }} --fps=${{ inputs.fps }} --w=854 --h=480 ${{ matrix.opts }} > out/${{ matrix.name }}.log 2>&1 || (tail -40 out/${{ matrix.name }}.log; exit 1)
-          ffmpeg -v error -y -framerate ${{ inputs.fps }} -i out/${{ matrix.name }}_%04d.jpg -c:v libx264 -preset slow -crf 24 -pix_fmt yuv420p -movflags +faststart -an out/${{ matrix.name }}.mp4
+          ffmpeg -v error -y -framerate ${{ inputs.fps }} -i out/${{ matrix.name }}_%04d.jpg -c:v libx264 -preset slow -crf 17 -pix_fmt yuv420p -movflags +faststart -an out/${{ matrix.name }}.mp4
           ls -la out/${{ matrix.name }}.mp4; cat out/${{ matrix.name }}.json
       - if: steps.sel.outputs.skip != '1'
         uses: actions/upload-artifact@v4
