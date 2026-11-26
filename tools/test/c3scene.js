@@ -24,7 +24,7 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
   const waitRoom = (r) => page.waitForFunction((r) => { const g = window.__AS_UI.game; return g && !g.p.travel && g.p.room === r; }, { timeout: 15000 }, r);
   const calm = () => page.evaluate(() => { const g = window.__AS_UI.game; g.level = () => 0; g.m.cool = g.c.cool = g.s.cool = g.k.cool = 9999; });
   try {
-    await tapSel('#load-go'); await sleep(1000);
+    await tapSel('#load-go'); await sleep(700); await tapSel('#warn-go'); await sleep(800);
     await page.evaluate(() => { const s = window.__AS_UI.save; s.prog.c1 = 5; s.prog.c2 = 5; window.__AS_NOCALL = true; window.__AS_UI.startNight(0, 3); });
     await sleep(700); log.push('intro: ' + await page.evaluate(() => document.getElementById('intro-name').textContent)); await shot('c01_intro');
     await tapSel('#intro-go'); await sleep(1800); await calm();

@@ -679,7 +679,7 @@ if __name__ == '__main__':
         'plastic_crinkle': (plastic_crinkle, 0.6), 'breath_hold_gasp': (breath_hold, 0.85), 'distant_scream': (distant_scream, 0.6),
         'rain_heavy': (rain_heavy, 0.75),
         'wing_flap': (lambda: wing_flap(5, False), 0.7), 'wing_flap_far': (lambda: wing_flap(4, True), 0.5), 'wind_gust': (wind_gust, 0.7),
-        'beetles': (beetles, 0.5), 'beetle_scatter': (beetle_scatter, 0.7), 'aparador_creak': (aparador_creak, 0.7), 'kumot_breath': (kumot_breath, 0.75),
+        'beetles': (beetles, 0.5), 'beetle_scatter': (beetle_scatter, 0.7), 'aparador_creak': (aparador_creak, 0.7), 'kumot_breath': (kumot_breath, 0.95),
         'theme_menu': (theme_menu, 0.6),
         'step_w1': (lambda: step_one('wood', False, 0.25, 1), 0.55), 'step_w2': (lambda: step_one('wood', False, 0.25, 2), 0.55), 'step_w3': (lambda: step_one('wood', False, 0.25, 3), 0.55),
         'step_c1': (lambda: step_one('cement', False, 0.35, 4), 0.55), 'step_c2': (lambda: step_one('cement', False, 0.35, 5), 0.55), 'step_c3': (lambda: step_one('cement', False, 0.35, 6), 0.55),

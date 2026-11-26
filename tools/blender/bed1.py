@@ -433,7 +433,9 @@ elif VIEW == 'curtain':     # facing the back door at the start of the hall
         cf_ = point('curtainFill', (CX + 0.1, D + 0.35, 2.2), 6, color=(1.0, 0.62, 0.32), radius=0.25); cf_.visible_glossy = False; cf_.visible_transmission = False
     camera((CX + 0.02, D + 0.12, 1.5), (CX - 0.03, HY1 + 4.0, 1.4), lens=19)
 elif VIEW == 'living':
-    camera(LW(-0.35, 1.0, 1.55), LW(0.25, LDIM[1], 1.1), lens=22)
+    if 'pano' in OPT:   # turnable view from beside the sofa's far end: the sofa to hide behind on the left, the TV on the right
+        camera(LW(2.05, 2.35, 1.55), LW(-2.5, 2.7, 1.2), lens=22)
+    else: camera(LW(-0.35, 1.0, 1.55), LW(0.25, LDIM[1], 1.1), lens=22)
 elif VIEW == 'plan':   # debug: the whole house from above, cut at ceiling height
     c_ = camera((dx - 2.0, D + 0.8, 12), (dx - 2.0, D + 0.8, 0), lens=30)
     c_.data.type = 'ORTHO'; c_.data.ortho_scale = 15; c_.data.clip_start = 9.5
@@ -487,4 +489,18 @@ if 'lit' in OPT:   # the player's flashlight, from the camera
     cam = bpy.context.scene.camera; src = cam.location.copy() + mathutils.Vector((0.15, -0.1, -0.15))
     tgt = {'scare': (fx, AY + 0.14, 1.4), 'hero': (fx, AY + 0.12, 1.3), 'cabinet': (fx, AY + 0.1, 1.25), 'door': (dx, D + 1.5, 1.3), 'hub': (0.3, 3.8, 1.2), 'window': (W / 2 + 0.6, WY, 1.45)}[VIEW]
     spot('flash', tuple(src), (mathutils.Vector(tgt) - src).to_track_quat('-Z', 'Y').to_euler(), 160, angle=math.radians(44), color=(1.0, 0.93, 0.8), blend=0.75) if VIEW != 'scare' else spot('flash', (fx - 0.55, AY - 0.25, 0.85), (mathutils.Vector((fx, AY + 0.12, 1.45)) - mathutils.Vector((fx - 0.55, AY - 0.25, 0.85))).to_track_quat('-Z', 'Y').to_euler(), 14, angle=math.radians(40), color=(1.0, 0.8, 0.65), blend=0.8)
+if 'pano' in OPT and VIEW in ('hub', 'living', 'kitchen'):
+    # Room views you can turn in (slide left / right in the game): a level equirectangular panorama around the same
+    # spot, centred on the same heading, its vertical range shifted to keep the old downward tilt.
+    import mathutils
+    cam = bpy.context.scene.camera; bpy.context.view_layer.update()
+    fwd = cam.matrix_world.to_quaternion() @ mathutils.Vector((0, 0, -1))
+    yaw = math.atan2(fwd.y, fwd.x); pitch = math.asin(max(-1, min(1, fwd.z)))
+    LON, LAT = {'hub': (152, 62), 'living': (150, 52), 'kitchen': (150, 54)}[VIEW]
+    cam.rotation_euler = mathutils.Vector((math.cos(yaw), math.sin(yaw), 0)).to_track_quat('-Z', 'Y').to_euler()
+    cd = cam.data; cd.type = 'PANO'; cd.panorama_type = 'EQUIRECTANGULAR'
+    cd.longitude_min = math.radians(-LON / 2); cd.longitude_max = math.radians(LON / 2)
+    cd.latitude_min = pitch + math.radians(-LAT / 2); cd.latitude_max = pitch + math.radians(LAT / 2)
+    sc_ = bpy.context.scene; sc_.render.resolution_y = 720; sc_.render.resolution_x = int(round(720 * LON / LAT / 2) * 2)
+
 render(out)

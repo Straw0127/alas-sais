@@ -26,7 +26,7 @@ for f in os.listdir(W):
     b = os.path.join(D, f[:-4] + '.webp'); a = os.path.join(W, f)
     if os.path.exists(b) and os.path.getmtime(b) > os.path.getmtime(a): continue
     im = Image.open(a); im = im.crop(im.getbbox()); im.save(b, 'WEBP', quality=88, method=6)
-a = '/home/claude/render/out/final/ui_phone.png'; b = os.path.join(D, 'phone.webp')
+a = '/home/claude/render/out/ui/ui_phone.png'; b = os.path.join(D, 'phone.webp')
 if os.path.exists(a) and (not os.path.exists(b) or os.path.getmtime(b) < os.path.getmtime(a)):
     Image.open(a).save(b, 'WEBP', quality=90, method=6)
 PY

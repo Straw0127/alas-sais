@@ -14,7 +14,7 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
   await page.evaluateOnNewDocument(() => { localStorage.clear(); window.__AS_NOCALL = true; });
   await page.goto('http://127.0.0.1:8765/index.html', { waitUntil: 'networkidle0' });
   await page.waitForFunction(() => document.getElementById('load-go').style.visibility === 'visible', { timeout: 60000 });
-  await page.click('#load-go'); await sleep(800);
+  await page.click('#load-go'); await sleep(600); await page.click('#warn-go'); await sleep(700);
   await page.evaluate(BOT + '; window.__bot = bot;');
   try {
     for (let n = 0; n < 5; n++) {

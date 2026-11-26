@@ -23,7 +23,7 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
   const shot = (n) => page.screenshot({ path: OUT + '/' + n + '.png' });
   const waitRoom = (r) => page.waitForFunction((r) => { const g = window.__AS_UI.game; return g && !g.p.travel && g.p.room === r; }, { timeout: 15000 }, r);
   try {
-    await tapSel('#load-go'); await sleep(1000);
+    await tapSel('#load-go'); await sleep(700); await tapSel('#warn-go'); await sleep(800);
     await page.evaluate(() => { const s = window.__AS_UI.save; s.prog.c1 = 5; s.prog.c2 = 4; window.__AS_UI.startNight(3, 2); });
     await sleep(800); await shot('b01_intro'); log.push('intro: ' + await page.evaluate(() => document.getElementById('intro-name').textContent));
     await tapSel('#intro-go'); await sleep(1500); await shot('b02_ring');

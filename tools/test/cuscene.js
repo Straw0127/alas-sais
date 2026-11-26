@@ -10,10 +10,10 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
   await page.goto('http://127.0.0.1:8765/index.html', { waitUntil: 'networkidle0' });
   await page.waitForFunction(() => document.getElementById('load-go').style.visibility === 'visible', { timeout: 60000 });
   try {
-    await page.click('#load-go'); await sleep(800);
+    await page.click('#load-go'); await sleep(600); await page.click('#warn-go'); await sleep(700);
     await page.evaluate(() => { const s = window.__AS_UI.save; s.prog = { c1: 5, c2: 5, c3: 7 }; s.custom.unlocked = true; window.__AS_UI.toMenu(); }); await sleep(600);
     log.push('custom enabled: ' + await page.evaluate(() => !document.getElementById('m-custom').disabled));
-    await page.click('#m-custom'); await sleep(500);
+    await page.evaluate(() => document.getElementById('m-custom').click()); await sleep(500);
     log.push('modes: ' + await page.evaluate(() => document.querySelectorAll('#cu-modes .cumode').length) + ' sliders: ' + await page.evaluate(() => document.querySelectorAll('#cu-ai .cuent').length));
     await page.screenshot({ path: __dirname + '/shots6/cu1.png' });
     await page.evaluate(() => document.querySelectorAll('#cu-modes .cumode')[7].click()); await sleep(200);

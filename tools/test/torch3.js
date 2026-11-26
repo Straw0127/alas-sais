@@ -8,7 +8,7 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
   await page.evaluateOnNewDocument(() => { localStorage.clear(); });
   await page.goto('http://127.0.0.1:8765/index.html', { waitUntil: 'networkidle0' });
   await page.waitForFunction(() => document.getElementById('load-go').style.visibility === 'visible', { timeout: 60000 });
-  await page.click('#load-go'); await sleep(800);
+  await page.click('#load-go'); await sleep(600); await page.click('#warn-go'); await sleep(700);
   await page.evaluate(() => { window.__AS_NOCALL = true; window.__AS_UI.startNight(5, 3); }); await sleep(600);
   await page.click('#intro-go'); await sleep(1800);
   await page.evaluate(() => { const g = window.__AS_UI.game; g.level = () => 0; window.__AS_UI.go('kitchen'); });

@@ -34,7 +34,7 @@
     <div id="clock"><b id="clock-t">12:00 AM</b><span id="clock-n">NIGHT 1</span></div>
     <div id="topr">
       <div class="chip" id="salt" style="display:none">ASIN <b id="salt-n">2</b></div>
-      <div class="chip"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#e9dfcb" stroke-width="2" aria-hidden="true"><path d="M8 3h8l-1 6H9z"/><rect x="9" y="9" width="6" height="12" rx="1"/></svg><div class="bar"><i id="batt-i"></i></div></div>
+      <div class="chip batt"><img id="batt-img" src="assets/ui/bat_5.webp" alt="Phone battery"><i id="batt-i" style="display:none"></i></div>
       <button id="runBtn" class="pe chip" type="button">WALK</button>
       <button id="pauseBtn" class="pe" type="button" aria-label="Pause">II</button>
     </div>
@@ -55,11 +55,20 @@
 
   <!-- screens -->
   <div id="scr-load" class="scr"><div class="center">
-    <h1 class="logo">ALAS-SAIS</h1>
+    <h1 class="logo"><img class="wlogo" src="assets/ui/logo.webp" alt="ALAS-SAIS" style="height:110px;margin:0 auto"></h1>
     <div id="loadBar"><i id="load-i"></i></div>
     <p class="sub" id="load-msg">Loading</p>
     <button class="cta red" id="load-go" type="button" style="visibility:hidden">▶ PLAY</button>
     <p class="note" data-t="headphones"></p>
+  </div></div>
+
+  <div id="scr-warn" class="scr"><div class="center warnbox">
+    <div class="warn-ico" aria-hidden="true">!</div>
+    <h3>WARNING &nbsp;·&nbsp; BABALA</h3>
+    <p>This game contains <b>flashing lights</b>, <b>sudden loud sounds</b>, <b>jumpscares</b> and dark, frightening scenes. It may not be suitable for players with photosensitive epilepsy, heart conditions or anxiety. Headphones recommended.</p>
+    <p class="fil">May <b>kumikislap na ilaw</b>, <b>biglang malalakas na tunog</b>, <b>jumpscare</b> at nakakatakot na eksena ang larong ito. Maaaring hindi ito angkop sa may photosensitive epilepsy, sakit sa puso o anxiety. Mas maganda kung may headphones.</p>
+    <p class="dim">You can soften scares and motion in Settings · Mapapalambot ang takot at galaw sa Settings</p>
+    <button class="cta red" id="warn-go" type="button">I UNDERSTAND · NAIINTINDIHAN KO</button>
   </div></div>
 
   <div id="scr-menu" class="scr" style="background:#000">
@@ -80,12 +89,12 @@
     <p class="note" style="position:absolute;left:90px;bottom:26px" data-t="headphones"></p>
   </div>
 
-  <div id="scr-nights" class="scr"><div class="panel">
+  <div id="scr-nights" class="scr dossier"><div class="panel">
     <h2 data-t="chapters"></h2><div id="night-list" class="chlist"></div>
-    <div><button class="cta" id="n-back" type="button" data-t="back"></button></div>
+    <div><button class="cta back" id="n-back" type="button" data-t="back"></button></div>
   </div></div>
 
-  <div id="scr-custom" class="scr"><div class="panel">
+  <div id="scr-custom" class="scr dossier"><div class="panel">
     <h2 data-t="custom_night"></h2>
     <div id="cu-modes" class="cumodes"></div>
     <div id="cu-ai" class="cuai"></div>
@@ -93,37 +102,34 @@
     <div class="row2"><button class="cta red" id="cu-go" type="button" data-t="cu_start"></button><button class="cta" id="cu-back" type="button" data-t="back"></button></div>
   </div></div>
 
-  <div id="scr-settings" class="scr"><div class="panel">
+  <div id="scr-settings" class="scr dossier"><div class="panel">
     <h2 data-t="settings"></h2>
     <div class="grid3">
-      <div style="display:flex;flex-direction:column;gap:18px">
+      <section class="sect"><h4 data-t="sec_display"></h4>
         <div class="field"><span data-t="language"></span><div class="seg"><button class="btn langbtn" data-lang="en" type="button">English</button><button class="btn langbtn" data-lang="fil" type="button">Filipino</button></div></div>
-        <div class="field"><span data-t="graphics"></span><div class="seg"><button class="btn" data-gfx="low" type="button"></button><button class="btn" data-gfx="medium" type="button"></button><button class="btn" data-gfx="high" type="button"></button></div></div>
-        <div class="field"><span data-t="fullscreen"></span><button class="btn" id="s-full" type="button" data-t="fullscreen"></button></div>
-        <div class="field"><span data-t="save_code"></span><p class="note" data-t="save_note" style="margin:2px 0 6px"></p>
-          <input id="s-code" type="text" spellcheck="false" autocomplete="off" style="width:100%;font:12px monospace;padding:6px;background:#111;color:#ddd;border:1px solid #444;border-radius:6px">
-          <div class="seg"><button class="btn" id="s-copy" type="button" data-t="code_copy"></button><button class="btn" id="s-load" type="button" data-t="code_load"></button></div>
-          <p class="note" id="s-code-msg"></p></div>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:14px">
+        <div class="field"><span data-t="graphics"></span><div class="seg"><button class="btn" data-gfx="low" type="button"></button><button class="btn" data-gfx="medium" type="button"></button><button class="btn" data-gfx="high" type="button"></button></div><small class="hintline" id="gfx-note"></small></div>
+        <div class="field"><button class="btn wide" id="s-full" type="button" data-t="fullscreen"></button></div>
+      </section>
+      <section class="sect"><h4 data-t="sec_sound"></h4>
         <label class="field"><span><span data-t="master"></span> <b id="vl-master"></b></span><input type="range" id="v-master" min="0" max="100"></label>
         <label class="field"><span><span data-t="sfx"></span> <b id="vl-sfx"></b></span><input type="range" id="v-sfx" min="0" max="100"></label>
         <label class="field"><span><span data-t="amb"></span> <b id="vl-amb"></b></span><input type="range" id="v-amb" min="0" max="100"></label>
         <label class="field"><span><span data-t="music"></span> <b id="vl-music"></b></span><input type="range" id="v-music" min="0" max="100"></label>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:18px">
-        <div class="field tog"><span data-t="motion"></span><button class="btn" id="t-mot" type="button"></button></div>
-        <div class="field tog"><span data-t="reduced"></span><button class="btn" id="t-red" type="button"></button></div>
-        <p class="note">Keyboard: 1 door · 2 window · 3 aparador · S back · H hide · SPACE hold · F flashlight · Esc pause</p>
-      </div>
+      </section>
+      <section class="sect"><h4 data-t="sec_comfort"></h4>
+        <div class="field tog"><span data-t="motion"></span><button class="sw" id="t-mot" type="button" role="switch"></button></div>
+        <div class="field tog"><span data-t="reduced"></span><button class="sw" id="t-red" type="button" role="switch"></button></div>
+        <p class="note" data-t="autosave_note"></p>
+        <p class="note dim">Keyboard: 1 door · 2 window · 3 aparador · S back · H hide · SPACE hold · F flashlight · Esc pause</p>
+      </section>
     </div>
-    <div><button class="cta" id="s-back" type="button" data-t="back"></button></div>
+    <div><button class="cta back" id="s-back" type="button" data-t="back"></button></div>
   </div></div>
 
-  <div id="scr-credits" class="scr"><div class="panel">
-    <h2 data-t="credits"></h2>
-    <div class="cred"><div class="cred-title">ALAS-SAIS</div><div class="cred-by" data-t="made_by"></div><p class="cred-desc" data-t="made_desc"></p><p class="cred-attr" data-t="attributions"></p></div>
-    <div><button class="cta" id="c-back" type="button" data-t="back"></button></div>
+  <div id="scr-credits" class="scr dossier"><div class="panel cpanel">
+    <img class="clogo" src="assets/ui/logo.webp" alt="ALAS-SAIS">
+    <div class="cred"><div class="cred-by" data-t="made_by"></div><p class="cred-desc" data-t="made_desc"></p><hr><p class="cred-attr" data-t="attributions"></p></div>
+    <div><button class="cta back" id="c-back" type="button" data-t="back"></button></div>
   </div></div>
 
   <div id="scr-phone" class="scr">

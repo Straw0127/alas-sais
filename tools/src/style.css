@@ -244,7 +244,7 @@ img.w6am{display:block;height:120px;width:auto;margin:0 auto;filter:drop-shadow(
 .mi:disabled img.wm{opacity:.32}
 .mi{align-items:center}
 /* the phone: a Blender-rendered handset, the call screen drawn on its glass */
-.pp-phone,#phone{background:url(assets/ui/phone.webp) center/100% 100% no-repeat !important;border:0 !important;border-radius:0 !important;box-shadow:none !important}
+.pp-phone,#phone{background-color:transparent !important;background-position:center;border:0 !important;border-radius:0 !important;box-shadow:none !important}
 .pp-phone{position:relative;width:300px;height:600px;padding:38px 30px !important;filter:drop-shadow(0 30px 40px rgba(0,0,0,.9))}
 .pp-phone::before,#phone::before{content:"";position:absolute;left:10%;top:6.33%;width:80%;height:87.33%;border-radius:17px;background:linear-gradient(180deg,#16241a 0%,#0c140e 45%,#050806 100%);z-index:0}
 .pp-phone>*,#phone>*{position:relative;z-index:1}
@@ -256,7 +256,7 @@ img.w6am{display:block;height:120px;width:auto;margin:0 auto;filter:drop-shadow(
 .pp-btns button{flex:0 0 auto !important;width:76px;min-height:76px !important;border-radius:50% !important;font:600 0px Inter,sans-serif !important;position:relative;box-shadow:0 0 0 8px rgba(46,125,50,.18),0 0 0 16px rgba(46,125,50,.08);animation:ansp 1.4s ease-in-out infinite}
 .pp-btns button::after{content:"";position:absolute;inset:0;background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='white' d='M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1A17 17 0 0 1 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1l-2.3 2.2z'/></svg>") center/34px no-repeat}
 @keyframes ansp{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
-#phone{width:220px !important;height:440px;padding:30px 24px !important;left:30px !important;bottom:-150px !important;transform:translateY(130%) rotate(-5deg);filter:drop-shadow(0 20px 30px rgba(0,0,0,.9))}
+#phone{width:220px !important;height:440px;padding:30px 24px !important;left:30px !important;bottom:-60px !important;transform:translateY(130%) rotate(-5deg);filter:drop-shadow(0 20px 30px rgba(0,0,0,.9))}
 #phone.show{transform:translateY(0) rotate(-5deg)}
 #phone.talk{width:220px !important;padding:30px 24px !important}
 #phone .ph-top{background:none !important;padding:4px 2px !important;font:500 11px Inter,sans-serif !important;color:#cfd8cc !important;letter-spacing:.5px !important}
@@ -277,3 +277,85 @@ img.w6am{display:block;height:120px;width:auto;margin:0 auto;filter:drop-shadow(
 #hot.c1 .spot .lbl{opacity:.92}
 #hot.c1 .spot.gesture .lbl{display:block;top:auto;bottom:6%;transform:translateX(-50%);background:rgba(0,0,0,.55);font:500 15px Oswald,sans-serif;letter-spacing:2px}
 #hot.c1 .spot.exit .lbl{opacity:.85}
+
+.chip.batt{padding:6px 10px}
+#batt-img{height:26px;width:auto;display:block}
+#batt-img.low{animation:lowbat 1s steps(2) infinite}
+@keyframes lowbat{50%{opacity:.35}}
+
+/* phone screens are pictures now: hide the old text, keep the clock (digit images) and invisible buttons over the drawn ones */
+.pp-phone,#phone{background-size:100% 100% !important;background-repeat:no-repeat !important}
+.pp-phone::before,#phone::before{display:none !important}
+#phone .ph-top,#phone .ph-who,.pp-scr,.pp-top{visibility:hidden}
+#ph-time,#pp-time{visibility:visible;position:absolute;left:0;right:0;top:51.5%;display:flex;justify-content:center;gap:0}
+#ph-time img{height:22px}#pp-time img{height:30px}
+#phone .ph-btns,.pp-btns{position:absolute !important;inset:0;padding:0 !important;display:block !important}
+#phone .ph-btns button,.pp-btns button{position:absolute !important;top:72.6%;width:23% !important;height:11.5% !important;min-height:0 !important;margin:0;border-radius:50% !important;background:transparent !important;box-shadow:none !important;animation:none !important;font-size:0 !important;color:transparent !important}
+#phone .ph-btns button::after,.pp-btns button::after{display:none !important}
+#ph-dec{left:20.2% !important}#ph-ans{left:56.8% !important}
+#phone.talk #ph-dec{left:38.5% !important}
+.pp-btns button{left:38.5%}
+.talking .pp-btns{visibility:hidden}
+#phone{padding:0 !important}
+.pp-phone{padding:0 !important}
+
+#hot{transition:opacity .2s}
+#hot.moving{opacity:0}
+
+/* ---------- menus redesigned: the room behind, blurred and dark; titles in Blender lettering; typewriter notes ---------- */
+.dossier{background:#050505}
+.dossier::before{content:"";position:absolute;inset:-30px;background:url(assets/img/c1_hub.jpg) center/cover;filter:blur(14px) brightness(.28) saturate(.7);transform:scale(1.05)}
+.dossier::after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 30% 40%,transparent 20%,rgba(0,0,0,.75) 85%),repeating-linear-gradient(0deg,rgba(255,255,255,.015) 0 1px,transparent 1px 3px);pointer-events:none}
+.dossier .panel{background:linear-gradient(90deg,rgba(6,6,6,.88),rgba(6,6,6,.62));border:0;border-left:3px solid #6b1d16;z-index:1;padding:34px 48px}
+.dossier h2 img.wm{height:46px;width:auto;display:block;filter:drop-shadow(0 4px 10px #000)}
+.dossier h2{margin-bottom:6px}
+.sect{display:flex;flex-direction:column;gap:16px;padding-top:4px}
+.sect h4{margin:0 0 2px;font:400 15px 'Special Elite',monospace;letter-spacing:3px;text-transform:uppercase;color:#c94a3a;border-bottom:1px solid rgba(201,74,58,.35);padding-bottom:6px}
+.dossier .field{font:400 15px 'Special Elite',monospace;color:#d8cdb8;letter-spacing:.5px}
+.dossier .field b{color:#e0a24a;font-weight:400}
+.dossier .seg{gap:0;border:1px solid #3a2f27;border-radius:6px;overflow:hidden}
+.dossier .seg .btn{border:0;border-radius:0;background:rgba(0,0,0,.35);font:500 15px Oswald,sans-serif;letter-spacing:2px;text-transform:uppercase;min-height:44px;color:#a39886}
+.dossier .seg .btn+.btn{border-left:1px solid #3a2f27}
+.dossier .seg .btn.cur{background:#6b1d16;color:#f1e6d2}
+.dossier .btn.wide{width:100%;min-height:46px;font:500 15px Oswald,sans-serif;letter-spacing:3px;text-transform:uppercase;border-radius:6px;border-color:#3a2f27;background:rgba(0,0,0,.35)}
+.hintline{font:400 12px Inter,sans-serif;color:#8a8070;letter-spacing:.2px}
+.dossier input[type=range]{-webkit-appearance:none;appearance:none;height:26px;background:transparent}
+.dossier input[type=range]::-webkit-slider-runnable-track{height:4px;background:linear-gradient(90deg,#8e2219,#3a2f27);border-radius:2px}
+.dossier input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;margin-top:-8px;border-radius:50%;background:#e9dfcb;border:3px solid #8e2219;box-shadow:0 0 10px rgba(142,34,25,.7)}
+.dossier input[type=range]::-moz-range-track{height:4px;background:#3a2f27}
+.dossier input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:#e9dfcb;border:3px solid #8e2219}
+.sw{position:relative;width:64px;height:32px;border-radius:16px;border:1px solid #3a2f27;background:rgba(0,0,0,.45);color:transparent;font-size:0;cursor:pointer;flex:none}
+.sw::after{content:"";position:absolute;left:4px;top:4px;width:22px;height:22px;border-radius:50%;background:#6f665a;transition:left .18s,background .18s}
+.sw.on{background:#6b1d16;border-color:#8e2219}.sw.on::after{left:36px;background:#f1e6d2}
+.dossier .note{font:400 13px Inter,sans-serif;color:#9d9483}.dossier .note.dim{color:#6f675c;font-size:12px}
+.cta.back{border:0;padding:0 4px;font:500 18px Oswald,sans-serif;letter-spacing:5px;color:#c9bfab}
+.cta.back::before{content:"‹  "}.cta.back:hover{color:#fff}
+/* chapters: three stills of the house */
+.dossier .chlist{gap:16px}
+.dossier .chcard{position:relative;min-height:330px;justify-content:flex-end;padding:20px;border:1px solid rgba(233,223,203,.12);border-radius:4px;background-size:cover;background-position:center;box-shadow:0 18px 40px rgba(0,0,0,.6)}
+.chnum{position:absolute;left:18px;top:6px;font:700 76px Oswald,sans-serif;color:rgba(233,223,203,.16);line-height:1}
+.chlock{position:absolute;right:14px;top:14px;font:400 13px 'Special Elite',monospace;letter-spacing:3px;color:#c94a3a;border:1px solid rgba(201,74,58,.5);padding:3px 8px;text-transform:uppercase}
+.dossier .chcard h3{font:500 26px Oswald,sans-serif;letter-spacing:2px;color:#f1e6d2}
+.dossier .chcard p{font:400 14px 'Special Elite',monospace;color:#c9bfab}
+.dossier .chcard.locked{opacity:1;filter:grayscale(1) brightness(.55)}
+.dossier .chnights button{width:44px;height:44px;border-radius:50%;border:1px solid rgba(233,223,203,.35);background:rgba(0,0,0,.55);color:#e9dfcb;font:500 17px Oswald,sans-serif}
+.dossier .chnights button.done{background:#6b1d16;border-color:#8e2219}
+.dossier .chnights button:disabled{opacity:.3}
+/* credits */
+.cpanel{align-items:center;justify-content:center;text-align:center}
+.clogo{height:110px;width:auto;filter:drop-shadow(0 8px 24px #000)}
+.cpanel .cred{align-items:center;max-width:760px}
+.cpanel .cred-by{font:400 26px 'Special Elite',monospace;letter-spacing:2px;color:#d0574a}
+.cpanel .cred-desc{font:400 18px Inter,sans-serif;color:#e9dfcb}
+.cpanel hr{width:120px;border:0;border-top:1px solid rgba(201,74,58,.5);margin:6px auto}
+.cpanel .cred-attr{font:400 13px Inter,sans-serif;color:#8f8676}
+/* warning before the menu */
+#scr-warn{background:radial-gradient(ellipse at 50% 40%,#1a0c0a,#000 70%)}
+.warnbox{max-width:860px;text-align:center;gap:14px}
+.warn-ico{width:74px;height:74px;margin:0 auto;border:3px solid #c94a3a;border-radius:50%;font:700 44px Oswald,sans-serif;color:#c94a3a;line-height:66px;animation:pulse 1.6s ease-in-out infinite}
+.warnbox h3{margin:4px 0;font:700 32px Oswald,sans-serif;letter-spacing:8px;color:#e9dfcb}
+.warnbox p{margin:0;font:400 18px/1.55 Inter,sans-serif;color:#d8cdb8}
+.warnbox p.fil{font-family:'Special Elite',monospace;font-size:16px;color:#b9ae99}
+.warnbox p.dim{font-size:13px;color:#7d7466}
+.warnbox b{color:#e0a24a;font-weight:600}
+.dossier .field.tog{flex-direction:row;align-items:center;justify-content:space-between}

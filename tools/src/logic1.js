@@ -31,7 +31,8 @@ var C1 = (function () {
     };
     function emit(type, data) { g.events.push({ type: type, data: data || {} }); }
     g.emit = emit;
-    function level(who) { var L = N[who]; if (!L) return 0; var h = g.hour(); return L[h < 2 ? 0 : h < 4 ? 1 : 2]; }
+    var EASE = 0.66;   // story difficulty: tense but fair (custom nights are not eased)
+    function level(who) { var L = N[who]; if (!L) return 0; var h = g.hour(); return Math.round(L[h < 2 ? 0 : h < 4 ? 1 : 2] * EASE); }
     function diff(who) { return level(who) / 20; }
     function roll(who) { return rng() * 20 < level(who); }
     // fairness: on the early nights only one thing comes for you at a time; later, at most two
@@ -184,9 +185,9 @@ var C1 = (function () {
         p.travel.left -= dt;
         if (p.travel.left <= 0) { var to = p.travel.to, fr = p.travel.from; p.travel = null; p.pos = to; emit('arrive', { to: to, from: fr }); if (to === 'bed') emit('hide'); if (fr === 'bed') emit('unhide'); }
       }
-      if (p.light) { p.battery -= dt * (g.house.power ? 2.0 : 1.6); if (p.battery <= 0) { p.battery = 0; p.light = false; emit('light', { on: false }); emit('battery_dead'); } }
+      if (p.light) { p.battery -= dt * (g.house.power ? 0.6 : 0.5); if (p.battery <= 0) { p.battery = 0; p.light = false; emit('light', { on: false }); emit('battery_dead'); } }
       if (p.peek > 0) {   // the light is on down the hall: it drains, and shows her wherever she moves to
-        p.battery -= dt * 2.2;
+        p.battery -= dt * 0.7;
         if (p.battery <= 0) { p.battery = 0; p.peek = 0; emit('peek_off'); emit('battery_dead'); }
         else { var ps = g.k.on ? Math.min(3, g.k.st) : 0; if (ps !== p.peekSt) { p.peekSt = ps; emit('peek', { st: ps, moved: true }); } }
       }

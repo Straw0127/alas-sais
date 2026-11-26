@@ -13,26 +13,18 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
   await page.goto('http://127.0.0.1:8765/index.html', { waitUntil: 'networkidle0' });
   await page.waitForFunction(() => document.getElementById('load-go').style.visibility === 'visible', { timeout: 60000 });
   const click = (sel) => page.evaluate((s) => document.querySelector(s).click(), sel);
-  await click('#load-go'); await sleep(800);
+  await click('#load-go'); await sleep(600); await click('#warn-go'); await sleep(600); await click('#warn-go'); await sleep(600);
   await click('#m-settings'); await sleep(500); await page.screenshot({ path: OUT + '/settings.png' });
   for (const g of ['low', 'high', 'medium']) {
     await click('[data-gfx="' + g + '"]'); await sleep(200);
     log.push(g + ': ' + JSON.stringify(await page.evaluate(() => ({ grain: document.getElementById('grain').style.opacity, vig: document.getElementById('vig').style.display, dust: document.getElementById('dust').style.display }))));
   }
   await click('#t-mot'); await sleep(100); log.push('motion: ' + await page.evaluate(() => document.getElementById('t-mot').textContent));
-  // save code: fake progress, copy code, wipe, load it back
-  const code = await page.evaluate(() => { const s = JSON.parse(localStorage.getItem('alassais')); return document.getElementById('s-code').value; });
-  log.push('code: ' + code.slice(0, 16) + '…');
   await page.evaluate(() => { const s = JSON.parse(localStorage.getItem('alassais')); s.prog = { c1: 5, c2: 2, c3: 0 }; localStorage.setItem('alassais', JSON.stringify(s)); });
   await page.reload({ waitUntil: 'networkidle0' }); await page.waitForFunction(() => document.getElementById('load-go').style.visibility === 'visible');
-  await click('#load-go'); await sleep(600);
+  await click('#load-go'); await sleep(600); await click('#warn-go'); await sleep(600);
   log.push('after reload (autosaved progress kept): ' + JSON.stringify(JSON.parse(await page.evaluate(() => localStorage.getItem('alassais'))).prog));
   await click('#m-settings'); await sleep(300);
-  const code2 = await page.evaluate(() => document.getElementById('s-code').value);
-  await page.evaluate(() => { const s = JSON.parse(localStorage.getItem('alassais')); s.prog = { c1: 0, c2: 0, c3: 0 }; localStorage.setItem('alassais', JSON.stringify(s)); });
-  await page.evaluate((c) => { document.getElementById('s-code').value = c; document.getElementById('s-load').click(); }, code2); await sleep(200);
-  log.push('loaded code: ' + await page.evaluate(() => document.getElementById('s-code-msg').textContent) + ' ' + JSON.stringify(JSON.parse(await page.evaluate(() => localStorage.getItem('alassais'))).prog));
-  await page.evaluate(() => { document.getElementById('s-code').value = 'garbage'; document.getElementById('s-load').click(); }); log.push('bad code: ' + await page.evaluate(() => document.getElementById('s-code-msg').textContent));
   // low graphics in game: pictures from the half-size folder
   await click('[data-gfx="low"]'); await click('#t-mot');
   await page.evaluate(() => window.__AS_UI.startNight ? window.__AS_UI.startNight(0, 1) : null); await sleep(300);

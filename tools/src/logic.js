@@ -88,7 +88,7 @@ var AS = (function () {
       if (custom) return custom[name] || 0;
       var r = N.lv[name]; if (!r || !r[1]) return 0;
       var h = g.hour(); var step = h >= 4 ? 1 : h >= 3 ? 0.66 : h >= 2 ? 0.33 : 0;
-      var lv = Math.round(lerp(r[0], r[1], step));
+      var lv = Math.round(lerp(r[0], r[1], step) * (g.dark ? 0.56 : 0.66));   // story difficulty: tense but fair (candle nights gentler: you can barely see)
       if ((nightNo === 5 || (CH3 && nightNo === 7)) && h >= 5) lv += 2;
       return lv;
     }
@@ -199,7 +199,7 @@ var AS = (function () {
       // breath / battery / noise
       if (p.holdBreath) { p.breath -= dt; if (p.breath <= 0) { p.breath = 0; p.holdBreath = false; emit('gasp'); g.noise = clamp(g.noise + 25, 0, 100); g._gasp = g.time; } }
       else p.breath = Math.min(8, p.breath + dt * 1.6);
-      if (p.light) { p.battery -= dt * (g.dark ? 1.15 : 1.4); if (p.battery <= 0) { p.battery = 0; p.light = false; emit('battery_dead'); } }
+      if (p.light) { p.battery -= dt * (g.dark ? 0.45 : 0.55); if (p.battery <= 0) { p.battery = 0; p.light = false; emit('battery_dead'); } }
       g.noise = Math.max(0, g.noise - dt * 6);
 
       // blackouts

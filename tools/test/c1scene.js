@@ -23,7 +23,7 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
   const st = () => page.evaluate(() => { const g = window.__AS_UI.game; if (!g) return null; return { pos: g.p.pos, tr: !!g.p.travel, hd: g.p.holdDoor, hc: g.p.holdCurtain, light: g.p.light, hb: g.p.holdBreath, curtain: g.house.curtain, t: +g.time.toFixed(1), quiet: g.quiet, spots: [...document.querySelectorAll('#hot .spot')].map(s => s.getAttribute('data-spot')).join(',') }; });
   const shot = (n) => page.screenshot({ path: OUT + '/' + n + '.png' });
   try {
-  await tapSel('#load-go'); await sleep(1200); await shot('a01_menu');
+  await tapSel('#load-go'); await sleep(700); await tapSel('#warn-go'); await sleep(900); await shot('a01_menu');
   log.push('menu img: ' + await page.evaluate(() => document.getElementById('mbg-on').src.split('/').pop()));
   await tapSel('#m-new'); await sleep(1500); await shot('a02_prologue_ring');
   await tapSel('#pp-ans'); await sleep(5000); await shot('a03_prologue_talk');
