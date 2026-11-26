@@ -201,7 +201,7 @@
       im.onerror = function () { el.textContent = T(k); };
       el.textContent = ''; el.appendChild(im);
     });
-    $('m-sub').textContent = T('title_sub');
+    $('m-sub').textContent = T(RELEASE_CH1 ? 'title_sub_c1' : 'title_sub');
     if (RELEASE_CH1 && save.cur.ch > 1) save.cur = { ch: 1, n: Math.min(5, (save.prog.c1 || 0) + 1) };
     var cur = save.cur;
     $('m-cont').querySelector('small').textContent = T('ch_n', cur.ch) + ' · ' + T('night_n', cur.n);

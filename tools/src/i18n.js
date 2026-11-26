@@ -1,7 +1,7 @@
 /* ALAS-SAIS — English / Filipino text */
 var STR = {
   en: {
-    title_sub: "Seventeen nights in Lola Pilar's house",
+    title_sub: "Seventeen nights in Lola Pilar's house", title_sub_c1: "Five nights in Lola Pilar's room",
     loading: 'Loading', tap_start: 'Tap to start', headphones: 'Headphones recommended. Listen before you look.',
     new_game: 'New Game', cont: 'Continue', nights: 'Night Selection', settings: 'Settings', credits: 'Credits', quit: 'Exit Game',
     night_n: 'Night {n}', night_names: ['The First Encounter', 'Something Is Inside', 'No Place Is Safe', 'The House Is Awake', 'The Final Night'],
@@ -94,7 +94,7 @@ var STR = {
     }
   },
   fil: {
-    title_sub: 'Labimpitong gabi sa bahay ni Lola Pilar',
+    title_sub: 'Labimpitong gabi sa bahay ni Lola Pilar', title_sub_c1: 'Limang gabi sa kwarto ni Lola Pilar',
     loading: 'Naglo-load', tap_start: 'I-tap para magsimula', headphones: 'Mas maganda kung naka-headphones. Makinig bago tumingin.',
     new_game: 'Bagong Laro', cont: 'Ituloy', nights: 'Pumili ng Gabi', settings: 'Settings', credits: 'Credits', quit: 'Umalis sa Laro',
     night_n: 'Gabi {n}', night_names: ['Ang Unang Pagkikita', 'May Nasa Loob', 'Walang Ligtas na Lugar', 'Gising na ang Bahay', 'Ang Huling Gabi'],

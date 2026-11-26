@@ -667,7 +667,7 @@ var PROLOGUE = {"c1": [{"fil": "Hello? Migo? Si Tita Cora 'to. Nakarating ka na 
 /* ALAS-SAIS — English / Filipino text */
 var STR = {
   en: {
-    title_sub: "Seventeen nights in Lola Pilar's house",
+    title_sub: "Seventeen nights in Lola Pilar's house", title_sub_c1: "Five nights in Lola Pilar's room",
     loading: 'Loading', tap_start: 'Tap to start', headphones: 'Headphones recommended. Listen before you look.',
     new_game: 'New Game', cont: 'Continue', nights: 'Night Selection', settings: 'Settings', credits: 'Credits', quit: 'Exit Game',
     night_n: 'Night {n}', night_names: ['The First Encounter', 'Something Is Inside', 'No Place Is Safe', 'The House Is Awake', 'The Final Night'],
@@ -760,7 +760,7 @@ var STR = {
     }
   },
   fil: {
-    title_sub: 'Labimpitong gabi sa bahay ni Lola Pilar',
+    title_sub: 'Labimpitong gabi sa bahay ni Lola Pilar', title_sub_c1: 'Limang gabi sa kwarto ni Lola Pilar',
     loading: 'Naglo-load', tap_start: 'I-tap para magsimula', headphones: 'Mas maganda kung naka-headphones. Makinig bago tumingin.',
     new_game: 'Bagong Laro', cont: 'Ituloy', nights: 'Pumili ng Gabi', settings: 'Settings', credits: 'Credits', quit: 'Umalis sa Laro',
     night_n: 'Gabi {n}', night_names: ['Ang Unang Pagkikita', 'May Nasa Loob', 'Walang Ligtas na Lugar', 'Gising na ang Bahay', 'Ang Huling Gabi'],
@@ -1793,7 +1793,7 @@ if (typeof module !== 'undefined') module.exports = C1;
       im.onerror = function () { el.textContent = T(k); };
       el.textContent = ''; el.appendChild(im);
     });
-    $('m-sub').textContent = T('title_sub');
+    $('m-sub').textContent = T(RELEASE_CH1 ? 'title_sub_c1' : 'title_sub');
     if (RELEASE_CH1 && save.cur.ch > 1) save.cur = { ch: 1, n: Math.min(5, (save.prog.c1 || 0) + 1) };
     var cur = save.cur;
     $('m-cont').querySelector('small').textContent = T('ch_n', cur.ch) + ' · ' + T('night_n', cur.n);
