@@ -314,9 +314,9 @@ if BAR >= 1:   # beetles creeping out of the gap onto the door
     bm = beetle_mat()
     scatter_beetles('gap', (fx - 0.035, AY + 0.04, 1.0), (0.12, 0.9), {1: 5, 2: 16, 3: 26, 4: 40}[BAR], 'x', seed=21, mat=bm)
     if BAR >= 2: scatter_beetles('floorB', (fx - 0.3, AY, 0.012), (0.5, 0.6), {2: 4, 3: 10, 4: 18}[BAR], 'z', seed=8, mat=bm, s=1.1)
-if BAR >= 2:
+if BAR >= 2 and not OPT.get('js'):
     build_barang((AX - 0.02, AY + 0.15, 0), rotz=math.radians(-90), stage=BAR, right_hand=False)
-if BAR >= 3:
+if BAR >= 3 and not OPT.get('js'):
     # long grey fingers curled around the free edge of the closed door, coming from inside the gap
     from entities import skin_body, mat_skin
     fskin = mat_skin('brFing', (0.12, 0.1, 0.075), (0.24, 0.2, 0.15), sss=0.15, rough=0.7)
@@ -475,6 +475,52 @@ elif VIEW == 'hero':
 elif VIEW == 'cabinet':
     camera((-0.35, AY - 0.45, 1.55), (W / 2, AY + 0.3, 1.1), lens=26)
     point('viewFill', (0.0, AY - 0.6, 2.0), 9, color=(1.0, 0.65, 0.35), radius=0.4)
+
+JS = OPT.get('js')
+if JS:
+    # IN-PLACE JUMPSCARE (FNAF4): the room you were in when it got you stays the background; the entity lunges from where
+    # it was at your eyes. --js=<who> --frame=0..7 (0-1 there, twitching; 2-7 the lunge; the scream lands on frame 2).
+    import mathutils
+    from entities import build_kumot_batibat, build_tiyanak, build_kalansing, build_manananggal, add_aswang_tongue
+    from entities2 import build_barang
+    PROG = [0.0, 0.05, 0.16, 0.34, 0.56, 0.76, 0.92, 1.0]
+    SIDE = [0.0, 0.05, -0.04, 0.03, -0.03, 0.02, -0.015, 0.0]
+    TILT = [0, 4, -6, 5, -8, 6, -4, 0]
+    f = max(0, min(7, int(OPT.get('frame', 0)))); k = PROG[f]
+    # who: (builder, start position, its face relative to its origin when facing -y, how close the face ends up)
+    before = set(o.name for o in bpy.data.objects)
+    if JS == 'kumot':      build_kumot_batibat(0, 0); P0 = (dx - 0.15, D + 0.45, 0); FL = (0, -0.5, 2.12); DC = 0.6
+    elif JS == 'malikmata': build_tiyanak(0, 0, 0.0, crawl=True); P0 = LW(0.35, LDIM[1] - 1.0, 0); FL = (0, -0.34, 0.6); DC = 0.5
+    elif JS == 'kalansing': build_kalansing(0, 0); add_aswang_tongue(0, 0); P0 = KW(0.2, KDIM[1] - 0.9, 0); FL = (0, -0.66, 1.0); DC = 0.85
+    elif JS == 'silip':    build_manananggal(0, 0, 0, wing=0.8); P0 = (W / 2 + 0.6, WY, 1.05); FL = (0, -0.1, 0.66); DC = 0.8
+    elif JS == 'barang':   build_barang((0, 0, 0), 0.0, stage=4, glow=1.0); P0 = (fx - 0.05, AY + 0.1, 0); FL = (0, -0.23, 1.45); DC = 0.42
+    e = group_at(before, (0, 0, 0), 0.0)
+    cam = bpy.context.scene.camera; C = cam.location.copy(); bpy.context.view_layer.update()
+    fwd0 = cam.matrix_world.to_quaternion() @ mathutils.Vector((0, 0, -1)); lens0 = cam.data.lens
+    def face_rot(F):   # turn so its front (-y) faces the camera
+        v = C - F; return math.atan2(-v.x, v.y) + math.pi
+    def place(F):
+        r = face_rot(F); e.rotation_euler = (0, 0, r)
+        off = mathutils.Matrix.Rotation(r, 3, 'Z') @ mathutils.Vector(FL); e.location = F - off
+    r0 = face_rot(mathutils.Vector(P0) + mathutils.Vector(FL)); F0 = mathutils.Vector(P0) + mathutils.Matrix.Rotation(r0, 3, 'Z') @ mathutils.Vector(FL)
+    d = (F0 - C); dh = mathutils.Vector((d.x, d.y, 0)).normalized()
+    F1 = C + dh * DC + mathutils.Vector((0, 0, 0.04))
+    side = mathutils.Vector((-dh.y, dh.x, 0)) * SIDE[f]
+    F = F0.lerp(F1, k) + side; place(F)
+    if JS == 'silip' and f >= 2:   # she comes through the window: grill and capiz give way
+        for o in bpy.data.objects:
+            if o.name.startswith(('bar', 'barH', 'cz', 'sashV')): o.hide_render = True
+    # a sick key light rides with it; from frame 3 your own light catches the face
+    point('jsKey', tuple(F + mathutils.Vector((0.25, 0, 0.55))), 6 + 10 * k, color=(1.0, 0.75, 0.55), radius=0.15)
+    if f >= 3:
+        src = C + mathutils.Vector((0.1, 0, -0.15)); spot('jsTorch', tuple(src), (F - src).to_track_quat('-Z', 'Y').to_euler(), 25 + 45 * k, angle=math.radians(38), color=(1.0, 0.92, 0.8), blend=0.6)
+    # the camera does not move: it only turns toward the face (and the world lurches) and narrows a little
+    tgt = (C + fwd0 * 3).lerp(F, min(1, k * 1.4))
+    fwd = (tgt - C).normalized()
+    cam.rotation_euler = (mathutils.Quaternion(fwd, math.radians(TILT[f])) @ fwd.to_track_quat('-Z', 'Y')).to_euler()
+    cam.data.lens = lens0 + (30 - lens0) * k
+    for o in bpy.data.objects:   # the bulb stutters as it comes
+        if o.type == 'LIGHT' and f >= 2: o.data.energy *= (1.25 if f % 2 else 0.8)
 if 'lit' in OPT:   # the player's flashlight, from the camera
     import mathutils
     cam = bpy.context.scene.camera; src = cam.location.copy() + mathutils.Vector((0.15, -0.1, -0.15))
