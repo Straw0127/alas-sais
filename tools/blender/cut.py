@@ -26,7 +26,7 @@ k = PROG[f]
 # --- the entity, built at the origin facing -y (toward the camera)
 before = set(o.name for o in bpy.data.objects)
 Z0 = 0.0; LEAP = 0.0; BEND = 0
-if WHO == 'kumot':       build_kumot_batibat(0, 0); FL = (0, -0.5, 2.12); BEND = 0 if (f < 2 or STAND) else 48 * k
+if WHO == 'kumot':       build_kumot_batibat(0, 0); FL = (0, -0.5, 2.12); BEND = 0 if (f < 2 or STAND) else 22 * k   # a slight stoop; she ducks to your face
 elif WHO == 'malikmata': build_tiyanak(0, 0, 0.0, crawl=True); FL = (0, -0.34, 0.6); LEAP = 0.95
 elif WHO == 'kalansing': build_kalansing(0, 0); add_aswang_tongue(0, 0); FL = (0, -0.66, 1.0); LEAP = 0.55
 elif WHO == 'silip':     build_manananggal(0, 0, 0, wing=0.8 if (f < 2 or STAND) else 0.5); FL = (0, -0.1, 0.66); Z0 = 1.05
@@ -60,20 +60,19 @@ else:
     F0 = mathutils.Vector((0, 2.6, Z0)) + FLv
     F1 = C + mathutils.Vector((0, 0.5, 0))
     if WHO in ('malikmata', 'kalansing'): F1.z = min(C.z + 0.04, FLv.z + LEAP)   # it leaps at your face
-    elif WHO == 'kumot': F1.z = max(C.z - 0.05, F0.z - 0.7)
     else: F1.z = C.z + 0.04
     F = F0.lerp(F1, k) + mathutils.Vector((SIDE[f], 0, 0))
     o_ = F - FLv
     if WHO in ('malikmata', 'kalansing') and o_.z < 0: o_.z = 0
-    if WHO == 'kumot': o_.z = 0   # standing; the bend brings her face down
+    # (no floor in a cut-out: close up, whatever is below the frame simply is not seen)
     e.location = o_
     # the camera stays put (the room picture behind does not move); the game zooms and shakes the whole picture
 
 # --- light: your flashlight from the camera, the room's own colour round it, a rim behind
 COL = {'warm': (1.0, 0.72, 0.45), 'cold': (0.55, 0.72, 1.0), 'dark': (0.6, 0.62, 0.7)}[LIGHT]
-fill = {'warm': 14, 'cold': 14, 'dark': 3}[LIGHT]
+fill = {'warm': 16, 'cold': 16, 'dark': 7}[LIGHT]
 src = (C if not STAND else mathutils.Vector((0, -3.0, F.z))) + mathutils.Vector((0.1, 0, -0.12))
-spot('torch', tuple(src), (F - src).to_track_quat('-Z', 'Y').to_euler(), (30 + 50 * k) * (0.7 if LIGHT == 'dark' else 1), angle=math.radians(40), color=(1.0, 0.93, 0.82), blend=0.6)
+spot('torch', tuple(src), (F - src).to_track_quat('-Z', 'Y').to_euler(), (34 + 50 * k), angle=math.radians(40), color=(1.0, 0.93, 0.82), blend=0.6)
 area('fill', (1.6, F.y - 0.6, F.z + 1.4), (math.radians(-40), math.radians(35), 0), fill, size=(1.5, 1.5), color=COL)
 point('rim', (-0.6, F.y + 1.2, F.z + 0.8), 10 if LIGHT != 'dark' else 4, color=COL, radius=0.3)
 render(out)
