@@ -82,7 +82,7 @@
     try {
       var s = JSON.parse(localStorage.getItem('alassais') || 'null');
       if (s && s.set) { save.set = s.set; save.set.vol = Object.assign({}, DEF.vol, s.set.vol); }
-      if (s && s.prog) { save.prog = Object.assign(save.prog, s.prog); save.cur = s.cur || save.cur; save.custom = s.custom || save.custom; save.pro = s.pro || {}; }
+      if (s && s.prog) { save.prog = Object.assign(save.prog, s.prog); save.cur = s.cur || save.cur; save.custom = s.custom || save.custom; save.pro = s.pro || {}; save.played = !!s.played; }
     } catch (e) {}
   }
   function store() { try { localStorage.setItem('alassais', JSON.stringify(save)); } catch (e) {} }
@@ -205,7 +205,7 @@
     if (RELEASE_CH1 && save.cur.ch > 1) save.cur = { ch: 1, n: Math.min(5, (save.prog.c1 || 0) + 1) };
     var cur = save.cur;
     $('m-cont').querySelector('small').textContent = T('ch_n', cur.ch) + ' · ' + T('night_n', cur.n);
-    $('m-cont').disabled = save.prog.c1 === 0 && !save.pro.c1;
+    $('m-cont').disabled = save.prog.c1 === 0 && !save.pro.c1 && !save.played;
     $('m-nights').querySelector('small').textContent = RELEASE_CH1 ? Math.min(5, save.prog.c1) + ' / 5' : (save.prog.c1 + save.prog.c2 + save.prog.c3) + ' / 17';
     var cuOpen = save.custom.unlocked || PREVIEW_ALL;
     $('m-custom').querySelector('small').textContent = cuOpen ? '' : T('locked');
@@ -295,6 +295,7 @@
     curCh = ch || curCh || 1;
     if (curCh === 1 && idx === 0 && !save.pro.c1 && !window.__AS_NOCALL) { return prologue('c1', function () { save.pro.c1 = true; store(); startNight(0, 1); }); }
     stopMenu();
+    save.cur = { ch: curCh, n: idx + 1 }; save.played = true; store();   // Continue always points at the night you last played
     nightIdx = idx; if (call) endCall(true); stopAll();
     if (raf) cancelAnimationFrame(raf);
     game = null; paused = false;
