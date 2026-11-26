@@ -1595,7 +1595,13 @@
     for (var tj = 640, alt = 0; tj < 1500; tj += 70, alt++) (function (t, a) { scareTimers.push(setTimeout(function () { im.src = base + (a % 2 ? 7 : 6) + '.jpg'; }, t)); })(tj, alt);
     scareTimers.push(setTimeout(function () { im.src = base + '7.jpg'; sc.classList.remove('hit'); }, 1500));
     $('over-who').textContent = T('who')[who];
-    $('over-hint').textContent = who === 'bangungot' ? T('hint_bangungot') : (ch1 ? T('c1_hint') : T('hint'))[who] || T('c1_hint')[who] || '';
+    // how to beat the one that got you (and what went wrong where you were caught)
+    var sk = jsn || (who === 'kumot' ? (ch1 ? 'kumot_c1' : 'kumot') : who === 'malik' ? 'malikmata' : who), tips = (T('surv') || {})[sk];
+    var oh = $('over-hint'); oh.innerHTML = '';
+    if (tips && tips.length) {
+      var ht = document.createElement('b'); ht.className = 'surv-t'; ht.textContent = T('surv_t'); oh.appendChild(ht);
+      var ul = document.createElement('ul'); tips.forEach(function (t) { var li = document.createElement('li'); li.textContent = t; ul.appendChild(li); }); oh.appendChild(ul);
+    } else oh.textContent = who === 'bangungot' ? T('hint_bangungot') : (ch1 ? T('c1_hint') : T('hint'))[who] || T('c1_hint')[who] || '';
     if (who === 'barang') play('beetle_scatter', { vol: 1 });
     var c = ck; $('over-time').textContent = (ch1 ? T('ch_n', 1) + ' · ' : '') + T('night_n', night) + ' · ' + c.h + ':' + (c.m < 10 ? '0' : '') + c.m + ' AM';
     $('over-bg').src = JSDIR + 'js_' + (jsn || JS[who]) + '_7.jpg';

@@ -25,7 +25,8 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
     await page.evaluate((ch, n) => { const U = window.__AS_UI; U.save.pro.c1 = U.save.pro.c2 = U.save.pro.c3 = true; U.startNight(n, ch); }, ch, n); await sleep(800); await click('#intro-go'); await sleep(2200);
     await page.evaluate(new Function('const g = window.__AS_UI.game; ' + code)); await sleep(1400);
     log.push(name + ' -> ' + await page.evaluate(() => (document.getElementById('scare-img').src || '').split('/').pop()));
-    await sleep(3500); await page.evaluate(() => { const b = document.querySelector('#scr-over.show [data-act="menu"], #over-menu'); if (b) b.click(); }); await sleep(800);
+    await sleep(3500); log.push('   tips: ' + await page.evaluate(() => document.getElementById('over-hint').innerText.replace(/\n/g, ' | ').slice(0, 160)));
+    await page.screenshot({ path: '/tmp/over_' + name.split(' ')[0] + '.png' }); await page.evaluate(() => { const b = document.querySelector('#scr-over.show [data-act="menu"], #over-menu'); if (b) b.click(); }); await sleep(800);
   }
   console.log(log.join('\n')); console.log('ERRORS:', errors.join('\n') || 'none'); await browser.close();
 })();
