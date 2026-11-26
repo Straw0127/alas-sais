@@ -304,7 +304,7 @@ def ap_door(name, hy, sign, angle):
         ps.append(decal(name + 'Rot', silver, (fx - 0.044, cy, z0 + 1.15), (0.3, 0.6), '-x'))
     for p in ps: p.parent = e; p.matrix_parent_inverse = e.matrix_world.inverted()
     e.rotation_euler = (0, 0, math.radians(angle))
-ang = {0: 0, 1: 6, 2: 14, 3: 26, 4: 62}[BAR]
+ang = {0: 0, 1: 22, 2: 42, 3: 64, 4: 88}[BAR]   # wide enough to see from the middle of the room
 ap_door('apDoorR', AY + AW / 2, 1, -ang)
 ap_door('apDoorL', AY - AW / 2, -1, 9 if BAR >= 4 else 0)
 from pinoy import santo_nino
@@ -803,6 +803,13 @@ if 'pano' in OPT and VIEW in ('hub', 'living', 'kitchen'):
                 print('PROBE', pat, [round(min(xs), 1), round(min(ys), 1), round(max(xs) - min(xs), 1), round(max(ys) - min(ys), 1)])
         raise SystemExit
 
+if os.environ.get('PROBEPT') and 'pano' not in OPT:   # flat view: where world points land on screen (%)
+    from bpy_extras.object_utils import world_to_camera_view
+    bpy.context.view_layer.update(); cam_ = bpy.context.scene.camera
+    for pt_ in [p for p in os.environ['PROBEPT'].split(';') if p]:
+        v_ = world_to_camera_view(bpy.context.scene, cam_, mathutils.Vector([float(c) for c in pt_.split(',')]) if 'mathutils' in dir() else __import__('mathutils').Vector([float(c) for c in pt_.split(',')]))
+        print('PT', pt_, [round(v_.x * 100, 2), round((1 - v_.y) * 100, 2)])
+    raise SystemExit
 if os.environ.get('CHECK') and JS:   # does the entity go through anything this frame? (instead of rendering)
     import mathutils
     from mathutils.bvhtree import BVHTree
