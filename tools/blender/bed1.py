@@ -382,7 +382,7 @@ if KPOS > 0:   # what the flashlight finds down the hallway
     from entities import build_kumot_batibat
     before = set(o.name for o in bpy.data.objects)
     build_kumot_batibat(0, 0, peer=(KPOS == 3))
-    kp = {1: ((HXP(3.85), CY, 0), 90), 2: ((HXP(1.7), CY + 0.1, 0), 90), 3: ((HXP(0.8), CY - 0.05, 0), 90)}[KPOS]
+    kp = {1: ((HXP(3.85), CY, 0), 90), 2: ((HXP(1.7), CY + 0.1, 0), 90), 3: ((dx - 0.25, D + 0.72, 0), 0)}[KPOS]
     group_at(before, kp[0], math.radians(kp[1]))
 if KUMOT:
     from entities import build_kumot_batibat
@@ -452,20 +452,19 @@ elif VIEW == 'plan':   # debug: the whole house from above, cut at ceiling heigh
 elif VIEW == 'hub':
     camera((0.25, -0.15, 1.6), (0.75, 4.4, 1.28), lens=17)
 elif VIEW == 'door':
-    # Leaning out of the doorway, head tilted (FNAF4): the hall to the kitchen, the sala door at an angle. Closing: see CLOSE_FR.
+    # FNAF4-style: you stand a step inside the room facing the doorway, the real door hinged on the right. Holding it shut,
+    # the door swings across the opening in front of you (frames sw80..sw18, closed); the camera stays put.
+    # With the light on (peek) you lean out of the doorway and shine it down the hall toward the kitchen.
     import mathutils
-    if SWING is None: cpos = mathutils.Vector((dx + 0.12, D + 0.3, 1.5)); ctg = mathutils.Vector((HXP(4.3), D + 1.0, 1.32)); roll = -17
-    else:
-        (ox, oy), _, k = CLOSE_FR[SWING]
-        cpos = mathutils.Vector((dx + 0.12 + ox, D + 0.3 + oy, 1.5 - 0.04 * k))
-        ctg = mathutils.Vector((HXP(4.3), D + 1.0, 1.32)).lerp(mathutils.Vector((dx + 0.05, D, 1.25)), k); roll = -17 + 6 * k
-    cam_ = camera(tuple(cpos), tuple(ctg), lens=22)
+    if PEEK >= 0: cpos = mathutils.Vector((dx + 0.05, D + 0.2, 1.5)); ctg = mathutils.Vector((HXP(4.3), D + 0.8, 1.3)); roll = -7
+    else: cpos = mathutils.Vector((dx + 0.05, D - 2.3, 1.55)); ctg = mathutils.Vector((dx - 0.05, D + 1.3, 1.12)); roll = 0
+    cam_ = camera(tuple(cpos), tuple(ctg), lens=22 if PEEK >= 0 else 19)
     fwd_ = (ctg - cpos).normalized()
     cam_.rotation_euler = (mathutils.Quaternion(fwd_, math.radians(roll)) @ fwd_.to_track_quat('-Z', 'Y')).to_euler()
     if PEEK >= 0:
-        import mathutils
-        src_ = mathutils.Vector((dx + 0.05, D + 0.25, 1.4)); tg_ = mathutils.Vector((HXP(3.0), D + 0.75, 1.1))
+        src_ = mathutils.Vector((dx + 0.05, D + 0.15, 1.4)); tg_ = mathutils.Vector((HXP(3.0), D + 0.75, 1.1))
         spot('peekTorch', tuple(src_), (tg_ - src_).to_track_quat('-Z', 'Y').to_euler(), 700, angle=math.radians(40), color=(1.0, 0.93, 0.8), blend=0.85)
+    else: point('doorFill', (dx + 0.2, D - 1.6, 2.2), 5, color=(1.0, 0.7, 0.42), radius=0.4)
     point('viewFill', (dx + 0.9, D - 1.2, 1.9), 3, color=(1.0, 0.65, 0.35), radius=0.3)
 elif VIEW == 'window':
     camera((0.15, WY - 0.05, 1.52), (W / 2 + 1, WY, 1.48), lens=22)
@@ -483,7 +482,9 @@ if 'lit' in OPT:   # the player's flashlight, from the camera
     import mathutils
     cam = bpy.context.scene.camera; src = cam.location.copy() + mathutils.Vector((0.15, -0.1, -0.15))
     tgt = {'scare': (fx, AY + 0.14, 1.4), 'hero': (fx, AY + 0.12, 1.3), 'cabinet': (fx, AY + 0.1, 1.25), 'door': (dx, D + 1.5, 1.3), 'hub': (0.3, 3.8, 1.2), 'window': (W / 2 + 0.6, WY, 1.45)}[VIEW]
-    spot('flash', tuple(src), (mathutils.Vector(tgt) - src).to_track_quat('-Z', 'Y').to_euler(), 160, angle=math.radians(44), color=(1.0, 0.93, 0.8), blend=0.75) if VIEW != 'scare' else spot('flash', (fx - 0.55, AY - 0.25, 0.85), (mathutils.Vector((fx, AY + 0.12, 1.45)) - mathutils.Vector((fx - 0.55, AY - 0.25, 0.85))).to_track_quat('-Z', 'Y').to_euler(), 14, angle=math.radians(40), color=(1.0, 0.8, 0.65), blend=0.8)
+    if 'pano' in OPT: point('flash', tuple(src), 55, color=(1.0, 0.93, 0.8), radius=0.04)   # a turnable view: the torch has to reach wherever you face
+    elif VIEW != 'scare': spot('flash', tuple(src), (mathutils.Vector(tgt) - src).to_track_quat('-Z', 'Y').to_euler(), 160, angle=math.radians(44), color=(1.0, 0.93, 0.8), blend=0.75)
+    else: spot('flash', (fx - 0.55, AY - 0.25, 0.85), (mathutils.Vector((fx, AY + 0.12, 1.45)) - mathutils.Vector((fx - 0.55, AY - 0.25, 0.85))).to_track_quat('-Z', 'Y').to_euler(), 14, angle=math.radians(40), color=(1.0, 0.8, 0.65), blend=0.8)
 if 'pano' in OPT and VIEW in ('hub', 'living', 'kitchen'):
     # Room views you can turn in (slide left / right in the game): a level equirectangular panorama around the same
     # spot, centred on the same heading, its vertical range shifted to keep the old downward tilt.

@@ -198,7 +198,8 @@ def render(path):
     if os.environ.get('FLASHLIGHT'):   # the player's torch, from just below the camera, along the view
         bpy.context.view_layer.update(); cam = bpy.context.scene.camera; fwd = cam.matrix_world.to_quaternion() @ Vector((0, 0, -1))
         src = cam.location + Vector((0, 0, -0.18)) + fwd * 0.1
-        spot('torch', tuple(src), (fwd + Vector((0.05, 0, -0.06))).to_track_quat('-Z', 'Y').to_euler(), 900, angle=math.radians(80), color=(1.0, 0.93, 0.8), blend=0.85)
+        if cam.data.type == 'PANO': point('torch', tuple(src), 160, color=(1.0, 0.93, 0.8), radius=0.05)   # turnable panorama: light all round
+        else: spot('torch', tuple(src), (fwd + Vector((0.05, 0, -0.06))).to_track_quat('-Z', 'Y').to_euler(), 900, angle=math.radians(80), color=(1.0, 0.93, 0.8), blend=0.85)
     bpy.context.scene.render.filepath = path
     bpy.ops.render.render(write_still=True)
 
