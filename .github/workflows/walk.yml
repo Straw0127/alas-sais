@@ -1,0 +1,64 @@
+name: Render walks
+on:
+  workflow_dispatch:
+    inputs:
+      samples: { description: 'Cycles samples', default: '12' }
+      fps: { description: 'frames per second', default: '20' }
+      only: { description: 'Comma list of job names (empty = all)', default: '' }
+permissions:
+  contents: write
+  actions: read
+jobs:
+  walk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        include: [{"name": "walk_hall_bedroom", "route": "hall-bedroom", "opts": "--hall=lit"}, {"name": "walk_hall_living", "route": "hall-living", "opts": "--hall=lit"}, {"name": "walk_hall_kitchen", "route": "hall-kitchen", "opts": "--hall=lit"}, {"name": "walk_hall_curtain", "route": "hall-curtain", "opts": "--hall=lit"}, {"name": "walk_bedroom_hall", "route": "bedroom-hall", "opts": "--hall=lit"}, {"name": "walk_bedroom_living", "route": "bedroom-living", "opts": "--hall=lit"}, {"name": "walk_bedroom_kitchen", "route": "bedroom-kitchen", "opts": "--hall=lit"}, {"name": "walk_bedroom_curtain", "route": "bedroom-curtain", "opts": "--hall=lit"}, {"name": "walk_living_hall", "route": "living-hall", "opts": "--hall=lit"}, {"name": "walk_living_bedroom", "route": "living-bedroom", "opts": "--hall=lit"}, {"name": "walk_living_kitchen", "route": "living-kitchen", "opts": "--hall=lit"}, {"name": "walk_living_curtain", "route": "living-curtain", "opts": "--hall=lit"}, {"name": "walk_kitchen_hall", "route": "kitchen-hall", "opts": "--hall=lit"}, {"name": "walk_kitchen_bedroom", "route": "kitchen-bedroom", "opts": "--hall=lit"}, {"name": "walk_kitchen_living", "route": "kitchen-living", "opts": "--hall=lit"}, {"name": "walk_kitchen_curtain", "route": "kitchen-curtain", "opts": "--hall=lit"}, {"name": "walk_curtain_hall", "route": "curtain-hall", "opts": "--hall=lit"}, {"name": "walk_curtain_bedroom", "route": "curtain-bedroom", "opts": "--hall=lit"}, {"name": "walk_curtain_living", "route": "curtain-living", "opts": "--hall=lit"}, {"name": "walk_curtain_kitchen", "route": "curtain-kitchen", "opts": "--hall=lit"}, {"name": "walk_c1center_c1door", "route": "c1center-c1door", "opts": ""}, {"name": "walk_c1center_c1window", "route": "c1center-c1window", "opts": ""}, {"name": "walk_c1center_c1cabinet", "route": "c1center-c1cabinet", "opts": ""}, {"name": "walk_c1door_c1center", "route": "c1door-c1center", "opts": ""}, {"name": "walk_c1door_c1window", "route": "c1door-c1window", "opts": ""}, {"name": "walk_c1door_c1cabinet", "route": "c1door-c1cabinet", "opts": ""}, {"name": "walk_c1window_c1center", "route": "c1window-c1center", "opts": ""}, {"name": "walk_c1window_c1door", "route": "c1window-c1door", "opts": ""}, {"name": "walk_c1window_c1cabinet", "route": "c1window-c1cabinet", "opts": ""}, {"name": "walk_c1cabinet_c1center", "route": "c1cabinet-c1center", "opts": ""}, {"name": "walk_c1cabinet_c1door", "route": "c1cabinet-c1door", "opts": ""}, {"name": "walk_c1cabinet_c1window", "route": "c1cabinet-c1window", "opts": ""}]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Skip if not selected
+        id: sel
+        run: |
+          if [ -n "${{ inputs.only }}" ] && ! echo ",${{ inputs.only }}," | grep -q ",${{ matrix.name }},"; then echo "skip=1" >> $GITHUB_OUTPUT; fi
+      - uses: actions/setup-python@v5
+        if: steps.sel.outputs.skip != '1'
+        with: { python-version: '3.13', cache: 'pip', cache-dependency-path: 'tools/blender/requirements.txt' }
+      - if: steps.sel.outputs.skip != '1'
+        run: pip install -r tools/blender/requirements.txt && sudo apt-get install -y -q ffmpeg > /dev/null
+      - if: steps.sel.outputs.skip != '1'
+        name: Walk ${{ matrix.name }}
+        run: |
+          mkdir -p out
+          python tools/blender/bed1.py -- out/${{ matrix.name }}.png ${{ inputs.samples }} --view=walk --route=${{ matrix.route }} --fps=${{ inputs.fps }} --w=854 --h=480 ${{ matrix.opts }} > out/${{ matrix.name }}.log 2>&1 || (tail -40 out/${{ matrix.name }}.log; exit 1)
+          ffmpeg -v error -y -framerate ${{ inputs.fps }} -i out/${{ matrix.name }}_%04d.jpg -c:v libx264 -preset slow -crf 24 -pix_fmt yuv420p -movflags +faststart -an out/${{ matrix.name }}.mp4
+          ls -la out/${{ matrix.name }}.mp4; cat out/${{ matrix.name }}.json
+      - if: steps.sel.outputs.skip != '1'
+        uses: actions/upload-artifact@v4
+        with:
+          name: '${{ matrix.name }}'
+          retention-days: 7
+          path: |
+            out/${{ matrix.name }}.mp4
+            out/${{ matrix.name }}.json
+  collect:
+    needs: walk
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 1 }
+      - uses: actions/download-artifact@v4
+        with: { path: dl }
+      - name: Push the clips to the renders branch
+        run: |
+          git config user.name alas-sais-bot; git config user.email actions@users.noreply.github.com
+          mkdir -p /tmp/w; find dl -name '*.mp4' -exec cp {} /tmp/w/ \; ; find dl -name '*.json' -exec cp {} /tmp/w/ \;
+          for i in 1 2 3 4 5; do
+            git fetch --depth 1 origin renders && git checkout -B renders FETCH_HEAD
+            mkdir -p walk; cp /tmp/w/* walk/ 2>/dev/null || true; git add walk
+            git commit -m "walks from run ${{ github.run_id }} [skip ci]" || echo nothing
+            git push origin renders && break; sleep 7
+          done

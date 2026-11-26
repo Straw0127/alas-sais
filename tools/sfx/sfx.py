@@ -385,6 +385,27 @@ def phone_text():
     vib = signal.square(2 * np.pi * 180 * t_(0.5)) * 0.15 * env(int(0.5 * SR), 0.02, 0.1)
     place(y, lp(vib, 400), 0.35)
     return y
+def efan(d=8.0):
+    """an old stand fan on high: motor hum, the blades chopping air (3 blades at ~19 rev/s), a loose cage rattling now and then"""
+    t = t_(d)
+    motor = np.sin(2 * np.pi * 60 * t) * 0.12 + np.sin(2 * np.pi * 120 * t) * 0.06 + np.sin(2 * np.pi * 180 * t) * 0.02
+    air = lp(noise(d), 1400) * 0.55 + bp(noise(d), 300, 2200) * 0.25
+    chop = 0.75 + 0.25 * np.sin(2 * np.pi * 57 * t)              # blade pass frequency
+    wob = 0.9 + 0.1 * np.sin(2 * np.pi * 0.31 * t)                # slow oscillation of the head
+    y = (motor + air * chop) * wob
+    for _ in range(5):                                          # the cage ticks against the guard
+        place(y, metal_hit(rng.uniform(2600, 3400), 0.04, damp=0.01) * 0.12, rng.uniform(0.2, d - 0.3))
+    return loopify(np.stack([y, np.roll(y, 300) * 0.96], 1), 0.6)
+def efan_click():
+    """the fan's piano-key switch: a plastic clack, then the motor starting / dying"""
+    y = np.zeros(int(0.9 * SR)); place(y, metal_hit(1800, 0.05, damp=0.02) * 0.9, 0.0); place(y, lp(noise(0.06), 3000) * env(int(0.06 * SR), 0.001, 0.03) * 0.6, 0.0)
+    t = t_(0.8); place(y, (np.sin(2 * np.pi * (40 + 40 * t) * t) * 0.15 * env(len(t), 0.05, 0.4)), 0.05)
+    return y
+def yawn():
+    """you, worn out: a long breathy yawn"""
+    d = 2.2; t = t_(d); f0 = 180 + 60 * np.sin(np.pi * t / d)
+    v = bp(noise(d), 300, 1600) * 0.5 + np.sin(2 * np.pi * np.cumsum(f0) / SR) * 0.12
+    return reverb(v * env(len(t), 0.4, 0.9), 0.4, 0.1)
 def fluorescent(d=10.0):
     t = t_(d); hum = (np.sin(2 * np.pi * 120 * t) * 0.2 + np.sin(2 * np.pi * 240 * t) * 0.1 + hp(noise(d), 6000) * 0.03)
     flick = np.ones(len(t))
@@ -681,7 +702,7 @@ if __name__ == '__main__':
         'steps_walk_wood': (lambda: footsteps(8, 0.55, 'wood'), 0.8), 'steps_run_wood': (lambda: footsteps(12, 0.3, 'wood', True), 0.9),
         'steps_walk_cement': (lambda: footsteps(8, 0.55, 'cement'), 0.8), 'tuko_gecko': (tuko, 0.75), 'dog_howl': (dog_howl, 0.7),
         'tricycle_far': (tricycle_far, 0.5), 'rooster_dawn': (rooster, 0.8), 'phone_text': (phone_text, 0.7),
-        'fluorescent_hum': (fluorescent, 0.5), 'clock_tick': (clock_tick, 0.6), 'power_down': (power_down, 0.85),
+        'fluorescent_hum': (fluorescent, 0.5), 'efan': (efan, 0.55), 'efan_click': (efan_click, 0.7), 'yawn': (yawn, 0.6), 'clock_tick': (clock_tick, 0.6), 'power_down': (power_down, 0.85),
         'breaker': (breaker, 0.85), 'cabinet_open': (lambda: cabinet_door(True), 0.75), 'cabinet_close': (lambda: cabinet_door(False), 0.8),
         'plastic_crinkle': (plastic_crinkle, 0.6), 'breath_hold_gasp': (breath_hold, 0.85), 'distant_scream': (distant_scream, 0.6),
         'rain_heavy': (rain_heavy, 0.75),

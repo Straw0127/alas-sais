@@ -531,6 +531,98 @@ if 'lit' in OPT:   # the player's flashlight, from the camera
     if 'pano' in OPT: point('flash', tuple(src), 55, color=(1.0, 0.93, 0.8), radius=0.04)   # a turnable view: the torch has to reach wherever you face
     elif VIEW != 'scare': spot('flash', tuple(src), (mathutils.Vector(tgt) - src).to_track_quat('-Z', 'Y').to_euler(), 160, angle=math.radians(44), color=(1.0, 0.93, 0.8), blend=0.75)
     else: spot('flash', (fx - 0.55, AY - 0.25, 0.85), (mathutils.Vector((fx, AY + 0.12, 1.45)) - mathutils.Vector((fx - 0.55, AY - 0.25, 0.85))).to_track_quat('-Z', 'Y').to_euler(), 14, angle=math.radians(40), color=(1.0, 0.8, 0.65), blend=0.8)
+
+if VIEW == 'walk':
+    # WALKING / RUNNING BETWEEN ROOMS, as video. --route=<from>-<to>; rooms: hall (the hub at the back-door end),
+    # bedroom, living, kitchen, curtain (Chapters 2-3), and c1center, c1door, c1window, c1cabinet (inside Lola's room).
+    # You turn toward where you are going, walk (head bob, a little sway), and turn to face the way that room's view
+    # faces. Going back the other way you turn round first, so the hallway is seen from the other side.
+    import mathutils, json
+    V2 = lambda x, y: mathutils.Vector((x, y))
+    EYE = 1.58; SPEED = 2.2 if not OPT.get('route', '').startswith('c1') else 2.0
+    def head(a, b): d = V2(b[0] - a[0], b[1] - a[1]); return d.normalized()
+    ROOMS = {   # camera spot, the way that room's view faces, path from the hall's centreline into the spot
+        'hall':    {'at': (HXP(-2.0), D + 0.75), 'look': (HXP(4.3), D + 0.62), 'in': [(HXP(-1.6), CY)]},
+        'bedroom': {'at': (0.25, -0.15), 'look': (0.75, 4.4), 'in': [(dx, CY), (dx, D + 0.15), (dx + 0.05, D - 0.6), (0.2, D - 1.8)]},
+        'living':  {'at': LW(2.05, 2.35, 0)[:2], 'look': LW(-2.5, 2.7, 0)[:2], 'in': [(LX, CY), (LX, HY1 + 0.35), (LX + 0.5, HY1 + 1.3)]},
+        'kitchen': {'at': KW(-0.2, 0.15, 0)[:2], 'look': KW(0.1, KDIM[1], 0)[:2], 'in': [(XK + 0.3, CY), (XK - 0.5, CY), (XK - 2.2, CY + 0.6)]},
+        'curtain': {'at': (CX + 0.02, D + 0.12), 'look': (CX - 0.03, HY1 + 4.0), 'in': [(CX + 0.3, CY - 0.1)]},
+        'c1center': {'at': (0.25, -0.15)}, 'c1door': {'at': (dx + 0.5, D - 1.55), 'look': (dx - 0.2, D + 1.2)},
+        'c1window': {'at': (0.15, WY - 0.05), 'look': (W / 2 + 1, WY)}, 'c1cabinet': {'at': (-0.35, AY - 0.45), 'look': (W / 2, AY + 0.3)},
+    }
+    C1FACE = {'c1door': (dx, D), 'c1window': (W / 2, WY), 'c1cabinet': (fx, AY)}   # from the middle of the room you face what you went to / came from
+    a_, b_ = OPT['route'].split('-')
+    A, B = ROOMS[a_], ROOMS[b_]
+    if a_.startswith('c1'):
+        pts = [A['at'], B['at']]
+        h0 = head(A['at'], A['look']) if 'look' in A else head(A['at'], C1FACE[b_])
+        h1 = head(B['at'], B['look']) if 'look' in B else head(B['at'], C1FACE[a_])
+    else:
+        pts = [A['at']] + list(reversed(A['in'])) + B['in'] + [B['at']]
+        h0, h1 = head(A['at'], A['look']), head(B['at'], B['look'])
+    pts = [V2(*p) for p in pts]
+    # drop points that double back on themselves (both rooms enter the hall at nearly the same spot)
+    clean = [pts[0]]
+    for p in pts[1:]:
+        if (p - clean[-1]).length > 0.15: clean.append(p)
+    pts = clean
+    seg = [(pts[i + 1] - pts[i]).length for i in range(len(pts) - 1)]; L = sum(seg)
+    def at_s(sv):   # position at arc length sv
+        for i, l in enumerate(seg):
+            if sv <= l or i == len(seg) - 1: return pts[i].lerp(pts[i + 1], max(0, min(1, sv / l if l else 0)))
+            sv -= l
+    def ang(u, v): return math.degrees(math.atan2(u.x * v.y - u.y * v.x, u.dot(v)))
+    d0, d1 = (pts[1] - pts[0]).normalized(), (pts[-1] - pts[-2]).normalized()
+    tA = abs(ang(h0, d0)) / 200.0; tB = 0.25                           # turn round on the spot first (200 deg/s); the arriving turn happens while walking
+    ACC = 0.35                                                          # speeding up / slowing down
+    tW = L / SPEED + ACC
+    T = tA + tW + tB + 0.1
+    FPS = int(OPT.get('fps', 24)); N = max(2, int(round(T * FPS)))
+    sc = bpy.context.scene; sc.render.fps = FPS; sc.frame_start = 1; sc.frame_end = N
+    sc.render.resolution_x, sc.render.resolution_y = int(OPT.get('w', 854)), int(OPT.get('h', 480)); sc.render.resolution_percentage = 100
+    sc.render.use_motion_blur = True; sc.render.motion_blur_shutter = 0.45
+    cam = camera((pts[0].x, pts[0].y, EYE), (pts[0].x + h0.x, pts[0].y + h0.y, EYE - 0.08), lens=20)
+    def rot_to(hv, pitch_deg, roll_deg):
+        f = mathutils.Vector((hv.x, hv.y, math.tan(math.radians(pitch_deg)))).normalized()
+        q = f.to_track_quat('-Z', 'Y'); return (mathutils.Quaternion(f, math.radians(roll_deg)) @ q).to_euler()
+    def slerp2(u, v, k):   # rotate u toward v by fraction k
+        a = math.radians(ang(u, v)) * k; c, s_ = math.cos(a), math.sin(a)
+        return V2(u.x * c - u.y * s_, u.x * s_ + u.y * c)
+    def ease(x): return x * x * (3 - 2 * x)
+    for fr in range(1, N + 1):
+        t = (fr - 1) / FPS
+        if t < tA:   # turn toward the way out
+            pos, hv, walking = pts[0], slerp2(h0, d0, ease(t / tA) if tA else 1), 0
+        elif t < tA + tW:   # walk (trapezoid speed profile)
+            u = t - tA
+            if u < ACC: sv = SPEED * u * u / (2 * ACC)
+            elif u > tW - ACC: w_ = tW - u; sv = L - SPEED * w_ * w_ / (2 * ACC)
+            else: sv = SPEED * ACC / 2 + SPEED * (u - ACC)
+            sv = max(0, min(L, sv)); pos = at_s(sv)
+            ahead = at_s(min(L, sv + 1.1)); dv = (ahead - pos)
+            hv = dv.normalized() if dv.length > 0.05 else d1
+            rem = L - sv   # over the last stretch you already turn toward the way you will face (no staring into a wall)
+            if rem < 1.6: hv = slerp2(hv, h1, ease(1 - rem / 1.6))
+            walking = min(1, u / ACC, (tW - u) / ACC)
+        else:   # settle, facing the way this room's view looks
+            pos, hv, walking = pts[-1], h1, 0
+        ph = t * 2 * math.pi * 1.9   # step rhythm
+        bob = 0.028 * walking * abs(math.sin(ph)); sway = 0.012 * walking * math.sin(ph / 2)
+        side = mathutils.Vector((-hv.y, hv.x, 0))
+        cam.location = mathutils.Vector((pos.x, pos.y, EYE - 0.02 + bob)) + side * sway
+        cam.rotation_euler = rot_to(hv, -4 + 1.2 * walking * math.sin(ph), 1.4 * walking * math.sin(ph / 2))
+        cam.keyframe_insert('location', frame=fr); cam.keyframe_insert('rotation_euler', frame=fr)
+    # the room's own light follows you a little (so a dark hall is not black): a faint torch-less fill at the eye
+    fill = point('walkFill', (pts[0].x, pts[0].y, 2.2), 2.5, color=(1.0, 0.75, 0.5), radius=0.3)
+    for fr in range(1, N + 1, 4):
+        sc.frame_set(fr); fill.location = (cam.location.x, cam.location.y, 2.3); fill.keyframe_insert('location', frame=fr)
+    out_ = A_[0] if (A_ := [a for a in sys.argv if a.endswith('.png')]) else '/tmp/walk.png'
+    base_ = out_[:-4]
+    json.dump({'route': OPT['route'], 'frames': N, 'fps': FPS, 'dur': round(N / FPS, 3), 'len': round(L, 2)}, open(base_ + '.json', 'w'))
+    if os.environ.get('WALK_INFO'): print('WALK', OPT['route'], round(L, 2), round(T, 2)); raise SystemExit
+    sc.render.filepath = base_ + '_'; sc.render.image_settings.file_format = 'JPEG'; sc.render.image_settings.quality = 92
+    bpy.ops.render.render(animation=True)
+    raise SystemExit
 if 'pano' in OPT and VIEW in ('hub', 'living', 'kitchen'):
     # Room views you can turn in (slide left / right in the game): a level equirectangular panorama around the same
     # spot, centred on the same heading, its vertical range shifted to keep the old downward tilt.
