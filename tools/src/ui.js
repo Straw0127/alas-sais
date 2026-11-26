@@ -1259,7 +1259,7 @@
     var g = game, p = g.p, H = g.house, k = g.k, s = g.s, b = g.b, keys = [];
     if (g.chapter === 1 && p.pos === 'center' && !p.travel && !p.hidden && H.power && k.st !== 4) {
       if (s.on && s.st >= 2) keys.push('hubx_s' + Math.min(3, s.st) + (H.curtain ? 'o' : 'c'));
-      if (b.on && b.st >= 1) keys.push('hubx_b' + Math.max(2, Math.min(4, b.st)));
+      if (b.on && b.st >= 1) keys.push('hubx_b' + Math.min(4, b.st));
     }
     ovlSwap(keys);
   }
