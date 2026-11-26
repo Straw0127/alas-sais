@@ -402,6 +402,13 @@ def power_down():
     v = signal.sawtooth(2 * np.pi * np.cumsum(f) / SR) * np.exp(-t / 0.9) * 0.6
     y = lp(v, 900); place(y, light_switch() * 1.5, 0)
     return reverb(y, 1.5, 0.3)
+def bulb_flicker():
+    """the light stuttering: two filament ticks with a short mains buzz, the second weaker"""
+    d = 0.55; y = np.zeros(int(d * SR))
+    for at, amp, ln in ((0.0, 1.0, 0.09), (0.17, 0.7, 0.06), (0.26, 0.45, 0.05)):
+        t = t_(ln); bz = (signal.square(2 * np.pi * 120 * t) * 0.25 + np.sin(2 * np.pi * 240 * t) * 0.2 + hp(noise(ln), 3000) * 0.25) * env(len(t), 0.003, 0.02)
+        place(y, bz * amp, at); place(y, metal_hit(4200, 0.03, damp=0.01) * 0.5 * amp, at)
+    return reverb(y, 0.7, 0.2)
 def breaker():
     d = 0.6; t = t_(d); y = np.sin(2 * np.pi * 90 * t) * np.exp(-t / 0.03) + hp(noise(d), 1500) * np.exp(-t / 0.01) * 1.2
     place(y, metal_hit(2000, 0.3, damp=0.03) * 0.4, 0)
@@ -667,7 +674,7 @@ if __name__ == '__main__':
         'tv_static': (tv_static, 0.5), 'static_swell': (static_swell, 0.7), 'vhs_glitch': (vhs_glitch, 0.7), 'giggle': (giggle, 0.7),
         'clinks': (clinks, 0.7), 'sniff': (sniff, 0.6), 'knife_taps': (knife_taps, 0.7), 'nail_taps': (nail_taps, 0.6),
         'whisper': (whisper, 0.6), 'glass_shatter': (glass_shatter, 0.9), 'bell_6am': (bell6, 0.85),
-        'light_switch': (light_switch, 0.7), 'flashlight_click': (flashlight_click, 0.6), 'curtain_rings': (curtain_rings, 0.7),
+        'light_switch': (light_switch, 0.7), 'bulb_flicker': (bulb_flicker, 0.6), 'flashlight_click': (flashlight_click, 0.6), 'curtain_rings': (curtain_rings, 0.7),
         'jumpscare_kumot': (lambda: jumpscare2('kumot'), 0.98), 'jumpscare_malikmata': (lambda: jumpscare2('malikmata'), 0.98),
         'jumpscare_kalansing': (lambda: jumpscare2('kalansing'), 0.98), 'jumpscare_silip': (lambda: jumpscare2('silip'), 0.98),
         'jumpscare_barang': (lambda: jumpscare2('barang'), 0.98),

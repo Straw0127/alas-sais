@@ -83,10 +83,19 @@ def screen(state, lang, both=True):
     else:   # ended: the red button greyed
         d.ellipse((w / 2 - br, by - br, w / 2 + br, by + br), fill=(80, 40, 36))
         ic, pos = handset_icon(d, int(w / 2), int(by), 24, color=(200, 180, 180), down=False); scr.alpha_composite(ic, (int(pos[0]), int(pos[1])))
+    # an emissive screen: bright text and icons bleed a little light, plus a whisper of sensor grain
+    import numpy as np
+    from PIL import ImageChops
+    al = scr.split()[3]; rgb = scr.convert('RGB')
+    bl = rgb.filter(ImageFilter.GaussianBlur(7)).point(lambda v: int(max(0, v - 40) * 0.55))
+    rgb = ImageChops.screen(rgb, bl)
+    n = (np.random.default_rng(7).normal(0, 2.2, (h, w, 1))).repeat(3, 2)
+    rgb = Image.fromarray(np.clip(np.asarray(rgb).astype(float) + n, 0, 255).astype('uint8'))
+    scr = rgb.convert('RGBA'); scr.putalpha(al)
     # rounded corners to fit the glass, a soft sheen from the top-left
     mask = Image.new('L', (w, h), 0); ImageDraw.Draw(mask).rounded_rectangle((0, 0, w - 1, h - 1), 40, fill=255)
     sheen = Image.new('RGBA', (w, h), (0, 0, 0, 0)); sd = ImageDraw.Draw(sheen)
-    sd.polygon([(0, 0), (w * 0.55, 0), (0, h * 0.42)], fill=(255, 255, 255, 14)); scr.alpha_composite(sheen.filter(ImageFilter.GaussianBlur(30)))
+    pass
     out = PHONE.copy(); scr.putalpha(Image.fromarray(__import__('numpy').minimum(__import__('numpy').asarray(scr.split()[3]), __import__('numpy').asarray(mask)))) if False else None
     scr2 = Image.new('RGBA', (w, h), (0, 0, 0, 0)); scr2.paste(scr, (0, 0), mask)
     out.alpha_composite(scr2, (x0, y0))
@@ -101,11 +110,18 @@ for lang in ('en', 'fil'):
         screen(st, lang).save(os.path.join(OUT, 'phone_%s_%s.png' % (st, lang)))
     screen('ring', lang, both=False).save(os.path.join(OUT, 'phone_ringA_%s.png' % lang))
 
-# timer digits for the call clock (Inter, cream)
-for ch, name in [(str(k), str(k)) for k in range(10)] + [(':', 'col')]:
-    f = font('400', 44); im = Image.new('RGBA', (34 if ch != ':' else 16, 56), (0, 0, 0, 0)); d = ImageDraw.Draw(im)
-    tw = d.textlength(ch, font=f); d.text(((im.width - tw) / 2, 2), ch, font=f, fill=CREAM)
-    im.save(os.path.join(OUT, 'dg_%s.png' % name))
+# the glass of the rendered handset (reflections, smudges, the crack): screen-blended over the live screen at runtime
+g = Image.new('RGBA', PHONE.size, (0, 0, 0, 0)); g.paste(PHONE.crop(BOX).convert('RGB'), BOX[:2]); g.save(os.path.join(OUT, 'phone_glass.png'))
+# call-timer digits: one sprite strip, fixed-width cells so the clock never shifts as it counts; lit on black
+# (drawn additively onto the screen), with the same soft bloom as the rest of the screen
+CW, CC, CH = 30, 15, 58
+sh = Image.new('RGB', (CW * 10 + CC, CH), (0, 0, 0)); d = ImageDraw.Draw(sh); f = font('400', 44)
+for k in range(11):
+    ch = ':' if k == 10 else str(k); x = k * CW; cw = CC if k == 10 else CW
+    tw = d.textlength(ch, font=f); d.text((x + (cw - tw) / 2, 3), ch, font=f, fill=CREAM)
+from PIL import ImageChops
+sh = ImageChops.screen(sh, sh.filter(ImageFilter.GaussianBlur(5)).point(lambda v: int(v * 0.5)))
+sh.save(os.path.join(OUT, 'phone_digits.png'))
 
 # phone battery icon with five bars (the flashlight is the phone's)
 for n in range(6):

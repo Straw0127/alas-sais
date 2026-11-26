@@ -24,7 +24,7 @@ for src in sorted(glob.glob(R + 'hubx_*.png')):
     if os.path.exists(f) and os.path.getmtime(f) > max(os.path.getmtime(src), os.path.getmtime(R + base + '.png')): continue
     v = graded_png(k, base); b = graded_png(base)
     d = np.abs(v - b).max(axis=2).astype(np.uint8)
-    H_, W_ = d.shape; box_ = {'k': (0.22, 0.50), 's': (0.60, 1.0), 'b': (0.50, 0.68)}[k[5]]   # each entity only changes its own part of the room
+    H_, W_ = d.shape; box_ = {'k': (0.29, 0.50), 's': (0.59, 0.86), 'b': (0.50, 0.67)}[k[5]]   # panorama columns   # each entity only changes its own part of the room
     reg = np.zeros_like(d); reg[:, int(box_[0] * W_):int(box_[1] * W_)] = 1; d = d * reg
     m = Image.fromarray(((d > (4 if k.endswith('n') else 9)) * 255).astype(np.uint8)).filter(ImageFilter.MinFilter(5)).filter(ImageFilter.MaxFilter(21)).filter(ImageFilter.GaussianBlur(10))
     rgba = Image.fromarray(v.astype(np.uint8)).convert('RGBA'); rgba.putalpha(m)

@@ -17,6 +17,8 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
   const touch = async (type, x, y) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints: type === 'touchEnd' ? [] : [{ x, y }] });
   const tapXY = async (x, y) => { await touch('touchStart', x, y); await sleep(40); await touch('touchEnd'); };
   const center = (sel) => page.evaluate((s) => { const e = document.querySelector(s); if (!e) return null; const r = e.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 }; }, sel);
+  // slide a finger across the screen to turn the room (dx < 0: look right)
+  const swipe = async (x0, x1, y) => { await touch('touchStart', x0, y); for (let k = 1; k <= 8; k++) { await touch('touchMove', x0 + (x1 - x0) * k / 8, y); await sleep(16); } await touch('touchEnd'); await sleep(200); };
   const dblXY = async (x, y) => { await tapXY(x, y); await sleep(120); await tapXY(x, y); };
   const tapSel = async (sel) => { const p = await center(sel); if (!p) { log.push('MISSING ' + sel + ' state ' + JSON.stringify(await st())); return; } await tapXY(p.x, p.y); };
   const spot = (id) => '#hot [data-spot="' + id + '"]';
@@ -42,6 +44,7 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
   { const seen = []; for (let k = 0; k < 14; k++) { seen.push(await page.evaluate(() => { const a = document.querySelector('#bgA'), b = document.querySelector('#bgB'); return (a.style.opacity === '1' ? a : b).getAttribute('data-k'); })); await sleep(35); } log.push('swing: ' + [...new Set(seen)].join(' > ')); }
   await sleep(100); log.push('holding door: ' + (await st()).hd); await shot('a10_hold_door'); await touch('touchEnd'); await sleep(300);
   await tapSel(spot('back')); await sleep(250); await shot('a11_walk_back'); await sleep(700); await shot('a12_hub_back');
+  await shot('a12a_pan_left'); await swipe(700, 150, 200); await shot('a12b_pan_right'); log.push('turned: ' + await page.evaluate(() => window.__AS_UI.pan.x.toFixed(2)) + ' spots ' + await page.evaluate(() => [...document.querySelectorAll('#hotp .spot')].map(e => e.getAttribute('data-spot') + '@' + Math.round(e.getBoundingClientRect().x)).join(' ')));
   await tapSel(spot('curtain')); await sleep(1000); await shot('a13_window'); log.push('window: ' + JSON.stringify(await st()));
   p = await center(spot('curtain')); if (!p) throw new Error('no curtain spot ' + JSON.stringify(await st())); await touch('touchStart', p.x, p.y); await sleep(700); log.push('holding curtain: ' + (await st()).hc); await touch('touchEnd'); await sleep(300);
   await dblXY(420, 170); await sleep(700); await shot('a14_window_open'); log.push('curtain open: ' + (await st()).curtain);
@@ -50,11 +53,11 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
   await page.evaluate(() => { const g = window.__AS_UI.game; g.b.on = true; g.b.st = 3; }); await sleep(300); await shot('a16_cabinet_st3');
   await dblXY(420, 170); await sleep(1700); await shot('a17_flashlight'); log.push('light: ' + (await st()).light + ' barang st ' + await page.evaluate(() => window.__AS_UI.game.b.st));
   await dblXY(420, 170); await sleep(200); log.push('light off: ' + !(await st()).light);
-  await tapSel(spot('back')); await sleep(1000); await tapSel(spot('bed')); await sleep(350); await shot('a18_crouch'); await sleep(1000); await shot('a19_under_bed'); log.push('bed: ' + JSON.stringify(await st()));
+  await tapSel(spot('back')); await sleep(1000); await swipe(150, 750, 200); log.push('turned back: ' + await page.evaluate(() => window.__AS_UI.pan.x.toFixed(2))); await tapSel(spot('bed')); await sleep(350); await shot('a18_crouch'); await sleep(1000); await shot('a19_under_bed'); log.push('bed: ' + JSON.stringify(await st()));
   await touch('touchStart', 420, 150); await sleep(700); log.push('breath: ' + (await st()).hb); await shot('a20_breath'); await touch('touchEnd'); await sleep(300);
   await tapSel(spot('out')); await sleep(1300); log.push('out: ' + JSON.stringify(await st()));
   // entity states for visuals
-  await page.evaluate(() => { const g = window.__AS_UI.game; g.house.curtain = true; g.s.on = true; g.s.st = 2; }); await tapSel(spot('curtain')); await sleep(1100); await shot('a21_window_silip2');
+  await page.evaluate(() => { const g = window.__AS_UI.game; g.house.curtain = true; g.s.on = true; g.s.st = 2; }); await swipe(700, 150, 200); await tapSel(spot('curtain')); await sleep(1100); await shot('a21_window_silip2');
   await page.evaluate(() => { const g = window.__AS_UI.game; g.k.on = true; g.k.st = 4; g.k.grace = 99; }); await tapSel(spot('back')); await sleep(1100); await shot('a22_hub_kumot');
   // death screen
   await page.evaluate(() => { const g = window.__AS_UI.game; g.k.grace = 0.05; });

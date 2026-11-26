@@ -29,6 +29,7 @@
   <div id="grain" class="layer"></div>
   <div id="vig" class="layer"></div>
   <div id="hot" class="layer"></div>
+  <div id="pan-l" class="pan-arrow" aria-label="Turn left"></div><div id="pan-r" class="pan-arrow" aria-label="Turn right"></div>
 
   <div id="hud" class="layer">
     <div id="clock"><b id="clock-t">12:00 AM</b><span id="clock-n">NIGHT 1</span></div>
@@ -117,10 +118,11 @@
         <label class="field"><span><span data-t="music"></span> <b id="vl-music"></b></span><input type="range" id="v-music" min="0" max="100"></label>
       </section>
       <section class="sect"><h4 data-t="sec_comfort"></h4>
+        <label class="field"><span><span data-t="turn_sens"></span> <b id="vl-sens"></b></span><input type="range" id="v-sens" min="30" max="250" step="5"></label>
         <div class="field tog"><span data-t="motion"></span><button class="sw" id="t-mot" type="button" role="switch"></button></div>
         <div class="field tog"><span data-t="reduced"></span><button class="sw" id="t-red" type="button" role="switch"></button></div>
         <p class="note" data-t="autosave_note"></p>
-        <p class="note dim">Keyboard: 1 door · 2 window · 3 aparador · S back · H hide · SPACE hold · F flashlight · Esc pause</p>
+        <p class="note dim">Keyboard: ← → / A D turn · 1 door · 2 window · 3 aparador · S back · H hide · SPACE hold · F flashlight · Esc pause</p>
       </section>
     </div>
     <div><button class="cta back" id="s-back" type="button" data-t="back"></button></div>
@@ -140,7 +142,7 @@
           <div class="pp-top"><span id="pp-state"></span><span id="pp-time"></span></div>
           <div class="pp-av">C</div><div class="pp-who" data-t="ph_who"></div><div class="pp-num">0917 ••• 6262</div>
         </div>
-        <div class="pp-btns"><button type="button" id="pp-ans" class="ph-g" data-t="prologue_answer"></button></div>
+        <div class="pp-btns"><button type="button" id="pp-ans" class="ph-g" data-t="prologue_answer"></button><button type="button" id="pp-end" aria-label="End call"></button></div>
       </div>
       <div id="pp-sub"></div>
     </div>

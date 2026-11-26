@@ -25,7 +25,9 @@ for f in os.listdir(W):
     if not f.endswith('.png') or f == 't_menu.png': continue
     b = os.path.join(D, f[:-4] + '.webp'); a = os.path.join(W, f)
     if os.path.exists(b) and os.path.getmtime(b) > os.path.getmtime(a): continue
-    im = Image.open(a); im = im.crop(im.getbbox()); im.save(b, 'WEBP', quality=88, method=6)
+    im = Image.open(a)
+    if not f.startswith(('phone_', 'tex_')): im = im.crop(im.getbbox())   # phone screens keep the handset's frame, textures their tile
+    im.save(b, 'WEBP', quality=88 if not f.startswith('phone_') else 92, method=6)
 a = '/home/claude/render/out/ui/ui_phone.png'; b = os.path.join(D, 'phone.webp')
 if os.path.exists(a) and (not os.path.exists(b) or os.path.getmtime(b) < os.path.getmtime(a)):
     Image.open(a).save(b, 'WEBP', quality=90, method=6)
@@ -45,3 +47,27 @@ for f in os.listdir(dst):
     if not os.path.exists(os.path.join(src, f)): os.remove(os.path.join(dst, f))
 PY
 du -sh dist
+# Turnable views: every picture wider than 16:9 goes into the PANO table; the Chapter 3 door's box in its panorama
+# is measured from the open/closed renders (for the swing cut-out)
+python3 - <<'PY'
+import os, json, numpy as np
+from PIL import Image
+D = 'dist/assets/img'; P = {}
+for f in sorted(os.listdir(D)):
+    if not f.endswith('.jpg'): continue
+    w, h = Image.open(os.path.join(D, f)).size
+    if w / h > 1.85: P[f[:-4]] = round(w / h, 4)
+door = None
+a, b = os.path.join(D, 'c3_bed.jpg'), os.path.join(D, 'c3_bed_closed.jpg')
+if 'c3_bed' in P and os.path.exists(b):
+    A = np.asarray(Image.open(a).convert('L')).astype(int); B = np.asarray(Image.open(b).convert('L')).astype(int)
+    d = np.abs(A - B) > 18; H, W = d.shape; d[:, :int(W * 0.25)] = False; d[:, int(W * 0.55):] = False
+    ys, xs = np.nonzero(d)
+    if len(xs) > 200:
+        x0, x1 = np.percentile(xs, 1), np.percentile(xs, 99); y0, y1 = np.percentile(ys, 1), np.percentile(ys, 99)
+        door = {'x': round(x0 / W, 4), 'y': round(y0 / H, 4), 'w': round((x1 - x0) / W, 4), 'h': round((y1 - y0) / H, 4)}
+s = open('dist/index.html', encoding='utf-8').read()
+s = s.replace('/*PANO*/{}', '/*PANO*/' + json.dumps(P))
+open('dist/index.html', 'w', encoding='utf-8').write(s)
+print('panoramas:', len(P))
+PY

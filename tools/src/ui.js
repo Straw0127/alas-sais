@@ -3,7 +3,7 @@
   'use strict';
   var $ = function (id) { return document.getElementById(id); };
   // preload only what Chapter 1 and the menu need (the house rooms load when Chapter 2 opens)
-  var IMG = ['hero_kumot', 'hero_silip', 'menu_bed_off', 'menu_bed_off_lit', 'menu_morning'];
+  var IMG = ['hero_kumot', 'hero_silip', 'menu_bed', 'menu_bed_off', 'menu_bed_off_lit', 'menu_morning', 'menu_living_on', 'menu_living_tvoff', 'c1_hub_off', 'c1_hub_off_lit'];
   var SFX = ['amb_house', 'amb_garden', 'amb_menu', 'rain_heavy', 'heartbeat', 'bell_6am', 'rooster_dawn', 'tuko_gecko', 'dog_howl', 'tricycle_far', 'distant_scream',
     'fluorescent_hum', 'scuffs_far', 'scuffs_near', 'wheeze', 'lullaby_hum', 'handle_rattle', 'static_swell', 'vhs_glitch', 'giggle', 'baby_cry', 'clinks', 'sniff', 'knife_taps',
     'nail_taps', 'steps_walk_wood', 'steps_run_wood', 'steps_walk_cement', 'breath_hold_gasp', 'door_creak', 'door_slam', 'cabinet_open', 'cabinet_close', 'curtain_rings',
@@ -13,7 +13,7 @@
     'hide_cabinet', 'hide_sofa', 'turn_whoosh', 'run_pant', 'nervous_breath', 'floor_creak', 'steps_run_cement', 'flashlight_on', 'salt_throw', 'tv_click_off',
     'ringtone', 'phone_pickup', 'phone_hangup', 'line_static',
     'wing_flap', 'wing_flap_far', 'wind_gust', 'beetles', 'beetle_scatter', 'aparador_creak', 'kumot_breath', 'theme_menu',
-    'step_w1', 'step_w2', 'step_w3', 'step_c1', 'step_c2', 'step_c3'];
+    'step_w1', 'step_w2', 'step_w3', 'step_c1', 'step_c2', 'step_c3', 'bulb_flicker'];
   IMG.push('c1_door_k3', 'c1_win_shadow2', 'c1_door_sw80', 'c1_door_sw62', 'c1_door_sw46', 'c1_door_sw32', 'c1_door_sw18', 'c1_hub', 'c1_hub_open', 'c1_hub_kumot', 'c1_hub_lit', 'c1_door_ajar', 'c1_peek_0', 'c1_peek_2', 'c1_peek_3', 'c1_door_closed', 'c1_win_closed', 'c1_win_shadow', 'c1_win_open',
     'c1_win_s1', 'c1_win_s2', 'c1_win_s3', 'hero_barang', 'c1_under', 'c1_under_kumot');
   for (var _i = 0; _i < 5; _i++) IMG.push('c1_cab_' + _i, 'c1_cab_' + _i + '_lit');
@@ -24,15 +24,33 @@
   var WHO_IMG = { kumot: 'js_kumot_7', malik: 'js_malikmata_7', kal: 'js_kalansing_7', silip: 'js_silip_7', barang: 'js_barang_7' };
   var WHO_SFX = { kumot: 'jumpscare_kumot', malik: 'jumpscare_malikmata', kal: 'jumpscare_kalansing', silip: 'jumpscare_silip', barang: 'jumpscare_barang' };
   // the phone is a Blender-rendered handset with its call screen drawn in Python (render/phone_ui.py): pick the picture
+  // The phones are one canvas each: the drawn call screen, the live call timer counted onto it in fixed-width
+  // digits, then the handset's real glass (reflections, smudges, the crack) screened over everything.
+  var PHI = {};
+  function phSrc(src) { if (!PHI[src]) { var i = new Image(); i.onload = function () { ['phone', 'pp-phone'].forEach(function (id) { var e = $(id); if (e) phoneDraw(e, true); }); }; i.src = src; PHI[src] = i; } return PHI[src]; }
+  function phoneDraw(el, force) {
+    var c = el.querySelector('canvas.phc');
+    if (!c) { c = document.createElement('canvas'); c.className = 'phc'; c.width = 600; c.height = 1200; el.insertBefore(c, el.firstChild); }
+    var lang = save.set.lang === 'fil' ? 'fil' : 'en', st = el._st || 'ring', t = st === 'talk' || st === 'end' ? (el._t || '') : '';
+    var key = st + '|' + lang + '|' + t; if (c._k === key && !force) return;
+    var base = phSrc('assets/ui/phone_' + st + '_' + lang + '.webp'), gl = phSrc('assets/ui/phone_glass.webp'), dg = phSrc('assets/ui/phone_digits.webp');
+    if (!base.naturalWidth) return;
+    c._k = key; var x = c.getContext('2d'); x.globalCompositeOperation = 'source-over'; x.clearRect(0, 0, 600, 1200); x.drawImage(base, 0, 0, 600, 1200);
+    if (t && dg.naturalWidth) {
+      var CW = 30, CC = 15, CH = 58, tw = 0; t.split('').forEach(function (ch) { tw += ch === ':' ? CC : CW; });
+      var px = Math.round(300 - tw / 2), y = 605; x.globalCompositeOperation = 'lighter';
+      t.split('').forEach(function (ch) { var k = ch === ':' ? 10 : +ch, w = k === 10 ? CC : CW; x.drawImage(dg, k * CW, 0, w, CH, px, y, w, CH); px += w; });
+    }
+    if (gl.naturalWidth) { x.globalCompositeOperation = 'screen'; x.drawImage(gl, 0, 0, 600, 1200); }
+    x.globalCompositeOperation = 'source-over';
+  }
   function phoneImg(el) {
     var c = el.classList, pro = el.id === 'pp-phone';
-    var st = c.contains('ended') ? 'end' : (c.contains('talk') || c.contains('talking')) ? 'talk' : (pro ? 'ringA' : 'ring');
-    el.style.backgroundImage = 'url(assets/ui/phone_' + st + '_' + (save.set.lang === 'fil' ? 'fil' : 'en') + '.webp)';
+    el._st = c.contains('ended') ? 'end' : (c.contains('talk') || c.contains('talking')) ? 'talk' : (pro ? 'ringA' : 'ring');
+    if (el._st !== 'talk' && el._st !== 'end') el._t = '';
+    el.style.backgroundImage = 'none'; phoneDraw(el);
   }
-  function clockImg(el, str) {
-    if (el.getAttribute('data-v') === str) return; el.setAttribute('data-v', str); el.setAttribute('aria-label', str); el.innerHTML = '';
-    str.split('').forEach(function (ch) { var im = document.createElement('img'); im.src = 'assets/ui/dg_' + (ch === ':' ? 'col' : ch) + '.webp'; im.alt = ''; el.appendChild(im); });
-  }
+  function clockImg(el, str) { var ph = el.closest('#phone,.pp-phone'); if (!ph || ph._t === str) return; ph._t = str; el.setAttribute('aria-label', str); phoneDraw(ph); }
   var WORDS = ['cont', 'new_game', 'chapters', 'custom_night', 'settings', 'credits', 'quit', 'resume', 'restart', 'main_menu'];
   var lightLatch = false;   // a flashlight switched on by double-tap stays on after the finger lifts
   var JS = { kumot: 'kumot', malik: 'malikmata', kal: 'kalansing', silip: 'silip', barang: 'barang' }, scareTimers = [];
@@ -43,7 +61,7 @@
   var C3_RULES = { 1: ['kumot', 'malik', 'barang'], 2: ['kal', 'silip'], 3: [], 4: [], 5: [], 6: [], 7: [] };
 
   // ------------------------------------------------------------ save / settings
-  var DEF = { lang: 'en', gfx: 'medium', vol: { master: 0.9, sfx: 1, amb: 0.8, music: 0.6 }, captions: true, reduced: false, motion: undefined };
+  var DEF = { lang: 'en', gfx: 'medium', vol: { master: 0.9, sfx: 1, amb: 0.8, music: 0.6 }, captions: true, reduced: false, motion: undefined, sens: 1 };
   var save = { prog: { c1: 0, c2: 0, c3: 0 }, cur: { ch: 1, n: 1 }, custom: { unlocked: false, records: {} }, pro: {}, set: JSON.parse(JSON.stringify(DEF)) };
   function load() {
     try {
@@ -182,6 +200,7 @@
     ['master', 'sfx', 'amb', 'music'].forEach(function (k) { $('v-' + k).value = Math.round(s.vol[k] * 100); $('vl-' + k).textContent = Math.round(s.vol[k] * 100); });
     [['t-red', s.reduced], ['t-mot', s.motion]].forEach(function (x) { var b = $(x[0]); b.classList.toggle('on', !!x[1]); b.setAttribute('aria-checked', x[1] ? 'true' : 'false'); b.textContent = x[1] ? T('on') : T('off'); });
     $('gfx-note').textContent = T('gfx_' + s.gfx);
+    if (s.sens === undefined) s.sens = 1; $('v-sens').value = Math.round(s.sens * 100); $('vl-sens').textContent = Math.round(s.sens * 100) + '%';
     applyGfx();
   }
   var CH_NIGHTS = { 1: 5, 2: 5, 3: 7 }, CH_READY = { 1: true, 2: true, 3: true };
@@ -190,7 +209,7 @@
     var box = $('night-list'); box.innerHTML = '';
     [1, 2, 3].forEach(function (ch) {
       var card = document.createElement('div'); card.className = 'chcard' + (chUnlocked(ch) && CH_READY[ch] ? '' : ' locked');
-      card.style.backgroundImage = 'linear-gradient(180deg,rgba(0,0,0,.15),rgba(0,0,0,.88) 62%),url(' + IMGDIR() + { 1: 'c1_hub', 2: 'hallway_empty', 3: 'living_lights' }[ch] + '.jpg)';
+      card.style.backgroundImage = 'linear-gradient(180deg,rgba(0,0,0,.15),rgba(0,0,0,.88) 62%),url(' + IMGDIR() + { 1: 'menu_bed', 2: 'hallway_empty', 3: 'menu_living_on' }[ch] + '.jpg)';
       var num = document.createElement('div'); num.className = 'chnum'; num.textContent = ch; card.appendChild(num);
       if (!chUnlocked(ch)) { var lk = document.createElement('div'); lk.className = 'chlock'; lk.textContent = T('locked'); card.appendChild(lk); }
       var h = document.createElement('h3'); h.textContent = T('ch_names')[ch];
@@ -330,7 +349,7 @@
     if (!game.house.lights && amb.hum) { stop(amb.hum, 0.2); amb.hum = null; }
     if (amb.hum) setLoopVol(amb.hum, 0.4, 'living');
     }
-    setView(false); renderHUD();
+    setView(false); panTick(dt); renderHUD();
     var H = game.house, P = game.p;
     var st = isC1() ? [P.pos, !!P.travel, H.curtain, H.power, !!call].join() : [P.room, !!P.travel, P.hidden, H.door, H.tv, H.lights, H.power, H.curtain, P.salt, !!call].join();
     if (st !== loop._st) { loop._st = st; buildHot(); }
@@ -430,7 +449,7 @@
   }
   function onArrive() {
     if (runH) { stop(runH, 1.2); runH = null; }
-    camClear(); setView(true, true); buildHot();
+    camClear(); setView(true, true); panTick(0); buildHot();
     if (Math.random() < 0.35) play('floor_creak', { vol: 0.4 });
     black(0, 320);
     if (lowFx()) return;
@@ -438,7 +457,7 @@
     if (game && game.p.room === 'hall' && game.night === 1 && !onArrive._hallHint) { onArrive._hallHint = 1; hint(T('h_light'), 4); }
   }
   // swing the bedroom door: a cut-out of the closed door rotating on its hinge
-  var DOOR = { x: 516, y: 198, w: 169, h: 374 }, DOOR3 = { x: 402, y: 236, w: 158, h: 300 };
+  var DOOR = { x: 516, y: 198, w: 169, h: 374 }, DOOR3 = { x: 402, y: 236, w: 158, h: 300 }, DOOR3P = { x: 0.366, y: 0.255, w: 0.086, h: 0.595 };   // the bedroom door's box in the bedroom panorama
   function c3Look() {
     if (!game || game.p.travel || game.house.door) return;
     if (game.dark) { if (game.p.battery <= 0) return; game.p.battery = Math.max(0, game.p.battery - 3); play('flashlight_on', { vol: 0.5 }); }
@@ -452,15 +471,20 @@
     if (lowFx()) { setView(true, true); return; }
     var c3 = game && game.chapter === 3, R = c3 ? DOOR3 : DOOR, sfx = c3 && game.dark ? '_c' : '';
     var leaf = document.createElement('div'); leaf.className = 'leaf';
-    leaf.style.cssText = 'left:' + R.x + 'px;top:' + R.y + 'px;width:' + R.w + 'px;height:' + R.h + 'px;background-image:url(assets/img/' + (c3 ? 'c3_bed_closed' + sfx : 'bedroom_closed') + '.jpg);background-position:-' + R.x + 'px -' + R.y + 'px';
+    var lk_ = c3 ? 'c3_bed_closed' + sfx : 'bedroom_closed', K_ = kOf(lk_);
+    if (K_ > 1.01) {   // turnable bedroom: the door's place in the panorama, where the panorama sits right now
+      var W_ = K_ * 1280, o_ = -pan.x * (K_ - 1) * 1280, P_ = DOOR3P;
+      leaf.style.cssText = 'left:' + (P_.x * W_ + o_) + 'px;top:' + P_.y * 720 + 'px;width:' + P_.w * W_ + 'px;height:' + P_.h * 720 + 'px;background-image:url(' + IMGDIR() + lk_ + '.jpg);background-size:' + W_ + 'px 720px;background-position:-' + P_.x * W_ + 'px -' + P_.y * 720 + 'px;transform-origin:100% 50%';
+    } else
+    leaf.style.cssText = 'left:' + R.x + 'px;top:' + R.y + 'px;width:' + R.w + 'px;height:' + R.h + 'px;background-image:url(assets/img/' + lk_ + '.jpg);background-position:-' + R.x + 'px -' + R.y + 'px';
     fx.appendChild(leaf);
-    var open = 'rotateY(-78deg)', shut = 'rotateY(0deg)';
+    var open = K_ > 1.01 ? 'perspective(900px) rotateY(78deg)' : 'rotateY(-78deg)', shut = K_ > 1.01 ? 'perspective(900px) rotateY(0deg)' : 'rotateY(0deg)';   // the real door hangs on its right jamb
     // the room behind the leaf is the "open" picture during the swing
     viewLock = { key: closing ? (c3 ? 'c3_bed' + sfx : 'bedroom_empty') : viewKeyRaw(), until: performance.now() + ms };
     setView(true, true);
     var a = leaf.animate([{ transform: closing ? open : shut }, { transform: closing ? shut : open }], { duration: ms, easing: closing ? 'cubic-bezier(.5,0,.9,.6)' : 'cubic-bezier(.2,.6,.3,1)', fill: 'forwards' });
     a.onfinish = function () { viewLock = null; setView(true, true); fx.innerHTML = ''; if (closing) jolt(); };
-    if (closing) camAnim([{ transform: 'scale(1)' }, { transform: 'scale(1.06)' }, { transform: 'scale(1)' }], ms + 250, [47, 55]);
+    if (closing) camAnim([{ transform: 'scale(1)' }, { transform: 'scale(1.06)' }, { transform: 'scale(1)' }], ms + 250, panToView([39.9, 55]));
   }
   // red curtains slide apart / together (two halves of the closed-curtain render)
   function curtainAnim(opening) {
@@ -593,17 +617,89 @@
       if (g.k.st === 3 && !H.door) keys.push('hubx_k3' + (g.dark ? 'n' : 'l'));
       if (g.b.st >= 2) keys.push('hubx_b' + Math.min(4, g.b.st) + n);
     }
-    var sig = keys.join(','); if (sig === ovlSig) return; ovlSig = sig;
-    var box = $('ovl'); box.innerHTML = '';
-    keys.forEach(function (key) { var im = document.createElement('img'); im.className = 'bg'; im.alt = ''; im.src = IMGDIR() + key + '.webp'; box.appendChild(im); });
+    ovlSwap(keys);
+  }
+
+  // ============================================================ turning: the bedroom, sala and kitchen are panoramas you
+  // slide left / right in (FNAF4). PANO lists every picture wider than the 16:9 screen (filled in by the build).
+  var PANO = /*PANO*/{};
+  var pan = { x: 0, place: '', v: 0, mem: {} }, PAN_HOME = { c1hub: 0, bedroom: 0, living: 0.5, kitchen: 0.5 };
+  function kOf(key) { var a = key && PANO[key]; return a ? Math.max(1, a / (16 / 9)) : 1; }
+  function panK() { return kOf(lastKey); }
+  function panPlace() {
+    if (!game) return '';
+    if (isC1()) return game.p.pos === 'center' ? 'c1hub' : '';
+    return game.p.hidden ? '' : game.p.room;
+  }
+  function panSet(place, x) { pan.mem[place] = Math.max(0, Math.min(1, x)); if (pan.place === place) pan.x = pan.mem[place]; }
+  function panTick(dt) {
+    var pl = panPlace();
+    if (pl && pl !== pan.place) { pan.place = pl; pan.x = pan.mem[pl] !== undefined ? pan.mem[pl] : (PAN_HOME[pl] || 0.5); }
+    if (pan.v && pan.place) { pan.x = Math.max(0, Math.min(1, pan.x + pan.v * dt * (save.set.sens || 1) / Math.max(0.3, panK() - 1))); pan.mem[pan.place] = pan.x; }
+    panLayout();
+  }
+  function panPlaceEl(el, k) {
+    if (!el) return; var w = (k * 100).toFixed(3), l = (-pan.x * (k - 1) * 100).toFixed(3);
+    if (el._pw === w && el._pl === l) return; el._pw = w; el._pl = l;
+    el.style.width = w + '%'; el.style.left = l + '%'; el.style.right = 'auto';
+  }
+  function panLayout() {
+    ['bgA', 'bgB', 'litImg'].forEach(function (id) { var el = $(id); panPlaceEl(el, kOf(el.getAttribute('data-k'))); });
+    var K = panK(); panPlaceEl($('ovl'), K); panPlaceEl($('hotp'), K);
+    var can = K > 1.01 && !!pan.place && !(game && (game.p.travel || game.over)), pl = $('pan-l'), pr = $('pan-r');
+    if (pl) { pl.classList.toggle('on', can && pan.x > 0.02); pr.classList.toggle('on', can && pan.x < 0.98); }
+  }
+  // a point in the panorama (in %) -> where it is on screen right now (in %), for camera moves toward a spot
+  function panToView(pt) { var K = panK(); return K > 1.01 ? [(pt[0] / 100 * K - pan.x * (K - 1)) * 100, pt[1]] : pt; }
+  // drag to turn: a horizontal slide anywhere turns the view; a tap or a hold still works on whatever is under the finger
+  var pg = null, panDrag = false;
+  function panWire() {
+    var hot = $('hot');
+    hot.addEventListener('pointerdown', function (e) { if (panK() <= 1.01 || !pan.place) { pg = null; return; } var p = toStage(e); pg = { id: e.pointerId, x: p[0], y: p[1], x0: pan.x, moved: false }; }, true);
+    window.addEventListener('pointermove', function (e) {
+      if (e.pointerType === 'mouse' && !e.buttons && panK() > 1.01 && pan.place && !paused) {   // desktop: rest the mouse near an edge to turn
+        var q = toStage(e); pan.v = q[0] < 70 ? -0.9 : q[0] > 1210 ? 0.9 : (heldKeys.panL ? -1 : heldKeys.panR ? 1 : 0);
+      }
+      if (!pg || e.pointerId !== pg.id) return;
+      var p = toStage(e), dx = p[0] - pg.x;
+      if (!pg.moved && Math.abs(dx) > 16 && Math.abs(dx) > Math.abs(p[1] - pg.y) * 1.2) { pg.moved = true; panDrag = true; ['door', 'curtain', 'breath'].forEach(function (h) { if (game) game.hold(h, false); }); if (holdH) { stop(holdH, 0.2); holdH = null; } document.querySelectorAll('.spot.down,.spot.press').forEach(function (b) { b.classList.remove('down', 'press'); }); }
+      if (pg.moved) { var K = panK(); if (K > 1.01) { pan.x = Math.max(0, Math.min(1, pg.x0 - dx * (save.set.sens || 1) / (1280 * (K - 1)))); pan.mem[pan.place] = pan.x; } }
+    }, true);
+    var end = function (e) { if (!pg || e.pointerId !== pg.id) return; pg = null; if (panDrag) setTimeout(function () { panDrag = false; }, 0); };
+    window.addEventListener('pointerup', end, true); window.addEventListener('pointercancel', end, true);
+    window.addEventListener('mouseleave', function () { pan.v = 0; });
+    // the edge arrows: hold to turn (touch), they also show which way there is more to see
+    [['pan-l', -1], ['pan-r', 1]].forEach(function (a) {
+      var el = $(a[0]); if (!el) return;
+      el.addEventListener('pointerdown', function (e) { e.preventDefault(); e.stopPropagation(); try { el.setPointerCapture(e.pointerId); } catch (x) {} pan.v = a[1] * 0.8; });
+      var off = function () { pan.v = 0; }; el.addEventListener('pointerup', off); el.addEventListener('pointercancel', off); el.addEventListener('lostpointercapture', off);
+    });
+    window.addEventListener('keydown', function (e) { if (!game || paused) return; if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') { heldKeys.panL = true; pan.v = -1; } if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') { heldKeys.panR = true; pan.v = 1; } });
+    window.addEventListener('keyup', function (e) { if (/^(ArrowLeft|a|A)$/.test(e.key)) heldKeys.panL = false; if (/^(ArrowRight|d|D)$/.test(e.key)) heldKeys.panR = false; if (!heldKeys.panL && !heldKeys.panR) pan.v = 0; });
   }
   function viewKey() { if (viewLock && performance.now() < viewLock.until) return viewLock.key; return viewKeyRaw(); }
+  // Something appeared or left without you doing anything: the bulb stutters first and the change happens in the dark,
+  // so nobody is seen to pop in or out (the house's lights are old; she moves when they blink).
+  var lastAct = 0, flkPlace = '', flkUntil = 0;
+  function flkWhere() { var p = game.p; return isC1() ? p.pos + '|' + !!p.travel : p.room + '|' + p.hidden + '|' + !!p.travel; }
+  function flkOK() {
+    if (!game || game.over || paused || game.p.travel || viewLock || swing) return false;
+    var now = performance.now(); return now - lastAct > 700 && now > flkUntil && flkPlace === flkWhere();
+  }
+  function flicker() {
+    var now = performance.now(); flkUntil = now + 450;
+    play('bulb_flicker', { vol: 0.5 });
+    if (save.set.reduced) return;   // softer scares: no dark dips, just the sound
+    var b = $('black'), seq = [[0, 0.93, 0], [90, 0, 60], [170, 0.78, 0], [235, 0, 150]];
+    seq.forEach(function (st) { setTimeout(function () { if (paused) return; b.style.transition = st[2] ? 'opacity ' + st[2] + 'ms ease' : 'none'; b.style.opacity = st[1]; }, st[0]); });
+  }
   function setView(force, instant) {
     var g = game; if (!g) return;
     var key = viewKey();
     var dark = !g.house.power && !g.dark && g.p.room !== 'curtain' && !(g.chapter === 1 && g.p.pos === 'window');
     var sofa = g.p.hidden === 'sofa' && !(viewLock && performance.now() < viewLock.until);
     var sig = key + '|' + dark + '|' + sofa;
+    if (sig !== lastView && lastView && flkOK()) { flicker(); instant = true; }
     if (sig !== lastView || force) {
       var back = front === 'bgA' ? 'bgB' : 'bgA';
       var b = $(back), f = $(front);
@@ -622,11 +718,12 @@
     li.style.filter = torch3 && g.dark && !litOK ? 'brightness(4.2) saturate(.75) contrast(1.05)' : '';
     if (lk) {
       if (li.getAttribute('data-k') !== lk) { li.src = IMGDIR() + lk + '.jpg'; li.setAttribute('data-k', lk); }
-      var m = 'radial-gradient(circle at ' + beam[0] + 'px ' + beam[1] + 'px, #000 0, #000 120px, rgba(0,0,0,.6) 190px, transparent 280px)';
+      var lkK = kOf(lk), bxo = beam[0] + pan.x * (lkK - 1) * 1280;
+      var m = 'radial-gradient(circle at ' + bxo + 'px ' + beam[1] + 'px, #000 0, #000 120px, rgba(0,0,0,.6) 190px, transparent 280px)';
       li.style.webkitMaskImage = li.style.maskImage = m; li.style.opacity = 1;
     } else li.style.opacity = 0;
     if (pz && (!game || game.over || game.p.room !== 'kitchen' || game.p.travel || game.house.power)) puzzleClose();
-    if (isC1()) c1Overlays(); else if (game.chapter === 3) c3Overlays(); else if (ovlSig) { ovlSig = ''; $('ovl').innerHTML = ''; }
+    if (isC1()) c1Overlays(); else if (game.chapter === 3) c3Overlays(); else if (ovlSig || ovlWant) { ovlSig = ovlWant = ''; $('ovl').innerHTML = ''; }
     // flashlight beam follows the finger
     var dk = $('dark'), lit = g.p.light;
     var needDark = dark || (g.p.room === 'curtain' && g.house.curtain) || g.p.room === 'hall' && !g.house.power || (isC1() && g.p.pos === 'cabinet');
@@ -638,6 +735,7 @@
     else dk.style.opacity = 0;
     $('fog').style.opacity = (!isC1() && g.p.room === 'curtain' && !g.house.curtain && g.s.st === 4 && !g.p.travel) ? 1 : 0;
     $('grain').style.backgroundPosition = (Math.random() * 160 | 0) + 'px ' + (Math.random() * 160 | 0) + 'px';
+    flkPlace = flkWhere();
   }
   var beam = [660, 340];
 
@@ -663,7 +761,7 @@
 
   // ------------------------------------------------------------ hotspots: tap things in the room itself
   function doHold(name, on) {
-    if (!game) return;
+    if (!game) return; lastAct = performance.now();
     var was = name === 'light' ? game.p.light : name === 'door' ? game.p.holdDoor : name === 'curtain' ? game.p.holdCurtain : game.p.holdBreath;
     game.hold(name, on);
     var now = name === 'light' ? game.p.light : name === 'door' ? game.p.holdDoor : name === 'curtain' ? game.p.holdCurtain : game.p.holdBreath;
@@ -674,7 +772,7 @@
       if (!now && holdH && holdHName === name) { stop(holdH, 0.25); holdH = null; }
     }
   }
-  function act(a, arg) { if (!game || game.over || paused || (call && call.state === 'ring')) return; game.act(a, arg); handleEvents(); renderHUD(); }
+  function act(a, arg) { if (!game || game.over || paused || (call && call.state === 'ring')) return; lastAct = performance.now(); game.act(a, arg); handleEvents(); renderHUD(); }
   function go(room, pt) { if (!game || game.p.travel || game.p.hidden) return; walkPt = pt || [50, 60]; act('go', room); }
   var heldKeys = {};
   var hotSig = '';
@@ -688,17 +786,19 @@
   function spots() {
     if (isC1()) return c1Spots();
     var g = game, p = g.p, H = g.house, r = p.room, S = [];
+    var PK = kOf(viewKey()) > 1.01, R = function (pano, flat) { return PK ? pano : flat; };   // panorama or flat-picture coordinates
     var exit = { id: 'exit', x: 28, y: 86, w: 44, h: 14, cls: 'exit', label: '▼  ' + T('go_hall').toUpperCase(), tap: function () { go('hall', [50, 100]); } };
     var out = { id: 'exit', x: 28, y: 86, w: 44, h: 14, cls: 'exit', label: '▲  ' + T('a_unhide').toUpperCase(), tap: function () { act('hide'); } };
     if (r === 'bedroom' && g.chapter === 3) {
       if (p.hidden) S.push(out);
       else {
-        if (H.door) S.push({ id: 'door', x: 30, y: 33, w: 14, h: 46, cls: 'hold', label: T('a_hold_door'), hold: 'door', dbl: function () { act('door'); }, hintTap: 'h_door' });
+        var dr = R([36.5, 26, 9, 58], [30, 33, 14, 46]), lk = R([36.5, 8, 9, 17], [30, 12, 14, 20]), bd = R([2, 66, 28, 34], [0, 66, 25, 34]);
+        if (H.door) S.push({ id: 'door', x: dr[0], y: dr[1], w: dr[2], h: dr[3], cls: 'hold', label: T('a_hold_door'), hold: 'door', dbl: function () { act('door'); }, hintTap: 'h_door' });
         else {
-          S.push({ id: 'door', x: 30, y: 33, w: 14, h: 46, label: T('a_door_close'), tap: function () { act('door'); } });
-          S.push({ id: 'look', x: 30, y: 12, w: 14, h: 20, label: T('a_look'), tap: function () { c3Look(); } });
+          S.push({ id: 'door', x: dr[0], y: dr[1], w: dr[2], h: dr[3], label: T('a_door_close'), tap: function () { act('door'); } });
+          S.push({ id: 'look', x: lk[0], y: lk[1], w: lk[2], h: lk[3], label: T('a_look'), tap: function () { c3Look(); } });
         }
-        S.push({ id: 'bed', x: 0, y: 66, w: 25, h: 34, label: T('a_hide_bed'), tap: function () { act('hide'); } });
+        S.push({ id: 'bed', x: bd[0], y: bd[1], w: bd[2], h: bd[3], label: T('a_hide_bed'), tap: function () { act('hide'); } });
         S.push(exit);
       }
     } else if (r === 'bedroom') {
@@ -718,9 +818,10 @@
     } else if (r === 'living') {
       if (p.hidden) S.push(out);
       else {
-        if (H.tv) S.push({ id: 'tv', x: 37, y: 46, w: 19, h: 27, label: T('a_tv'), tap: function () { act('tv'); } });
-        S.push({ id: 'switch', x: 55, y: 34, w: 11, h: 20, cls: H.power ? '' : 'off', label: T(H.lights ? 'a_lights_off' : 'a_lights_on'), tap: function () { act('lights'); } });
-        S.push({ id: 'sofa', x: 0, y: 70, w: 27, h: 30, label: T('a_hide_sofa'), tap: function () { act('hide'); } });
+        var tv = R([69.5, 55, 12.5, 30], [37, 46, 19, 27]), swc = R([87, 44, 6, 16], [55, 34, 11, 20]), so = R([0, 72, 30, 28], [0, 70, 27, 30]);
+        if (H.tv) S.push({ id: 'tv', x: tv[0], y: tv[1], w: tv[2], h: tv[3], label: T('a_tv'), tap: function () { act('tv'); } });
+        S.push({ id: 'switch', x: swc[0], y: swc[1], w: swc[2], h: swc[3], cls: H.power ? '' : 'off', label: T(H.lights ? 'a_lights_off' : 'a_lights_on'), tap: function () { act('lights'); } });
+        S.push({ id: 'sofa', x: so[0], y: so[1], w: so[2], h: so[3], label: T('a_hide_sofa'), tap: function () { act('hide'); } });
         S.push(exit);
       }
     } else if (r === 'kitchen') {
@@ -728,9 +829,10 @@
         if (g.saltOK && p.salt > 0) S.push({ id: 'salt', x: 38, y: 30, w: 24, h: 30, label: T('a_salt', p.salt), tap: function () { act('salt'); } });
         S.push(out);
       } else {
-        S.push({ id: 'cabinet', x: g.chapter >= 2 ? 0 : 9, y: g.chapter >= 2 ? 24 : 60, w: g.chapter >= 2 ? 9 : 46, h: g.chapter >= 2 ? 62 : 25, label: T('a_hide_cab'), tap: function () { act('hide'); } });
-        if (g.saltOK) S.push({ id: 'salt', x: 24, y: 42, w: 11, h: 16, cls: p.salt > 0 ? '' : 'off', label: T('a_salt', p.salt), tap: function () { act('salt'); } });
-        if (!H.power && !g.dark) S.push({ id: 'breaker', x: 84, y: 20, w: 15, h: 20, cls: 'urgent', label: T('a_breaker'), tap: function () { if (g.chapter >= 2) puzzleOpen(); else act('breaker'); } });
+        var kc = R([15.5, 24, 13, 70], g.chapter >= 2 ? [0, 24, 9, 62] : [9, 60, 46, 25]), ks = R([34, 46, 6, 13], [24, 42, 11, 16]), kb = R([70.5, 24, 7, 18], [84, 20, 15, 20]);
+        S.push({ id: 'cabinet', x: kc[0], y: kc[1], w: kc[2], h: kc[3], label: T('a_hide_cab'), tap: function () { act('hide'); } });
+        if (g.saltOK) S.push({ id: 'salt', x: ks[0], y: ks[1], w: ks[2], h: ks[3], cls: p.salt > 0 ? '' : 'off', label: T('a_salt', p.salt), tap: function () { act('salt'); } });
+        if (!H.power && !g.dark) S.push({ id: 'breaker', x: kb[0], y: kb[1], w: kb[2], h: kb[3], cls: 'urgent', label: T('a_breaker'), tap: function () { if (g.chapter >= 2) puzzleOpen(); else act('breaker'); } });
         S.push(exit);
       }
     } else if (r === 'curtain') {
@@ -751,11 +853,12 @@
       e.preventDefault(); e.stopPropagation(); try { el.setPointerCapture(e.pointerId); } catch (x) {}
       down = true; held = false; el.classList.add('press');
       if (s.gesture) beam = toStage(e);
-      if (s.hold) timer = setTimeout(function () { if (down) { held = true; el.classList.add('down'); if (s.preHold) s.preHold(); doHold(s.hold, true); } }, s.gesture ? 210 : 130);
+      if (s.hold) timer = setTimeout(function () { if (down && !panDrag) { held = true; el.classList.add('down'); if (s.preHold) s.preHold(); doHold(s.hold, true); } }, s.gesture ? 210 : 130);
     });
     var up = function () {
       el.classList.remove('press');
       if (!down) return; down = false; clearTimeout(timer);
+      if (panDrag) { if (held) { held = false; el.classList.remove('down'); doHold(s.hold, false); } return; }
       if (held) { held = false; el.classList.remove('down'); doHold(s.hold, false); return; }
       if (s.tap) { s.tap(); return; }
       if (s.dbl) { var now = performance.now(); if (now - (el._last || 0) < 400) { el._last = 0; s.dbl(); } else { el._last = now; if (s.hintTap) hint(T(s.hintTap)); } }
@@ -766,14 +869,16 @@
     var box = $('hot'), g = game;
     if (!g || g.p.travel || g.over || (call && call.state === 'ring')) { if (hotSig !== 'none') { box.innerHTML = ''; hotSig = 'none'; } return; }
     var S = spots(), p = g.p;
-    var sig = (p.room || p.pos) + p.hidden + S.map(function (s) { return s.id + s.label + (s.cls || ''); }).join('|') + lightAllowed();
+    var PK = kOf(viewKey()) > 1.01;
+    var sig = (p.room || p.pos) + p.hidden + PK + S.map(function (s) { return s.id + s.label + (s.cls || ''); }).join('|') + lightAllowed();
     if (sig === hotSig) return;
-    hotSig = sig; releaseHolds(); box.innerHTML = '';
+    hotSig = sig; releaseHolds(); box.innerHTML = ''; 
     box.classList.toggle('c1', isC1());   // Chapter 1 teaches the controls: its names and hints stay visible
     box.classList.add('reveal'); clearTimeout(box._rv); box._rv = setTimeout(function () { box.classList.remove('reveal'); }, 1400);
     box.classList.toggle('dim', g.night >= 3);
     // background: hold for flashlight (dark places) or breath (under the bed)
     var bg = document.createElement('div'); bg.id = 'hotbg'; box.appendChild(bg);
+    var hp = document.createElement('div'); hp.id = 'hotp'; hp.className = 'layer'; hp.style.pointerEvents = 'none'; box.appendChild(hp); hp._pw = hp._pl = null;
     var bgHold = (p.hidden === 'bed' || p.pos === 'bed') ? 'breath' : (lightAllowed() ? 'light' : null);
     if (bgHold) {
       var on = function (e) { e.preventDefault(); try { bg.setPointerCapture(e.pointerId); } catch (x) {} beam = toStage(e); doHold(bgHold, true); };
@@ -788,7 +893,8 @@
       el.style.left = s.x + '%'; el.style.top = s.y + '%'; el.style.width = s.w + '%'; el.style.height = s.h + '%';
       el.innerHTML = '<i class="dot"></i><span class="lbl"></span>'; el.querySelector('.lbl').textContent = s.label;
       if (call && call.focus === s.id) el.classList.add('focus');
-      bindSpot(el, s); box.appendChild(el);
+      var fixed = /exit/.test(s.cls || '') || s.id === 'exit' || s.id === 'back' || s.id === 'out' || s.cls === 'gesture' || /gesture/.test(s.cls || '');
+      bindSpot(el, s); if (PK && !fixed) { el.style.pointerEvents = 'auto'; hp.appendChild(el); } else box.appendChild(el);
     });
   }
   // keep the camera alive while holding things
@@ -806,7 +912,7 @@
   }
 
   // ============================================================ CHAPTER 1 — Lola's bedroom (FNAF4-style: center, door, window, aparador, bed)
-  var C1PT = { door: [37, 55], window: [81, 45], cabinet: [62, 55], bed: [12, 86] };   // where each spot sits in the hub picture (%)
+  var C1PT = { door: [41, 55], window: [70, 42], cabinet: [60, 55], bed: [15, 86] };   // where each spot sits in the hub panorama (%)   // where each spot sits in the hub picture (%)
   function isC1() { return game && game.chapter === 1; }
   function c1Spatial(src) {
     var pos = game.p.travel ? game.p.travel.to : game.p.pos;
@@ -836,7 +942,7 @@
       case 'bed': return k.st === 4 && k.search > 0 ? 'c1_under_kumot' : 'c1_under';
     }
     if (k.st === 4) return 'c1_hub_kumot';
-    if (!H.power && !H.curtain) return 'menu_bed_off';   // brownout: only the moon through the curtain
+    if (!H.power && !H.curtain) return 'c1_hub_off';   // brownout: only the moon through the curtain
     return H.curtain ? 'c1_hub_open' : 'c1_hub';
   }
   var peekSt = 0;
@@ -849,14 +955,24 @@
       if (s.on && s.st >= 2) keys.push('hubx_s' + Math.min(3, s.st) + (H.curtain ? 'o' : 'c'));
       if (b.on && b.st >= 2) keys.push('hubx_b' + Math.min(4, b.st));
     }
-    var sig = keys.join(','); if (sig === ovlSig) return; ovlSig = sig;
-    var box = $('ovl'); box.innerHTML = '';
-    keys.forEach(function (key) { var im = document.createElement('img'); im.className = 'bg'; im.alt = ''; im.src = IMGDIR() + key + '.webp'; box.appendChild(im); });
+    ovlSwap(keys);
+  }
+  // put the entity cut-outs in place: decoded first, then swapped (in the dark of a flicker when nothing you did caused it)
+  var ovlWant = '';
+  function ovlSwap(keys) {
+    var sig = keys.join(','); if (sig === ovlWant) return; ovlWant = sig; if (sig === ovlSig) return;
+    var ims = keys.map(function (key) { var im = document.createElement('img'); im.className = 'bg'; im.alt = ''; im.src = IMGDIR() + key + '.webp'; return im; });
+    Promise.all(ims.map(function (im) { return im.decode ? im.decode().catch(function () {}) : null; })).then(function () {
+      if (ovlWant !== sig) return;
+      var hadSome = ovlSig !== '' || sig !== '';
+      if (hadSome && flkOK()) flicker();
+      ovlSig = sig; var box = $('ovl'); box.innerHTML = ''; box._pw = box._pl = null; ims.forEach(function (im) { box.appendChild(im); }); panLayout();
+    });
   }
   function c1LitKey() {   // the flashlight-lit render that the beam reveals
     var p = game.p; if (!p.light || p.travel) return null;
     if (p.pos === 'cabinet') return 'c1_cab_' + game.b.st + '_lit';
-    if (p.pos === 'center' && !game.house.curtain && game.k.st !== 4) return game.house.power ? 'c1_hub_lit' : 'menu_bed_off_lit';
+    if (p.pos === 'center' && !game.house.curtain && game.k.st !== 4) return game.house.power ? 'c1_hub_lit' : 'c1_hub_off_lit';
     return null;
   }
   function c1Spots() {
@@ -865,10 +981,11 @@
     var lightToggle = function () { if (!game) return; var on = !game.p.light; doHold('light', on); lightLatch = on && game.p.light; };
     switch (p.pos) {
       case 'center':
-        S.push({ id: 'door', x: 31, y: 35, w: 12, h: 42, label: T('s_door'), tap: function () { c1Go('door'); } });
-        S.push({ id: 'cabinet', x: 55, y: 34, w: 11, h: 46, label: T('s_cabinet'), tap: function () { c1Go('cabinet'); } });
-        S.push({ id: 'curtain', x: 68, y: 16, w: 27, h: 62, label: T('s_window'), tap: function () { c1Go('window'); } });
-        S.push({ id: 'bed', x: 0, y: 66, w: 25, h: 34, label: T('s_bed'), tap: function () { act('hide'); } });
+        var PK1 = kOf(viewKey()) > 1.01, Q = function (a, b) { return PK1 ? a : b; }, d1 = Q([36.5, 26, 9, 58], [31, 35, 12, 42]), c1_ = Q([55, 27, 10, 60], [55, 34, 11, 46]), w1 = Q([64, 12, 13, 60], [68, 16, 27, 62]), b1 = Q([2, 66, 28, 34], [0, 66, 25, 34]);
+        S.push({ id: 'door', x: d1[0], y: d1[1], w: d1[2], h: d1[3], label: T('s_door'), tap: function () { c1Go('door'); } });
+        S.push({ id: 'cabinet', x: c1_[0], y: c1_[1], w: c1_[2], h: c1_[3], label: T('s_cabinet'), tap: function () { c1Go('cabinet'); } });
+        S.push({ id: 'curtain', x: w1[0], y: w1[1], w: w1[2], h: w1[3], label: T('s_window'), tap: function () { c1Go('window'); } });
+        S.push({ id: 'bed', x: b1[0], y: b1[1], w: b1[2], h: b1[3], label: T('s_bed'), tap: function () { act('hide'); } });
         break;
       case 'door':     // anywhere: double-tap = flashlight down the hall (again = off), hold = shut the door and keep it shut
         S.push({ id: 'door', x: 0, y: 0, w: 100, h: 85, cls: 'gesture', gesture: true, label: T('s_door_use'), hold: 'door', dbl: function () { act('peek'); } });
@@ -899,7 +1016,7 @@
     var n = Math.max(1, Math.round(ms / 300)); steps(n, ms, 'wood', false);
     if (lowFx()) { black(1, Math.min(180, ms * 0.5)); return; }
     if (d.from === 'center') {   // walk toward the spot in the hub picture
-      camAnim(bobFrames(n, 1.9, 8, 0.5), ms, C1PT[d.to], 'ease-in');
+      camAnim(bobFrames(n, 1.9, 8, 0.5), ms, panToView(C1PT[d.to]), 'ease-in');
       black(0.85, Math.min(200, ms * 0.4), ms * 0.6);
     } else {                     // step back from the spot: the spot view slides back and darkens
       camAnim([{ transform: 'scale(1) translateY(0)' }, { transform: 'scale(1.06) translateY(10px)', offset: 0.5 }, { transform: 'scale(0.98) translateY(4px)' }], ms, [50, 60], 'ease-in');
@@ -907,9 +1024,10 @@
     }
   }
   function c1Arrive(d) {
-    camClear(); setView(true, true); buildHot(); black(0, 260);
+    if (d.to === 'center' && d.from) panSet('c1hub', d.from === 'window' || d.from === 'cabinet' ? 1 : 0);   // back in the middle, still facing where you were
+    camClear(); setView(true, true); panTick(0); buildHot(); black(0, 260);
     if (lowFx()) return;
-    if (d.to === 'center' && C1PT[d.from]) camAnim([{ transform: 'scale(1.7)' }, { transform: 'scale(1.0)' }], 520, C1PT[d.from], 'cubic-bezier(.2,.7,.3,1)');   // pulled back out of that corner
+    if (d.to === 'center' && C1PT[d.from]) camAnim([{ transform: 'scale(1.7)' }, { transform: 'scale(1.0)' }], 520, panToView(C1PT[d.from]), 'cubic-bezier(.2,.7,.3,1)');   // pulled back out of that corner
     else camAnim(bobFrames(1, 1, 5, 0.3, 1.18), 480, [50, 55], 'ease-out');
     if (Math.random() < 0.25) play('floor_creak', { vol: 0.3 });
   }
@@ -1189,9 +1307,9 @@
   function menuScene() {
     var P = save.prog;
     if (P.c1 >= 5 && P.c2 >= 5 && P.c3 >= 7) return { on: 'menu_morning', mode: 'day' };
-    if (P.c1 < 5) return P.c1 + 1 === 5 ? { on: 'menu_bed_off', lit: 'menu_bed_off_lit', mode: 'torch' } : { on: 'c1_hub', off: 'menu_bed_off', mode: 'blink' };
+    if (P.c1 < 5) return P.c1 + 1 === 5 ? { on: 'menu_bed_off', lit: 'menu_bed_off_lit', mode: 'torch' } : { on: 'menu_bed', off: 'menu_bed_off', mode: 'blink' };
     if (P.c2 < 5) return P.c2 + 1 === 5 ? { on: 'menu_hall_off', lit: 'menu_hall_off_lit', mode: 'torch' } : { on: 'hallway_empty', off: 'menu_hall_off', mode: 'blink' };
-    return P.c3 + 1 >= 5 ? { on: 'living_tvoff', lit: 'menu_living_off_lit', mode: 'torch' } : { on: 'living_lights_off_tv', off: 'living_tvoff', mode: 'blink' };
+    return P.c3 + 1 >= 5 ? { on: 'menu_living_tvoff', lit: 'menu_living_off_lit', mode: 'torch' } : { on: 'menu_living_on', off: 'menu_living_tvoff', mode: 'blink' };
   }
   function toMenu() {
     stopMenu(); show('scr-menu'); renderTexts();
@@ -1240,7 +1358,7 @@
     if (!lines) { done(); return; }
     initAudio().then(function () {
       pp = { key: key, lines: lines, i: -1, done: done, t: 0, wait: 0, speaking: false };
-      $('pp-bg').src = IMGDIR() + (key === 'c1' ? 'c1_hub' : 'hallway_empty') + '.jpg';
+      $('pp-bg').src = IMGDIR() + (key === 'c1' ? 'menu_bed' : 'hallway_empty') + '.jpg';
       $('pp-phone').className = 'pp-phone ring'; phoneImg($('pp-phone')); $('pp-state').textContent = T('ph_calling'); $('pp-time').textContent = '';
       $('pp-sub').style.opacity = 0; $('pp-sub').innerHTML = '';
       show('scr-phone');
@@ -1269,6 +1387,13 @@
     pp.talking = true; pp.wait = 0.8; pp.static = play('line_static', { loop: true, vol: 0.12 });
     $('pp-phone').className = 'pp-phone talking'; phoneImg($('pp-phone')); $('pp-state').textContent = T('ph_live');
   }
+  // the player hangs up on her: the line clicks off, the phone shows the call ended, the night begins
+  function ppHangUp() {
+    if (!pp || !pp.talking) return; var p_ = pp; pp = null;
+    cancelAnimationFrame(p_.raf); stop(p_.ring, 0.05); stop(p_.static, 0.1); stop(p_.voice, 0.08); stop(p_.room, 0.6);
+    play('phone_hangup', { vol: 0.7 }); $('pp-phone').classList.add('ended'); phoneImg($('pp-phone')); $('pp-sub').style.opacity = 0;
+    setTimeout(function () { p_.done(); }, 900);
+  }
   function ppEnd(skipped) {
     if (!pp) return; var p_ = pp; pp = null;
     cancelAnimationFrame(p_.raf); stop(p_.ring, 0.05); stop(p_.static, 0.2); stop(p_.voice, 0.1); stop(p_.room, 0.5);
@@ -1294,6 +1419,7 @@
   // ------------------------------------------------------------ wiring
   function on(id, fn) { var el = $(id); if (el) el.addEventListener('click', function (e) { e.preventDefault(); play('flashlight_click', { vol: 0.3, bus: 'sfx' }); fn(e); }); }
   function wire() {
+    panWire();
     on('load-go', function () { initAudio().then(function () { goFull(); show('scr-warn'); }); });
     on('warn-go', function () { toMenu(); });
     on('m-new', function () { save.pro.c1 = false; startNight(0, 1); });
@@ -1303,6 +1429,7 @@
     on('cu-go', function () { customStart(); });
     on('pp-ans', function () { ppAnswer(); });
     on('pp-skip', function () { ppEnd(true); });
+    on('pp-end', function () { ppHangUp(); });
     on('m-nights', function () { renderNights(); show('scr-nights'); });
     on('m-settings', function () { settingsFrom = 'scr-menu'; show('scr-settings'); });
     on('m-credits', function () { show('scr-credits'); });
@@ -1333,6 +1460,7 @@
     on('e-menu', function () { toMenu(); });
     on('s-full', function () { if (document.fullscreenElement) { try { document.exitFullscreen(); } catch (e) {} } else goFull(); });
     on('t-red', function () { save.set.reduced = !save.set.reduced; renderSettings(); store(); });
+    $('v-sens').addEventListener('input', function (e) { save.set.sens = e.target.value / 100; $('vl-sens').textContent = e.target.value + '%'; }); $('v-sens').addEventListener('change', function () { store(); });
     on('t-mot', function () { save.set.motion = !save.set.motion; renderSettings(); store(); });
     on('rot-ok', function () { rotateDismissed = true; fit(); });
     document.querySelectorAll('.langbtn').forEach(function (b) { b.addEventListener('click', function () { save.set.lang = b.getAttribute('data-lang'); store(); renderTexts(); if (game) { hotSig = ''; buildHot(); } }); });
@@ -1387,6 +1515,6 @@
     loadAll(function (p) { $('load-i').style.width = Math.round(p * 100) + '%'; }).then(function () {
       $('load-go').style.visibility = 'visible'; $('load-msg').textContent = T('tap_start');
     });
-    window.__AS_UI = { get game() { return game; }, get call() { return call; }, get pp() { return pp; }, get pz() { return pz; }, toMenu: toMenu, save: save, startNight: startNight, beginNight: beginNight, act: act, go: go, hold: doHold, show: show, answer: answerCall, hang: endCall };
+    window.__AS_UI = { get game() { return game; }, get call() { return call; }, get pp() { return pp; }, get pz() { return pz; }, toMenu: toMenu, save: save, startNight: startNight, beginNight: beginNight, act: act, go: go, hold: doHold, show: show, answer: answerCall, hang: endCall, pan: pan };
   });
 })();
