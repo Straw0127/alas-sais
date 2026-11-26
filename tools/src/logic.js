@@ -311,7 +311,7 @@ var AS = (function () {
         }
         if (k.t <= 0) {
           if (H.door && k.held >= k.win * 0.5) { k.st = 0; k.cool = lerp(10, 6, diff); emit('kumot_leave'); emit('cue', { id: 'scuffs_far', room: 'hall', cap: 'cap_scuffs_leave' }); }
-          else { k.st = 4; k.t = 7; k.lift = false; k.warned = false; H.door = false; k.grace = 2.2; k.away = 0; emit('kumot_enter'); emit('door_open', { forced: true }); emit('cue', { id: 'lullaby_hum', room: 'bedroom', cap: 'cap_hum' }); }
+          else { k.st = 4; k.t = 7; k.lift = false; k.warned = false; k.huntCue = false; H.door = false; k.grace = 2.2; k.away = 0; emit('kumot_enter'); emit('door_open', { forced: true }); emit('cue', { id: 'lullaby_hum', room: 'bedroom', cap: 'cap_hum' }); }
         }
         return;
       }
@@ -331,7 +331,10 @@ var AS = (function () {
         }
       } else {
         k.away += dt;
-        if (k.away > 14) { k.st = 0; k.cool = 8; emit('kumot_leave'); }
+        // Chapter 3 / Custom Night: she comes out of the bedroom looking for you; hidden, she gives up and goes back
+        if (CH3 && k.away > 9) { if (p.hidden || p.travel) { k.st = 0; k.cool = 8; emit('kumot_leave'); } else { kill('kumot'); return; } }
+        else if (k.away > 14) { k.st = 0; k.cool = 8; emit('kumot_leave'); }
+        if (CH3 && k.away > 4 && !k.huntCue) { k.huntCue = true; emit('cue', { id: 'scuffs_near', room: 'hall', cap: 'cap_scuffs_near' }); }
       }
     }
 
@@ -423,6 +426,12 @@ var AS = (function () {
           if (c.grace <= 0) { kill('kal'); return; }
         }
       }
+      // not in the kitchen: she comes looking for you; hidden somewhere, she gives up and goes back
+      if (!here('kitchen') && !p.travel) {
+        c.away = (c.away || 0) + dt;
+        if (c.away > 6 && !c.huntCue) { c.huntCue = true; emit('cue', { id: 'clinks', room: p.room, cap: 'cap_clinks_near' }); }
+        if (c.away > 12) { c.away = 0; c.huntCue = false; if (p.hidden) { c.st = 0; c.cool = lerp(12, 7, diff); emit('kal_leave'); return; } kill('kal'); return; }
+      } else c.away = 0;
       if (c.t <= 0) { c.st = 0; c.cool = lerp(12, 7, diff); emit('kal_leave'); }
     }
     // any tap while hidden in the cabinet with her there counts as moving

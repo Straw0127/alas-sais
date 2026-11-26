@@ -15,6 +15,21 @@ for k in $(python3 -c "import re;s=open('src/ui.js').read();m=re.search(r\"var S
 done
 rm -f dist/assets/voice/*.mp3; cp /home/claude/alas-sais/assets/voice/*.mp3 dist/assets/voice/ 2>/dev/null || echo 'no voice files yet'
 python3 lift.py > /tmp/lift.log
+# Cut-out jumpscares (entity only, transparent): graded like the rooms they are laid over, kept as WebP with alpha
+python3 - <<'PY'
+import glob, os, sys, numpy as np
+from PIL import Image
+sys.path.insert(0, '/home/claude/render'); from post import grade
+for src in sorted(glob.glob('/home/claude/render/out/cut/*.png')):
+    k = os.path.basename(src)[:-4]; dst = 'dist/assets/img/' + k + '.webp'
+    if os.path.exists(dst) and os.path.getmtime(dst) > os.path.getmtime(src): continue
+    im = Image.open(src).convert('RGBA'); a = im.getchannel('A')
+    im.convert('RGB').save('/tmp/cut_in.png'); g = 'cold' if '_cold_' in k else 'night' if '_dark_' in k else 'warm'
+    grade('/tmp/cut_in.png', '/tmp/cut_out.png', g, seed=7, strength=0.45)
+    o = Image.open('/tmp/cut_out.png').convert('RGBA'); o.putalpha(a)
+    if k.startswith('cutstand'): o = o.crop(o.getbbox())   # just the figure (placed in doorways by the game)
+    o.save(dst, 'WEBP', quality=82, method=6)
+PY
 # Lettering and the phone, rendered in Blender (render/words.py, render/phone.py): trimmed, transparent WebP
 mkdir -p dist/assets/ui dist/assets/fonts; cp -u fonts/*.woff2 dist/assets/fonts/
 python3 - <<'PY'

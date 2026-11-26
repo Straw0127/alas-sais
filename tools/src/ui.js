@@ -13,7 +13,7 @@
     'hide_cabinet', 'hide_sofa', 'turn_whoosh', 'run_pant', 'nervous_breath', 'floor_creak', 'steps_run_cement', 'flashlight_on', 'salt_throw', 'tv_click_off',
     'ringtone', 'phone_pickup', 'phone_hangup', 'line_static',
     'wing_flap', 'wing_flap_far', 'wind_gust', 'beetles', 'beetle_scatter', 'aparador_creak', 'kumot_breath', 'theme_menu',
-    'step_w1', 'step_w2', 'step_w3', 'step_c1', 'step_c2', 'step_c3', 'bulb_flicker', 'efan', 'efan_click', 'yawn'];
+    'step_w1', 'step_w2', 'step_w3', 'step_c1', 'step_c2', 'step_c3', 'bulb_flicker', 'efan', 'efan_click', 'yawn', 'glass_break'];
   IMG.push('c1_door_k3', 'c1_win_shadow2', 'c1_door_sw80', 'c1_door_sw62', 'c1_door_sw46', 'c1_door_sw32', 'c1_door_sw18', 'c1_hub', 'c1_hub_open', 'c1_hub_kumot', 'c1_hub_lit', 'c1_door_ajar', 'c1_peek_0', 'c1_peek_2', 'c1_peek_3', 'c1_door_closed', 'c1_win_closed', 'c1_win_shadow', 'c1_win_open',
     'c1_win_s1', 'c1_win_s2', 'c1_win_s3', 'hero_barang', 'c1_under', 'c1_under_kumot', 'c1_under_kin', 'c1_under_klift');
   for (var _i = 0; _i < 5; _i++) IMG.push('c1_cab_' + _i, 'c1_cab_' + _i + '_lit');
@@ -55,6 +55,7 @@
   var lightLatch = false;   // a flashlight switched on by double-tap stays on after the finger lifts
   var JS = { kumot: 'kumot', malik: 'malikmata', kal: 'kalansing', silip: 'silip', barang: 'barang', bangungot: 'bangungot' }, scareTimers = [];
   var JSDIR = 'assets/img/';   // jumpscare frames are full size on every graphics setting (seen for a second; no small copies)
+  function preloadCuts(dark) { ['malikmata', 'silip'].forEach(function (n) { (dark ? ['dark'] : ['warm', 'cold']).forEach(function (l) { for (var f = 0; f < 8; f++) { var k = 'cut_' + n + '_' + l + '_' + f; if (!imgs[k]) { var i = new Image(); i.src = JSDIR + k + '.webp'; imgs[k] = i; } } }); }); }
   function preloadScares() { Object.keys(JS).map(function (w) { return JS[w]; }).concat(['kumotu', 'malikh', 'kalh', 'silipc']).forEach(function (n) { for (var f = 0; f < 8; f++) { var k = 'js_' + n + '_' + f; if (!imgs[k + JSDIR]) { var i = new Image(); i.src = JSDIR + k + '.jpg'; imgs[k + JSDIR] = i; } } }); }
   var HERO = { kumot: 'hero_kumot', malik: 'hero_malikmata', kal: 'hero_kalansing', silip: 'hero_silip', barang: 'hero_barang' };
   var C1_RULES = { 1: ['kumot'], 2: ['silip'], 3: ['barang'], 4: [], 5: [] };
@@ -323,6 +324,7 @@
       show(null); fit();
       game = curCh === 1 ? C1.create(nightIdx, { seed: (Date.now() & 0xffffff) }) : AS.create(nightIdx, { seed: (Date.now() & 0xffffff), chapter: curCh === 2 || curCh === 3 ? curCh : 0, custom: customRun ? customRun.lv : null, dark: customRun && customRun.lv.dark });
       nightStart = performance.now(); paused = false; deathTimer = 0;
+      if (curCh !== 1) preloadCuts(!!game.dark);
       lastView = ''; hotSig = ''; viewLock = null; camClear(); black(0, 10); $('fx').innerHTML = '';
       setView(true, true); renderHUD();
       amb.house = play('amb_house', { bus: 'amb', loop: true, vol: 0.55 });
@@ -476,7 +478,7 @@
   function noiseTex() {
     if (noiseURL) return noiseURL;
     var c = document.createElement('canvas'); c.width = c.height = 256; var x = c.getContext('2d'), im = x.createImageData(256, 256);
-    for (var i = 0; i < im.data.length; i += 4) { var v = Math.random() * 46; im.data[i] = v * 0.55; im.data[i + 1] = v * 0.62; im.data[i + 2] = v; im.data[i + 3] = 255; }
+    for (var i = 0; i < im.data.length; i += 4) { var v = Math.random() * 30; im.data[i] = im.data[i + 1] = im.data[i + 2] = v; im.data[i + 3] = 255; }
     x.putImageData(im, 0, 0); noiseURL = c.toDataURL(); document.documentElement.style.setProperty('--noise', 'url(' + noiseURL + ')'); return noiseURL;
   }
   function irisRun(pt, ms) {   // a dark ring closing in on the point you walk to
@@ -1558,8 +1560,16 @@
     var hid = game.p.hidden || (ch1 && game.p.pos === 'bed' ? 'bed' : null);
     // FNAF4: where it got you is the background. Hiding places have their own; Silip comes through the back door after Chapter 1
     var jsn = who === 'kumot' && hid === 'bed' ? 'kumotu' : who === 'malik' && hid === 'sofa' ? 'malikh' : who === 'kal' && hid === 'cabinet' ? 'kalh' : who === 'silip' && !ch1 ? 'silipc' : null;
+    // Caught away from where it lives (it came looking for you): the room you are in, with the entity laid over it
+    var HOME = { kumot: 'bedroom', malik: 'living', kal: 'kitchen', silip: 'curtain', barang: 'bedroom' }, cut = null;
+    var awayRoom = game.p.room;
+    if (!ch1 && HOME[who] && !(hid && jsn && jsn !== 'silipc') && (game.p.room !== HOME[who] || (who === 'barang' && game.chapter === 3 && !c3d.on))) {
+      cut = { light: game.dark || !game.house.power ? 'dark' : game.p.room === 'living' ? 'cold' : 'warm', bg: null, room: game.p.room };
+      jsn = null;
+    }
     game = null;
-    if (who !== 'bangungot') return scareRun(who, ck, ch1, night, false, jsn);
+    if (cut) return approach(who, cut, function () { cut.bg = roomShot(); scareRun(who, ck, ch1, night, false, jsn, cut); });
+    if (who !== 'bangungot') return scareRun(who, ck, ch1, night, false, jsn, cut);
     // BANGUNGOT: your strength gives out. Your eyes close (slowly), the room goes; then you are lying in Lola's bed and
     // cannot move, and she is at the foot of it. She climbs onto you.
     var bl = $('black'); bl.style.transition = 'opacity 1.6s ease-in'; bl.style.opacity = 1;
@@ -1575,16 +1585,64 @@
     scareTimers.push(setTimeout(function () { im.src = base + '1.jpg'; play('kulambo_rustle', { vol: 0.8 }); }, 3900));
     scareTimers.push(setTimeout(function () { sc.style.transition = ''; sc.style.opacity = ''; scareRun('bangungot', ck, ch1, night, true); }, 5200));
   }
-  function scareRun(who, ck, ch1, night, keep, jsn) {
+  // what you are looking at right now, as one picture (the visible part of a panorama)
+  // FNAF4: before it gets you in a room that is not its own, you see it come in: where it enters from (pano %:
+  // x, feet y, and where a 1.9 m figure's head would be), a turn of the view if it comes from the side, glass breaking for Silip
+  var ENTRY = {
+    kitchen: { _: [61.2, 77.5, 24.5] },
+    living: { _: [10.5, 101, 25.4], turn: 0.0 },
+    hall: { malik: [62, 100, 34.4], silip: [27, 120, 26.7, 'glass'], kumot: [49.8, 89.7, 36.6], kal: [49.8, 89.7, 36.6], barang: [27, 120, 26.7], _: [62, 100, 34.4] },
+    bedroom: { barang: [58, 86, 36, 'aparador'], _: [40.9, 84.6, 32.4] },
+    curtain: { _: null }
+  };
+  var STAND_H = { kumot: 2.4, malik: 0.8, kal: 1.3, silip: 1.0, barang: 1.65 }, STAND = { kumot: 'kumot', malik: 'malikmata', kal: 'kalansing', silip: 'silip', barang: 'barang' };
+  function approach(who, cut, done) {
+    var R = ENTRY[cut.room] || {}, e = R[who] || R._, px = $('panx');
+    $('scare').style.display = 'none';
+    if (!e || !px || lowFx()) { flicker(); setTimeout(done, lowFx() ? 250 : 450); return; }
+    var t0 = 0;
+    if (R.turn !== undefined && PANO[lastKey]) {   // you turn toward the door (the game loop has stopped: ease it here)
+      var x0 = pan.x, x1 = R.turn, ts = performance.now(); t0 = 480; play('turn_whoosh', { vol: 0.6 });
+      (function st() { var q = Math.min(1, (performance.now() - ts) / 450); q = q * q * (3 - 2 * q); pan.x = pan.t = x0 + (x1 - x0) * q; panLayout(); if (q < 1) requestAnimationFrame(st); })();
+    }
+    var run = function () {
+      pan.x = pan.t; panLayout();
+      if (e[3] === 'glass') play('glass_break', { vol: 1 });
+      if (e[3] === 'aparador') play('aparador_creak', { vol: 1 });
+      flicker();
+      var h = (e[1] - e[2]) * STAND_H[who] / 1.9, el = document.createElement('img');
+      el.className = 'efan'; el.src = 'assets/img/cutstand_' + STAND[who] + '.webp'; el.alt = '';
+      var top = who === 'silip' ? e[2] + (e[1] - e[2]) * 0.15 : e[1] - h;
+      el.style.cssText = 'height:' + h + '%;top:' + top + '%;left:' + e[0] + '%;transform:translateX(-50%);transform-origin:50% 100%;opacity:0;transition:opacity .15s;' +
+        'filter:' + (cut.light === 'cold' ? 'brightness(.75) saturate(.6) hue-rotate(180deg) sepia(.15)' : cut.light === 'dark' ? 'brightness(.45) saturate(.5)' : 'brightness(.85)');
+      px.appendChild(el); px._fan = null;
+      play(who === 'silip' ? 'wing_flap' : who === 'malik' ? 'giggle' : who === 'kal' ? 'clinks' : who === 'barang' ? 'beetle_scatter' : 'wheeze', { vol: 0.9 });
+      requestAnimationFrame(function () { el.style.opacity = 1; });
+      // it comes at you: grows toward the middle of the screen
+      var vx = panToView([e[0], 50])[0];
+      setTimeout(function () { if (el.animate) el.animate([{ transform: 'translateX(-50%) scale(1)' }, { transform: 'translateX(calc(-50% + ' + ((50 - vx) * 6).toFixed(0) + 'px)) scale(2.6)' }], { duration: 650, easing: 'cubic-bezier(.6,0,.9,.5)', fill: 'forwards' }); }, 550);
+      setTimeout(function () { el.remove(); done(); }, 1150);
+    };
+    setTimeout(run, t0);
+  }
+  function roomShot() {
+    try {
+      var im = $(front), K = kOf(lastKey), c = document.createElement('canvas'); c.width = 1280; c.height = 720;
+      var w = im.naturalWidth, h = im.naturalHeight, sw = w / K, sx = pan.x * (w - sw);
+      c.getContext('2d').drawImage(im, sx, 0, sw, h, 0, 0, 1280, 720); return c.toDataURL('image/jpeg', 0.85);
+    } catch (e) { return null; }
+  }
+  function scareRun(who, ck, ch1, night, keep, jsn, cut) {
     // the jumpscare: frames 0-1 it is simply there, 2-7 it lunges (the scream lands with frame 2), then it shudders in your face
-    var sc = $('scare'), im = $('scare-img'), base = JSDIR + 'js_' + (jsn || JS[who]) + '_';
+    var sc = $('scare'), im = $('scare-img'), base = cut ? JSDIR + 'cut_' + JS[who] + '_' + cut.light + '_' : JSDIR + 'js_' + (jsn || JS[who]) + '_', EXT = cut ? '.webp' : '.jpg';
+    if (cut && cut.bg) $('scare-bg').src = cut.bg;
     if (!sc.querySelector('.redout')) { var ro = document.createElement('div'); ro.className = 'redout'; sc.appendChild(ro); }
     var soft = !!save.set.reduced, still = lowFx();
-    sc.style.display = 'block'; sc.className = 'anim'; if (!keep) im.src = base + '0.jpg';
+    sc.style.display = 'block'; sc.className = 'anim' + (cut ? ' cut' : ''); if (!keep) im.src = base + '0' + EXT;
     play(WHO_SFX[who], { vol: soft ? 0.45 : 1 });
     var T0 = keep ? [0, 0, 120, 165, 210, 255, 300, 345] : [0, 170, 350, 395, 440, 485, 530, 575], HIT = keep ? 120 : 350;
     if (!keep) { scareTimers.forEach(clearTimeout); scareTimers = []; }
-    T0.forEach(function (t, f) { scareTimers.push(setTimeout(function () { im.src = base + f + '.jpg'; }, t)); });
+    T0.forEach(function (t, f) { scareTimers.push(setTimeout(function () { im.src = base + f + EXT; }, t)); });
     scareTimers.push(setTimeout(function () {
       if (!soft) {
         if (!still) sc.classList.add('hit'); if (save.set.gfx !== 'low') sc.classList.add('split');
@@ -1592,11 +1650,11 @@
         if (navigator.vibrate) try { navigator.vibrate([90, 30, 140, 30, 220]); } catch (e) {}
       }
     }, HIT));
-    for (var tj = 640, alt = 0; tj < 1500; tj += 70, alt++) (function (t, a) { scareTimers.push(setTimeout(function () { im.src = base + (a % 2 ? 7 : 6) + '.jpg'; }, t)); })(tj, alt);
-    scareTimers.push(setTimeout(function () { im.src = base + '7.jpg'; sc.classList.remove('hit'); }, 1500));
+    for (var tj = 640, alt = 0; tj < 1500; tj += 70, alt++) (function (t, a) { scareTimers.push(setTimeout(function () { im.src = base + (a % 2 ? 7 : 6) + EXT; }, t)); })(tj, alt);
+    scareTimers.push(setTimeout(function () { im.src = base + '7' + EXT; sc.classList.remove('hit'); }, 1500));
     $('over-who').textContent = T('who')[who];
     // how to beat the one that got you (and what went wrong where you were caught)
-    var sk = jsn || (who === 'kumot' ? (ch1 ? 'kumot_c1' : 'kumot') : who === 'malik' ? 'malikmata' : who), tips = (T('surv') || {})[sk];
+    var sk = cut ? (who === 'malik' ? 'malikmata' : who) + '_away' : jsn || (who === 'kumot' ? (ch1 ? 'kumot_c1' : 'kumot') : who === 'malik' ? 'malikmata' : who), tips = (T('surv') || {})[sk];
     var oh = $('over-hint'); oh.innerHTML = '';
     if (tips && tips.length) {
       var ht = document.createElement('b'); ht.className = 'surv-t'; ht.textContent = T('surv_t'); oh.appendChild(ht);
@@ -1604,7 +1662,7 @@
     } else oh.textContent = who === 'bangungot' ? T('hint_bangungot') : (ch1 ? T('c1_hint') : T('hint'))[who] || T('c1_hint')[who] || '';
     if (who === 'barang') play('beetle_scatter', { vol: 1 });
     var c = ck; $('over-time').textContent = (ch1 ? T('ch_n', 1) + ' · ' : '') + T('night_n', night) + ' · ' + c.h + ':' + (c.m < 10 ? '0' : '') + c.m + ' AM';
-    $('over-bg').src = JSDIR + 'js_' + (jsn || JS[who]) + '_7.jpg';
+    $('over-bg').src = cut && cut.bg ? cut.bg : JSDIR + 'js_' + (jsn || JS[who]) + '_7.jpg';
     game = null;
     setTimeout(function () { sc.style.display = 'none'; sc.className = ''; show('scr-over'); play('amb_menu', { bus: 'music', loop: true, vol: 0.5 }); }, 1800);
   }

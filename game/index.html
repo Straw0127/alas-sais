@@ -24,6 +24,7 @@ body{font-family:Inter,system-ui,sans-serif;color:#e9dfcb}
 #fog .hand{position:absolute;width:110px;height:140px;border-radius:40% 40% 30% 30%;background:radial-gradient(rgba(10,10,12,.55),transparent 70%)}
 #scare{display:none;position:absolute;inset:0;background:#000;overflow:hidden;z-index:10}
 #scare img{position:absolute;inset:-6%;width:112%;height:112%;object-fit:cover}
+#scare-bg{display:none}#scare.cut #scare-bg{display:block}
 #scare.go img{animation:scare 1.5s cubic-bezier(.2,1.6,.4,1) forwards}
 #scare.go.soft img{animation:scaresoft 1.5s ease-out forwards}
 @keyframes scare{0%{transform:scale(1.7) translate(0,4%);filter:brightness(2) contrast(1.6)}8%{transform:scale(1.15) translate(-2%,1%)}12%{transform:scale(1.25) translate(2%,-1%);filter:brightness(1.3) contrast(1.4) hue-rotate(-12deg)}18%{transform:scale(1.12) translate(-1%,2%)}25%{transform:scale(1.2) translate(1%,-2%)}40%{transform:scale(1.08)}100%{transform:scale(1.04);filter:brightness(.6)}}
@@ -98,7 +99,7 @@ input[type=range]{width:100%;accent-color:#b3261e;height:30px}
 #black{background:#000;opacity:0;pointer-events:none}
 /* moving (FNAF4): the view closes in round where you are going, then dark static, then the new place */
 #iris{pointer-events:none;opacity:0}
-#black.static{background:#020306 var(--noise) 0 0/256px 256px}
+#black.static{background:#000 var(--noise) 0 0/256px 256px}
 #fx{pointer-events:none;perspective:1100px}
 .leaf{position:absolute;background-repeat:no-repeat;background-size:1280px 720px;transform-origin:0 50%;box-shadow:0 0 30px rgba(0,0,0,.6)}
 .half{position:absolute;top:0;height:100%;width:50%;background-repeat:no-repeat;background-size:1280px 720px}
@@ -509,7 +510,7 @@ h1.logo,#intro-n,.over h1,.cred-title,.chnum{background-image:url(assets/ui/tex_
     </div>
   </div>
   <div id="flash" class="layer"></div>
-  <div id="scare"><img id="scare-img" alt=""></div>
+  <div id="scare"><img id="scare-bg" alt=""><img id="scare-img" alt=""></div>
 
   <!-- screens -->
   <div id="scr-load" class="scr"><div class="center">
@@ -711,7 +712,7 @@ var STR = {
     a_hide_sofa: 'Hide behind sofa', a_unhide: 'Get out', a_breath: 'HOLD BREATH', a_tv: 'Turn off TV', a_lights_on: 'Lights on', a_lights_off: 'Lights off',
     a_curtain_open: 'Open curtain', a_curtain_close: 'Close curtain', a_hold_curtain: 'HOLD CURTAIN', a_light: 'FLASHLIGHT', a_salt: 'Throw asin ({n})', a_breaker: 'Reset breaker',
     begin: 'Tap to begin', survived: 'You survived', time_survived: 'Time survived', next: 'Continue',
-    surv_t: "HOW TO SURVIVE", surv: {"kumot_c1": ["Listen at the door. Double-tap for your flashlight down the hall to see how close she is.", "When she is right at the door, HOLD anywhere to keep it shut for about five seconds, until she gives up.", "Never shine the light while she is breathing behind the door.", "If she gets in, you have about two seconds: get under the bed and HOLD your breath until she leaves."], "kumot": ["Tap the bedroom door to stand at it. Double-tap for your flashlight down the hall.", "When the handle rattles, HOLD the door shut until she walks away.", "If she bursts in, you have about two seconds: hide under the bed right away (do not go to the door).", "Under the bed, HOLD your breath while the blanket moves."], "kumotu": ["She heard you under the bed.", "HOLD your breath (press and hold) from the moment the blanket rustles until she walks away.", "Do not tap anything else while she is searching.", "If your breath is running out, it is safer to hold the door earlier next time so she never gets in."], "bangungot": ["Your sanity ran out: you fainted.", "The e-fans keep you sane. When one switches itself off, the warning shows under SANITY: go and tap it to switch it back on.", "One fan off: sanity comes back slower. All fans off: it drains.", "A blackout stops the fans: fix the breaker in the kitchen quickly."], "silip": ["The curtain stays shut. Double-tap to open it and check where she is.", "When she is close or at the window, HOLD anywhere to keep the curtain shut until she flies away.", "If she reaches the window and nobody holds the curtain, she tears through."], "silipc": ["When the crickets go quiet, she is coming to the back door.", "Open the curtain and keep your flashlight on her: the light pushes her back.", "When she is at the glass (nails tapping), keep the curtain SHUT and HOLD it. Do not open it then."], "barang": ["Keep an eye on the aparador.", "When you hear crawling or its door creaks, keep your flashlight on it until it shuts again.", "Do not let it open all the way."], "malikmata": ["When the TV switches itself on (static, a baby crying), go to the living room and switch it off fast.", "If it is already out (giggling): switch the lights off and hide behind the sofa. Do not move.", "If you are in another room when it comes for you, hide."], "malikh": ["You hid behind the sofa, but the lights were on.", "Switch the living room lights off before you hide: in the light it finds you.", "Stay hidden and still until the giggling stops."], "kal": ["Do not run: the noise brings her.", "When the metal clinks get close, throw salt at her, or hide in the kitchen cupboard.", "If she is in the kitchen and you are not hidden, she gets you in about two seconds."], "kalh": ["She found you in the cupboard because you moved.", "While she is in the kitchen, do not tap anything at all, not even the screen.", "Wait until the knife tapping stops and she leaves."]},
+    surv_t: "HOW TO SURVIVE", surv: {"kal_away": ["She left the kitchen and came looking for you.", "When the clinking moves toward you, hide where you are (bed, cupboard or sofa) and stay still; she goes back.", "Or meet her in the kitchen with salt before she leaves it."], "kumot_away": ["She got into the bedroom, did not find you there, and came looking for you.", "Hold the bedroom door so she never gets in.", "If she is out (shuffling in the hall), hide where you are and stay still until she goes back."], "barang_away": ["The aparador opened all the way and she came out.", "Go back and keep your flashlight on the aparador before it opens fully.", "You cannot hide from her once she is out: watch the aparador."], "malikmata_away": ["It came out of the TV and went looking for you in another room.", "When the TV switches itself on, go and switch it off before it comes out.", "If it is already out (giggling, getting closer): hide right where you are (bed, cupboard or sofa) and stay still until it goes back."], "silip_away": ["She broke in through the back door and came looking for you.", "When the crickets go quiet, go to the curtain. When she is at the glass, keep it SHUT and HOLD it until she leaves.", "Staying in another room does not keep you safe from her."], "kumot_c1": ["Listen at the door. Double-tap for your flashlight down the hall to see how close she is.", "When she is right at the door, HOLD anywhere to keep it shut for about five seconds, until she gives up.", "Never shine the light while she is breathing behind the door.", "If she gets in, you have about two seconds: get under the bed and HOLD your breath until she leaves."], "kumot": ["Tap the bedroom door to stand at it. Double-tap for your flashlight down the hall.", "When the handle rattles, HOLD the door shut until she walks away.", "If she bursts in, you have about two seconds: hide under the bed right away (do not go to the door).", "Under the bed, HOLD your breath while the blanket moves."], "kumotu": ["She heard you under the bed.", "HOLD your breath (press and hold) from the moment the blanket rustles until she walks away.", "Do not tap anything else while she is searching.", "If your breath is running out, it is safer to hold the door earlier next time so she never gets in."], "bangungot": ["Your sanity ran out: you fainted.", "The e-fans keep you sane. When one switches itself off, the warning shows under SANITY: go and tap it to switch it back on.", "One fan off: sanity comes back slower. All fans off: it drains.", "A blackout stops the fans: fix the breaker in the kitchen quickly."], "silip": ["The curtain stays shut. Double-tap to open it and check where she is.", "When she is close or at the window, HOLD anywhere to keep the curtain shut until she flies away.", "If she reaches the window and nobody holds the curtain, she tears through."], "silipc": ["When the crickets go quiet, she is coming to the back door.", "Open the curtain and keep your flashlight on her: the light pushes her back.", "When she is at the glass (nails tapping), keep the curtain SHUT and HOLD it. Do not open it then."], "barang": ["Keep an eye on the aparador.", "When you hear crawling or its door creaks, keep your flashlight on it until it shuts again.", "Do not let it open all the way."], "malikmata": ["When the TV switches itself on (static, a baby crying), go to the living room and switch it off fast.", "If it is already out (giggling): switch the lights off and hide behind the sofa. Do not move.", "If you are in another room when it comes for you, hide."], "malikh": ["You hid behind the sofa, but the lights were on.", "Switch the living room lights off before you hide: in the light it finds you.", "Stay hidden and still until the giggling stops."], "kal": ["Do not run: the noise brings her.", "When the metal clinks get close, throw salt at her, or hide in the kitchen cupboard.", "If she is in the kitchen and you are not hidden, she gets you in about two seconds."], "kalh": ["She found you in the cupboard because you moved.", "While she is in the kitchen, do not tap anything at all, not even the screen.", "Wait until the knife tapping stops and she leaves."]},
     caught: 'caught you.', retry: 'Retry Night', rotate: 'Turn your phone sideways', play_anyway: 'Play anyway',
     who: { kumot: 'KUMOT', malik: 'MALIKMATA', kal: 'KALANSING', silip: 'SILIP', barang: 'BARANG', bangungot: 'BANGUNGOT' },
     s_fan: 'Turn on e-fan', s_fan_off: 'Turn off e-fan', fan_on_hint: 'The e-fan is running again: your sanity slowly comes back. Its hum covers quiet sounds.', fan_nopower: 'No power: the fan will not turn.',
@@ -804,7 +805,7 @@ var STR = {
     a_hide_sofa: 'Magtago sa likod ng sofa', a_unhide: 'Lumabas', a_breath: 'PIGILAN ANG HININGA', a_tv: 'Patayin ang TV', a_lights_on: 'Buksan ang ilaw', a_lights_off: 'Patayin ang ilaw',
     a_curtain_open: 'Buksan ang kurtina', a_curtain_close: 'Isara ang kurtina', a_hold_curtain: 'HAWAKAN ANG KURTINA', a_light: 'FLASHLIGHT', a_salt: 'Ihagis ang asin ({n})', a_breaker: 'I-reset ang breaker',
     begin: 'I-tap para magsimula', survived: 'Nakaligtas ka', time_survived: 'Tagal ng pagligtas', next: 'Ituloy',
-    surv_t: "PAANO MAKALIGTAS", surv: {"kumot_c1": ["Pakinggan ang pinto. I-double-tap para sa flashlight sa pasilyo at makita kung gaano siya kalapit.", "Kapag nasa pinto na siya, pindutin nang MATAGAL kahit saan para isara ito nang mga limang segundo, hanggang sumuko siya.", "Huwag iilawan kapag humihinga na siya sa likod ng pinto.", "Kapag nakapasok, may mga dalawang segundo ka: pumunta sa ilalim ng kama at PIGILAN ang hininga hanggang umalis siya."], "kumot": ["I-tap ang pinto ng kwarto para lumapit dito. I-double-tap para sa flashlight sa pasilyo.", "Kapag kumalansing ang hawakan, HAWAKAN ang pinto hanggang umalis siya.", "Kapag bigla siyang pumasok, may mga dalawang segundo ka: magtago agad sa ilalim ng kama (huwag pumunta sa pinto).", "Sa ilalim ng kama, PIGILAN ang hininga habang gumagalaw ang kumot."], "kumotu": ["Narinig ka niya sa ilalim ng kama.", "PIGILAN ang hininga (pindutin nang matagal) mula sa pagkaluskos ng kumot hanggang umalis siya.", "Huwag pipindot ng iba habang naghahanap siya.", "Kung nauubusan ka ng hininga, mas ligtas na hawakan nang mas maaga ang pinto para hindi siya makapasok."], "bangungot": ["Naubos ang sanity mo: nahimatay ka.", "Ang mga electric fan ang nagpapanatili ng sanity mo. Kapag namatay ang isa, lalabas ang babala sa ilalim ng SANITY: puntahan at i-tap para buksan ulit.", "Isa ang patay: mas mabagal bumalik ang sanity. Lahat patay: nababawasan ito.", "Pinapatay ng brownout ang mga fan: ayusin agad ang breaker sa kusina."], "silip": ["Laging sarado ang kurtina. I-double-tap para buksan at silipin kung nasaan siya.", "Kapag malapit na o nasa bintana na, pindutin nang MATAGAL kahit saan para manatiling sarado ang kurtina hanggang lumipad siya palayo.", "Kapag umabot siya sa bintana at walang humahawak sa kurtina, pupunitin niya ito."], "silipc": ["Kapag tumahimik ang mga kuliglig, papunta na siya sa pintuan sa likod.", "Buksan ang kurtina at itutok ang flashlight sa kanya: itinataboy siya ng liwanag.", "Kapag nasa salamin na siya (may kumakatok na kuko), panatilihing SARADO ang kurtina at HAWAKAN. Huwag itong bubuksan."], "barang": ["Bantayan ang aparador.", "Kapag may gumagapang o lumangitngit ang pinto nito, itutok ang flashlight dito hanggang sumara ulit.", "Huwag hayaang tuluyang bumukas."], "malikmata": ["Kapag kusang bumukas ang TV (may static at umiiyak na sanggol), pumunta sa sala at patayin ito agad.", "Kapag nakalabas na siya (may humahagikgik): patayin ang ilaw at magtago sa likod ng sofa. Huwag gagalaw.", "Kung nasa ibang kwarto ka nang hanapin ka niya, magtago."], "malikh": ["Nagtago ka sa likod ng sofa pero bukas ang ilaw.", "Patayin muna ang ilaw sa sala bago magtago: sa liwanag, makikita ka niya.", "Manatiling nakatago at huwag gagalaw hanggang tumigil ang hagikgik."], "kal": ["Huwag tatakbo: dinadala siya ng ingay.", "Kapag malapit na ang kalansing, ihagis ang asin sa kanya, o magtago sa paminggalan sa kusina.", "Kapag nasa kusina siya at hindi ka nakatago, mahuhuli ka niya sa mga dalawang segundo."], "kalh": ["Nahanap ka niya sa paminggalan dahil gumalaw ka.", "Habang nasa kusina siya, huwag pipindot ng kahit ano, kahit ang screen.", "Hintaying tumigil ang tunog ng kutsilyo at umalis siya."]},
+    surv_t: "PAANO MAKALIGTAS", surv: {"kal_away": ["Umalis siya sa kusina at hinanap ka.", "Kapag papalapit sa'yo ang kalansing, magtago kung nasaan ka (kama, paminggalan o sofa) at huwag gagalaw; babalik siya.", "O harapin siya sa kusina gamit ang asin bago siya lumabas."], "kumot_away": ["Nakapasok siya sa kwarto, wala ka roon, kaya hinanap ka niya.", "Hawakan ang pinto ng kwarto para hindi siya makapasok.", "Kapag nakalabas na siya (may kaluskos sa hallway), magtago kung nasaan ka at huwag gagalaw hanggang bumalik siya."], "barang_away": ["Tuluyang bumukas ang aparador at lumabas siya.", "Bumalik at ilawan ang aparador bago ito tuluyang bumukas.", "Hindi ka makakapagtago sa kanya kapag nakalabas na: bantayan ang aparador."], "malikmata_away": ["Lumabas siya sa TV at hinanap ka sa ibang kwarto.", "Kapag kusang bumukas ang TV, puntahan at patayin ito bago siya lumabas.", "Kapag nakalabas na siya (humahagikgik, papalapit): magtago kung nasaan ka (kama, paminggalan o sofa) at huwag gagalaw hanggang bumalik siya."], "silip_away": ["Pumasok siya sa pintuan sa likod at hinanap ka.", "Kapag tumahimik ang mga kuliglig, pumunta sa kurtina. Kapag nasa salamin na siya, panatilihing SARADO at HAWAKAN hanggang umalis siya.", "Hindi ka ligtas sa kanya kahit nasa ibang kwarto ka."], "kumot_c1": ["Pakinggan ang pinto. I-double-tap para sa flashlight sa pasilyo at makita kung gaano siya kalapit.", "Kapag nasa pinto na siya, pindutin nang MATAGAL kahit saan para isara ito nang mga limang segundo, hanggang sumuko siya.", "Huwag iilawan kapag humihinga na siya sa likod ng pinto.", "Kapag nakapasok, may mga dalawang segundo ka: pumunta sa ilalim ng kama at PIGILAN ang hininga hanggang umalis siya."], "kumot": ["I-tap ang pinto ng kwarto para lumapit dito. I-double-tap para sa flashlight sa pasilyo.", "Kapag kumalansing ang hawakan, HAWAKAN ang pinto hanggang umalis siya.", "Kapag bigla siyang pumasok, may mga dalawang segundo ka: magtago agad sa ilalim ng kama (huwag pumunta sa pinto).", "Sa ilalim ng kama, PIGILAN ang hininga habang gumagalaw ang kumot."], "kumotu": ["Narinig ka niya sa ilalim ng kama.", "PIGILAN ang hininga (pindutin nang matagal) mula sa pagkaluskos ng kumot hanggang umalis siya.", "Huwag pipindot ng iba habang naghahanap siya.", "Kung nauubusan ka ng hininga, mas ligtas na hawakan nang mas maaga ang pinto para hindi siya makapasok."], "bangungot": ["Naubos ang sanity mo: nahimatay ka.", "Ang mga electric fan ang nagpapanatili ng sanity mo. Kapag namatay ang isa, lalabas ang babala sa ilalim ng SANITY: puntahan at i-tap para buksan ulit.", "Isa ang patay: mas mabagal bumalik ang sanity. Lahat patay: nababawasan ito.", "Pinapatay ng brownout ang mga fan: ayusin agad ang breaker sa kusina."], "silip": ["Laging sarado ang kurtina. I-double-tap para buksan at silipin kung nasaan siya.", "Kapag malapit na o nasa bintana na, pindutin nang MATAGAL kahit saan para manatiling sarado ang kurtina hanggang lumipad siya palayo.", "Kapag umabot siya sa bintana at walang humahawak sa kurtina, pupunitin niya ito."], "silipc": ["Kapag tumahimik ang mga kuliglig, papunta na siya sa pintuan sa likod.", "Buksan ang kurtina at itutok ang flashlight sa kanya: itinataboy siya ng liwanag.", "Kapag nasa salamin na siya (may kumakatok na kuko), panatilihing SARADO ang kurtina at HAWAKAN. Huwag itong bubuksan."], "barang": ["Bantayan ang aparador.", "Kapag may gumagapang o lumangitngit ang pinto nito, itutok ang flashlight dito hanggang sumara ulit.", "Huwag hayaang tuluyang bumukas."], "malikmata": ["Kapag kusang bumukas ang TV (may static at umiiyak na sanggol), pumunta sa sala at patayin ito agad.", "Kapag nakalabas na siya (may humahagikgik): patayin ang ilaw at magtago sa likod ng sofa. Huwag gagalaw.", "Kung nasa ibang kwarto ka nang hanapin ka niya, magtago."], "malikh": ["Nagtago ka sa likod ng sofa pero bukas ang ilaw.", "Patayin muna ang ilaw sa sala bago magtago: sa liwanag, makikita ka niya.", "Manatiling nakatago at huwag gagalaw hanggang tumigil ang hagikgik."], "kal": ["Huwag tatakbo: dinadala siya ng ingay.", "Kapag malapit na ang kalansing, ihagis ang asin sa kanya, o magtago sa paminggalan sa kusina.", "Kapag nasa kusina siya at hindi ka nakatago, mahuhuli ka niya sa mga dalawang segundo."], "kalh": ["Nahanap ka niya sa paminggalan dahil gumalaw ka.", "Habang nasa kusina siya, huwag pipindot ng kahit ano, kahit ang screen.", "Hintaying tumigil ang tunog ng kutsilyo at umalis siya."]},
     caught: 'ang nakahuli sa\'yo.', retry: 'Ulitin ang Gabi', rotate: 'Ipahiga ang phone mo', play_anyway: 'Laruin pa rin',
     who: { kumot: 'KUMOT', malik: 'MALIKMATA', kal: 'KALANSING', silip: 'SILIP', barang: 'BARANG', bangungot: 'BANGUNGOT' },
     s_fan: 'Buksan ang e-fan', s_fan_off: 'Patayin ang e-fan', fan_on_hint: 'Umaandar na ulit ang electric fan: unti-unting bumabalik ang sanity mo. Natatakpan ng ugong nito ang mahihinang tunog.', fan_nopower: 'Walang kuryente: hindi aandar ang electric fan.',
@@ -1160,7 +1161,7 @@ var AS = (function () {
         }
         if (k.t <= 0) {
           if (H.door && k.held >= k.win * 0.5) { k.st = 0; k.cool = lerp(10, 6, diff); emit('kumot_leave'); emit('cue', { id: 'scuffs_far', room: 'hall', cap: 'cap_scuffs_leave' }); }
-          else { k.st = 4; k.t = 7; k.lift = false; k.warned = false; H.door = false; k.grace = 2.2; k.away = 0; emit('kumot_enter'); emit('door_open', { forced: true }); emit('cue', { id: 'lullaby_hum', room: 'bedroom', cap: 'cap_hum' }); }
+          else { k.st = 4; k.t = 7; k.lift = false; k.warned = false; k.huntCue = false; H.door = false; k.grace = 2.2; k.away = 0; emit('kumot_enter'); emit('door_open', { forced: true }); emit('cue', { id: 'lullaby_hum', room: 'bedroom', cap: 'cap_hum' }); }
         }
         return;
       }
@@ -1180,7 +1181,10 @@ var AS = (function () {
         }
       } else {
         k.away += dt;
-        if (k.away > 14) { k.st = 0; k.cool = 8; emit('kumot_leave'); }
+        // Chapter 3 / Custom Night: she comes out of the bedroom looking for you; hidden, she gives up and goes back
+        if (CH3 && k.away > 9) { if (p.hidden || p.travel) { k.st = 0; k.cool = 8; emit('kumot_leave'); } else { kill('kumot'); return; } }
+        else if (k.away > 14) { k.st = 0; k.cool = 8; emit('kumot_leave'); }
+        if (CH3 && k.away > 4 && !k.huntCue) { k.huntCue = true; emit('cue', { id: 'scuffs_near', room: 'hall', cap: 'cap_scuffs_near' }); }
       }
     }
 
@@ -1272,6 +1276,12 @@ var AS = (function () {
           if (c.grace <= 0) { kill('kal'); return; }
         }
       }
+      // not in the kitchen: she comes looking for you; hidden somewhere, she gives up and goes back
+      if (!here('kitchen') && !p.travel) {
+        c.away = (c.away || 0) + dt;
+        if (c.away > 6 && !c.huntCue) { c.huntCue = true; emit('cue', { id: 'clinks', room: p.room, cap: 'cap_clinks_near' }); }
+        if (c.away > 12) { c.away = 0; c.huntCue = false; if (p.hidden) { c.st = 0; c.cool = lerp(12, 7, diff); emit('kal_leave'); return; } kill('kal'); return; }
+      } else c.away = 0;
       if (c.t <= 0) { c.st = 0; c.cool = lerp(12, 7, diff); emit('kal_leave'); }
     }
     // any tap while hidden in the cabinet with her there counts as moving
@@ -1583,7 +1593,7 @@ if (typeof module !== 'undefined') module.exports = C1;
     'hide_cabinet', 'hide_sofa', 'turn_whoosh', 'run_pant', 'nervous_breath', 'floor_creak', 'steps_run_cement', 'flashlight_on', 'salt_throw', 'tv_click_off',
     'ringtone', 'phone_pickup', 'phone_hangup', 'line_static',
     'wing_flap', 'wing_flap_far', 'wind_gust', 'beetles', 'beetle_scatter', 'aparador_creak', 'kumot_breath', 'theme_menu',
-    'step_w1', 'step_w2', 'step_w3', 'step_c1', 'step_c2', 'step_c3', 'bulb_flicker', 'efan', 'efan_click', 'yawn'];
+    'step_w1', 'step_w2', 'step_w3', 'step_c1', 'step_c2', 'step_c3', 'bulb_flicker', 'efan', 'efan_click', 'yawn', 'glass_break'];
   IMG.push('c1_door_k3', 'c1_win_shadow2', 'c1_door_sw80', 'c1_door_sw62', 'c1_door_sw46', 'c1_door_sw32', 'c1_door_sw18', 'c1_hub', 'c1_hub_open', 'c1_hub_kumot', 'c1_hub_lit', 'c1_door_ajar', 'c1_peek_0', 'c1_peek_2', 'c1_peek_3', 'c1_door_closed', 'c1_win_closed', 'c1_win_shadow', 'c1_win_open',
     'c1_win_s1', 'c1_win_s2', 'c1_win_s3', 'hero_barang', 'c1_under', 'c1_under_kumot', 'c1_under_kin', 'c1_under_klift');
   for (var _i = 0; _i < 5; _i++) IMG.push('c1_cab_' + _i, 'c1_cab_' + _i + '_lit');
@@ -1625,6 +1635,7 @@ if (typeof module !== 'undefined') module.exports = C1;
   var lightLatch = false;   // a flashlight switched on by double-tap stays on after the finger lifts
   var JS = { kumot: 'kumot', malik: 'malikmata', kal: 'kalansing', silip: 'silip', barang: 'barang', bangungot: 'bangungot' }, scareTimers = [];
   var JSDIR = 'assets/img/';   // jumpscare frames are full size on every graphics setting (seen for a second; no small copies)
+  function preloadCuts(dark) { ['malikmata', 'silip'].forEach(function (n) { (dark ? ['dark'] : ['warm', 'cold']).forEach(function (l) { for (var f = 0; f < 8; f++) { var k = 'cut_' + n + '_' + l + '_' + f; if (!imgs[k]) { var i = new Image(); i.src = JSDIR + k + '.webp'; imgs[k] = i; } } }); }); }
   function preloadScares() { Object.keys(JS).map(function (w) { return JS[w]; }).concat(['kumotu', 'malikh', 'kalh', 'silipc']).forEach(function (n) { for (var f = 0; f < 8; f++) { var k = 'js_' + n + '_' + f; if (!imgs[k + JSDIR]) { var i = new Image(); i.src = JSDIR + k + '.jpg'; imgs[k + JSDIR] = i; } } }); }
   var HERO = { kumot: 'hero_kumot', malik: 'hero_malikmata', kal: 'hero_kalansing', silip: 'hero_silip', barang: 'hero_barang' };
   var C1_RULES = { 1: ['kumot'], 2: ['silip'], 3: ['barang'], 4: [], 5: [] };
@@ -1893,6 +1904,7 @@ if (typeof module !== 'undefined') module.exports = C1;
       show(null); fit();
       game = curCh === 1 ? C1.create(nightIdx, { seed: (Date.now() & 0xffffff) }) : AS.create(nightIdx, { seed: (Date.now() & 0xffffff), chapter: curCh === 2 || curCh === 3 ? curCh : 0, custom: customRun ? customRun.lv : null, dark: customRun && customRun.lv.dark });
       nightStart = performance.now(); paused = false; deathTimer = 0;
+      if (curCh !== 1) preloadCuts(!!game.dark);
       lastView = ''; hotSig = ''; viewLock = null; camClear(); black(0, 10); $('fx').innerHTML = '';
       setView(true, true); renderHUD();
       amb.house = play('amb_house', { bus: 'amb', loop: true, vol: 0.55 });
@@ -2046,7 +2058,7 @@ if (typeof module !== 'undefined') module.exports = C1;
   function noiseTex() {
     if (noiseURL) return noiseURL;
     var c = document.createElement('canvas'); c.width = c.height = 256; var x = c.getContext('2d'), im = x.createImageData(256, 256);
-    for (var i = 0; i < im.data.length; i += 4) { var v = Math.random() * 46; im.data[i] = v * 0.55; im.data[i + 1] = v * 0.62; im.data[i + 2] = v; im.data[i + 3] = 255; }
+    for (var i = 0; i < im.data.length; i += 4) { var v = Math.random() * 30; im.data[i] = im.data[i + 1] = im.data[i + 2] = v; im.data[i + 3] = 255; }
     x.putImageData(im, 0, 0); noiseURL = c.toDataURL(); document.documentElement.style.setProperty('--noise', 'url(' + noiseURL + ')'); return noiseURL;
   }
   function irisRun(pt, ms) {   // a dark ring closing in on the point you walk to
@@ -3128,8 +3140,16 @@ if (typeof module !== 'undefined') module.exports = C1;
     var hid = game.p.hidden || (ch1 && game.p.pos === 'bed' ? 'bed' : null);
     // FNAF4: where it got you is the background. Hiding places have their own; Silip comes through the back door after Chapter 1
     var jsn = who === 'kumot' && hid === 'bed' ? 'kumotu' : who === 'malik' && hid === 'sofa' ? 'malikh' : who === 'kal' && hid === 'cabinet' ? 'kalh' : who === 'silip' && !ch1 ? 'silipc' : null;
+    // Caught away from where it lives (it came looking for you): the room you are in, with the entity laid over it
+    var HOME = { kumot: 'bedroom', malik: 'living', kal: 'kitchen', silip: 'curtain', barang: 'bedroom' }, cut = null;
+    var awayRoom = game.p.room;
+    if (!ch1 && HOME[who] && !(hid && jsn && jsn !== 'silipc') && (game.p.room !== HOME[who] || (who === 'barang' && game.chapter === 3 && !c3d.on))) {
+      cut = { light: game.dark || !game.house.power ? 'dark' : game.p.room === 'living' ? 'cold' : 'warm', bg: null, room: game.p.room };
+      jsn = null;
+    }
     game = null;
-    if (who !== 'bangungot') return scareRun(who, ck, ch1, night, false, jsn);
+    if (cut) return approach(who, cut, function () { cut.bg = roomShot(); scareRun(who, ck, ch1, night, false, jsn, cut); });
+    if (who !== 'bangungot') return scareRun(who, ck, ch1, night, false, jsn, cut);
     // BANGUNGOT: your strength gives out. Your eyes close (slowly), the room goes; then you are lying in Lola's bed and
     // cannot move, and she is at the foot of it. She climbs onto you.
     var bl = $('black'); bl.style.transition = 'opacity 1.6s ease-in'; bl.style.opacity = 1;
@@ -3145,16 +3165,64 @@ if (typeof module !== 'undefined') module.exports = C1;
     scareTimers.push(setTimeout(function () { im.src = base + '1.jpg'; play('kulambo_rustle', { vol: 0.8 }); }, 3900));
     scareTimers.push(setTimeout(function () { sc.style.transition = ''; sc.style.opacity = ''; scareRun('bangungot', ck, ch1, night, true); }, 5200));
   }
-  function scareRun(who, ck, ch1, night, keep, jsn) {
+  // what you are looking at right now, as one picture (the visible part of a panorama)
+  // FNAF4: before it gets you in a room that is not its own, you see it come in: where it enters from (pano %:
+  // x, feet y, and where a 1.9 m figure's head would be), a turn of the view if it comes from the side, glass breaking for Silip
+  var ENTRY = {
+    kitchen: { _: [61.2, 77.5, 24.5] },
+    living: { _: [10.5, 101, 25.4], turn: 0.0 },
+    hall: { malik: [62, 100, 34.4], silip: [27, 120, 26.7, 'glass'], kumot: [49.8, 89.7, 36.6], kal: [49.8, 89.7, 36.6], barang: [27, 120, 26.7], _: [62, 100, 34.4] },
+    bedroom: { barang: [58, 86, 36, 'aparador'], _: [40.9, 84.6, 32.4] },
+    curtain: { _: null }
+  };
+  var STAND_H = { kumot: 2.4, malik: 0.8, kal: 1.3, silip: 1.0, barang: 1.65 }, STAND = { kumot: 'kumot', malik: 'malikmata', kal: 'kalansing', silip: 'silip', barang: 'barang' };
+  function approach(who, cut, done) {
+    var R = ENTRY[cut.room] || {}, e = R[who] || R._, px = $('panx');
+    $('scare').style.display = 'none';
+    if (!e || !px || lowFx()) { flicker(); setTimeout(done, lowFx() ? 250 : 450); return; }
+    var t0 = 0;
+    if (R.turn !== undefined && PANO[lastKey]) {   // you turn toward the door (the game loop has stopped: ease it here)
+      var x0 = pan.x, x1 = R.turn, ts = performance.now(); t0 = 480; play('turn_whoosh', { vol: 0.6 });
+      (function st() { var q = Math.min(1, (performance.now() - ts) / 450); q = q * q * (3 - 2 * q); pan.x = pan.t = x0 + (x1 - x0) * q; panLayout(); if (q < 1) requestAnimationFrame(st); })();
+    }
+    var run = function () {
+      pan.x = pan.t; panLayout();
+      if (e[3] === 'glass') play('glass_break', { vol: 1 });
+      if (e[3] === 'aparador') play('aparador_creak', { vol: 1 });
+      flicker();
+      var h = (e[1] - e[2]) * STAND_H[who] / 1.9, el = document.createElement('img');
+      el.className = 'efan'; el.src = 'assets/img/cutstand_' + STAND[who] + '.webp'; el.alt = '';
+      var top = who === 'silip' ? e[2] + (e[1] - e[2]) * 0.15 : e[1] - h;
+      el.style.cssText = 'height:' + h + '%;top:' + top + '%;left:' + e[0] + '%;transform:translateX(-50%);transform-origin:50% 100%;opacity:0;transition:opacity .15s;' +
+        'filter:' + (cut.light === 'cold' ? 'brightness(.75) saturate(.6) hue-rotate(180deg) sepia(.15)' : cut.light === 'dark' ? 'brightness(.45) saturate(.5)' : 'brightness(.85)');
+      px.appendChild(el); px._fan = null;
+      play(who === 'silip' ? 'wing_flap' : who === 'malik' ? 'giggle' : who === 'kal' ? 'clinks' : who === 'barang' ? 'beetle_scatter' : 'wheeze', { vol: 0.9 });
+      requestAnimationFrame(function () { el.style.opacity = 1; });
+      // it comes at you: grows toward the middle of the screen
+      var vx = panToView([e[0], 50])[0];
+      setTimeout(function () { if (el.animate) el.animate([{ transform: 'translateX(-50%) scale(1)' }, { transform: 'translateX(calc(-50% + ' + ((50 - vx) * 6).toFixed(0) + 'px)) scale(2.6)' }], { duration: 650, easing: 'cubic-bezier(.6,0,.9,.5)', fill: 'forwards' }); }, 550);
+      setTimeout(function () { el.remove(); done(); }, 1150);
+    };
+    setTimeout(run, t0);
+  }
+  function roomShot() {
+    try {
+      var im = $(front), K = kOf(lastKey), c = document.createElement('canvas'); c.width = 1280; c.height = 720;
+      var w = im.naturalWidth, h = im.naturalHeight, sw = w / K, sx = pan.x * (w - sw);
+      c.getContext('2d').drawImage(im, sx, 0, sw, h, 0, 0, 1280, 720); return c.toDataURL('image/jpeg', 0.85);
+    } catch (e) { return null; }
+  }
+  function scareRun(who, ck, ch1, night, keep, jsn, cut) {
     // the jumpscare: frames 0-1 it is simply there, 2-7 it lunges (the scream lands with frame 2), then it shudders in your face
-    var sc = $('scare'), im = $('scare-img'), base = JSDIR + 'js_' + (jsn || JS[who]) + '_';
+    var sc = $('scare'), im = $('scare-img'), base = cut ? JSDIR + 'cut_' + JS[who] + '_' + cut.light + '_' : JSDIR + 'js_' + (jsn || JS[who]) + '_', EXT = cut ? '.webp' : '.jpg';
+    if (cut && cut.bg) $('scare-bg').src = cut.bg;
     if (!sc.querySelector('.redout')) { var ro = document.createElement('div'); ro.className = 'redout'; sc.appendChild(ro); }
     var soft = !!save.set.reduced, still = lowFx();
-    sc.style.display = 'block'; sc.className = 'anim'; if (!keep) im.src = base + '0.jpg';
+    sc.style.display = 'block'; sc.className = 'anim' + (cut ? ' cut' : ''); if (!keep) im.src = base + '0' + EXT;
     play(WHO_SFX[who], { vol: soft ? 0.45 : 1 });
     var T0 = keep ? [0, 0, 120, 165, 210, 255, 300, 345] : [0, 170, 350, 395, 440, 485, 530, 575], HIT = keep ? 120 : 350;
     if (!keep) { scareTimers.forEach(clearTimeout); scareTimers = []; }
-    T0.forEach(function (t, f) { scareTimers.push(setTimeout(function () { im.src = base + f + '.jpg'; }, t)); });
+    T0.forEach(function (t, f) { scareTimers.push(setTimeout(function () { im.src = base + f + EXT; }, t)); });
     scareTimers.push(setTimeout(function () {
       if (!soft) {
         if (!still) sc.classList.add('hit'); if (save.set.gfx !== 'low') sc.classList.add('split');
@@ -3162,11 +3230,11 @@ if (typeof module !== 'undefined') module.exports = C1;
         if (navigator.vibrate) try { navigator.vibrate([90, 30, 140, 30, 220]); } catch (e) {}
       }
     }, HIT));
-    for (var tj = 640, alt = 0; tj < 1500; tj += 70, alt++) (function (t, a) { scareTimers.push(setTimeout(function () { im.src = base + (a % 2 ? 7 : 6) + '.jpg'; }, t)); })(tj, alt);
-    scareTimers.push(setTimeout(function () { im.src = base + '7.jpg'; sc.classList.remove('hit'); }, 1500));
+    for (var tj = 640, alt = 0; tj < 1500; tj += 70, alt++) (function (t, a) { scareTimers.push(setTimeout(function () { im.src = base + (a % 2 ? 7 : 6) + EXT; }, t)); })(tj, alt);
+    scareTimers.push(setTimeout(function () { im.src = base + '7' + EXT; sc.classList.remove('hit'); }, 1500));
     $('over-who').textContent = T('who')[who];
     // how to beat the one that got you (and what went wrong where you were caught)
-    var sk = jsn || (who === 'kumot' ? (ch1 ? 'kumot_c1' : 'kumot') : who === 'malik' ? 'malikmata' : who), tips = (T('surv') || {})[sk];
+    var sk = cut ? (who === 'malik' ? 'malikmata' : who) + '_away' : jsn || (who === 'kumot' ? (ch1 ? 'kumot_c1' : 'kumot') : who === 'malik' ? 'malikmata' : who), tips = (T('surv') || {})[sk];
     var oh = $('over-hint'); oh.innerHTML = '';
     if (tips && tips.length) {
       var ht = document.createElement('b'); ht.className = 'surv-t'; ht.textContent = T('surv_t'); oh.appendChild(ht);
@@ -3174,7 +3242,7 @@ if (typeof module !== 'undefined') module.exports = C1;
     } else oh.textContent = who === 'bangungot' ? T('hint_bangungot') : (ch1 ? T('c1_hint') : T('hint'))[who] || T('c1_hint')[who] || '';
     if (who === 'barang') play('beetle_scatter', { vol: 1 });
     var c = ck; $('over-time').textContent = (ch1 ? T('ch_n', 1) + ' · ' : '') + T('night_n', night) + ' · ' + c.h + ':' + (c.m < 10 ? '0' : '') + c.m + ' AM';
-    $('over-bg').src = JSDIR + 'js_' + (jsn || JS[who]) + '_7.jpg';
+    $('over-bg').src = cut && cut.bg ? cut.bg : JSDIR + 'js_' + (jsn || JS[who]) + '_7.jpg';
     game = null;
     setTimeout(function () { sc.style.display = 'none'; sc.className = ''; show('scr-over'); play('amb_menu', { bus: 'music', loop: true, vol: 0.5 }); }, 1800);
   }

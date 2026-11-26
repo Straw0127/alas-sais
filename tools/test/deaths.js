@@ -18,12 +18,15 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
     ['kalh (C2 cupboard)', 2, 1, `g.p.room='kitchen'; g.act('hide'); g.c.st=3; g.c.t=10; g.act('none');`],
     ['silipc (C2 curtain)', 2, 3, `g.p.room='curtain'; g.house.curtain=true; g.s.st=4; g.s.t=5; g.s.grace=0;`],
     ['malikmata (C2 living)', 2, 1, `g.p.room='living'; g.m.st=2; g.m.t=15; g.m.exposed=3.9;`],
+    ['away malik (C2 kitchen)', 2, 1, `g.p.room='kitchen'; g.m.st=2; g.m.t=15; g.m.hunt=7; g.m.exposed=4.4;`],
+    ['away kumot (C3 living)', 3, 0, `g.p.room='living'; g.k.st=4; g.k.away=8.95;`],
+    ['away kal (C2 hall)', 2, 1, `g.p.room='hall'; g.c.st=3; g.c.t=10; g.c.away=8.95;`],
     ['kumot (C1 door)', 1, 0, `g.k.on=true; g.k.st=4; g.k.grace=0.05;`],
     ['kumotu (C1 bed)', 1, 0, `g.p.pos='bed'; g.k.on=true; g.k.st=4; g.k.search=10; g.k.slip=0.44; g.p.holdBreath=false;`],
   ];
   for (const [name, ch, n, code] of cases) {
     await page.evaluate((ch, n) => { const U = window.__AS_UI; U.save.pro.c1 = U.save.pro.c2 = U.save.pro.c3 = true; U.startNight(n, ch); }, ch, n); await sleep(800); await click('#intro-go'); await sleep(2200);
-    await page.evaluate(new Function('const g = window.__AS_UI.game; ' + code)); await sleep(1400);
+    await page.evaluate(new Function('const g = window.__AS_UI.game; ' + code)); await sleep(name.startsWith('away') ? 2600 : 1400);
     log.push(name + ' -> ' + await page.evaluate(() => (document.getElementById('scare-img').src || '').split('/').pop()));
     await sleep(3500); log.push('   tips: ' + await page.evaluate(() => document.getElementById('over-hint').innerText.replace(/\n/g, ' | ').slice(0, 160)));
     await page.screenshot({ path: '/tmp/over_' + name.split(' ')[0] + '.png' }); await page.evaluate(() => { const b = document.querySelector('#scr-over.show [data-act="menu"], #over-menu'); if (b) b.click(); }); await sleep(800);
