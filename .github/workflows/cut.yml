@@ -1,0 +1,55 @@
+name: Render cut-out jumpscares
+on:
+  workflow_dispatch:
+    inputs:
+      samples: { description: 'Cycles samples', default: '64' }
+      only: { description: 'Comma list of job names (empty = all)', default: '' }
+permissions:
+  contents: write
+  actions: read
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        include: [{"name": "cut_kumot_warm", "who": "kumot", "light": "warm"}, {"name": "cut_kumot_cold", "who": "kumot", "light": "cold"}, {"name": "cut_kumot_dark", "who": "kumot", "light": "dark"}, {"name": "cut_malikmata_warm", "who": "malikmata", "light": "warm"}, {"name": "cut_malikmata_cold", "who": "malikmata", "light": "cold"}, {"name": "cut_malikmata_dark", "who": "malikmata", "light": "dark"}, {"name": "cut_kalansing_warm", "who": "kalansing", "light": "warm"}, {"name": "cut_kalansing_cold", "who": "kalansing", "light": "cold"}, {"name": "cut_kalansing_dark", "who": "kalansing", "light": "dark"}, {"name": "cut_silip_warm", "who": "silip", "light": "warm"}, {"name": "cut_silip_cold", "who": "silip", "light": "cold"}, {"name": "cut_silip_dark", "who": "silip", "light": "dark"}, {"name": "cut_barang_warm", "who": "barang", "light": "warm"}, {"name": "cut_barang_cold", "who": "barang", "light": "cold"}, {"name": "cut_barang_dark", "who": "barang", "light": "dark"}]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Skip if not selected
+        id: sel
+        run: |
+          if [ -n "${{ inputs.only }}" ] && ! echo ",${{ inputs.only }}," | grep -q ",${{ matrix.name }},"; then echo "skip=1" >> $GITHUB_OUTPUT; fi
+      - uses: actions/setup-python@v5
+        if: steps.sel.outputs.skip != '1'
+        with: { python-version: '3.13', cache: 'pip', cache-dependency-path: 'tools/blender/requirements.txt' }
+      - if: steps.sel.outputs.skip != '1'
+        run: pip install -r tools/blender/requirements.txt
+      - if: steps.sel.outputs.skip != '1'
+        name: Render ${{ matrix.name }}
+        run: |
+          mkdir -p out
+          for f in 0 1 2 3 4 5 6 7; do python tools/blender/cut.py -- out/cut_${{ matrix.who }}_${{ matrix.light }}_$f.png ${{ inputs.samples }} --who=${{ matrix.who }} --light=${{ matrix.light }} --frame=$f > out/${{ matrix.name }}_$f.log 2>&1 || (tail -30 out/${{ matrix.name }}_$f.log; exit 1); done
+          if [ "${{ matrix.light }}" = warm ]; then python tools/blender/cut.py -- out/cutstand_${{ matrix.who }}.png ${{ inputs.samples }} --who=${{ matrix.who }} --stand > out/stand.log 2>&1; fi
+      - if: steps.sel.outputs.skip != '1'
+        uses: actions/upload-artifact@v4
+        with: { name: '${{ matrix.name }}', path: 'out/*.png', retention-days: 7 }
+  collect:
+    needs: render
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 1 }
+      - uses: actions/download-artifact@v4
+        with: { path: dl }
+      - name: Push PNGs to the renders branch
+        run: |
+          git config user.name alas-sais-bot; git config user.email actions@users.noreply.github.com
+          mkdir -p /tmp/raw; find dl -name '*.png' -exec cp {} /tmp/raw/ \; ; find dl -name '*.json' -exec cp {} /tmp/raw/ \;
+          if git ls-remote --exit-code origin renders >/dev/null; then git fetch --depth 1 origin renders; git checkout -B renders FETCH_HEAD; else git checkout --orphan renders; git rm -rf -q .; fi
+          mkdir -p raw; cp /tmp/raw/* raw/ 2>/dev/null || true; git add raw
+          git commit -m "renders from run ${{ github.run_id }} [skip ci]" || echo nothing
+          for i in 1 2 3; do git push origin renders && break; git fetch --depth 1 origin renders && git rebase FETCH_HEAD || true; sleep 5; done
