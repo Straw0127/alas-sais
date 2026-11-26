@@ -391,9 +391,9 @@ if KUMOT:
             build_kumot_batibat(0.3, 3.0)
         elif KST == 'lift':   # down on the floor at the edge of the bed, the blanket lifted: her face at the gap
             before_ = set(o.name for o in bpy.data.objects); build_kumot_batibat(0, 0)
-            group_at(before_, (-0.62, 1.55, -1.95), math.radians(-46))
-            point('liftKey', (-0.3, 1.0, 0.35), 2.5, color=(1.0, 0.7, 0.45), radius=0.1)
-        else: build_kumot_batibat(-0.45, 1.9)   # standing right beside the bed, searching
+            group_at(before_, (-0.15, 1.75, 0), math.radians(-52))   # standing right at the gap, the blanket up (clear of the bed frame)
+            point('liftKey', (-0.4, 1.1, 0.3), 2.5, color=(1.0, 0.7, 0.45), radius=0.1)
+        else: build_kumot_batibat(-0.15, 2.0)   # standing right beside the bed, searching (clear of the frame)
     else: build_kumot_batibat(-0.6, 3.1)
 if VIEW == 'under' and ((KUMOT and KST == 'lift') or OPT.get('js') == 'kumotu'):   # the hanging blanket is lifted
     for o_ in bpy.data.objects:
@@ -519,34 +519,67 @@ if JS:
     elif JS == 'kalansing': build_kalansing(0, 0); add_aswang_tongue(0, 0); P0 = KW(0.2, KDIM[1] - 0.9, 0); FL = (0, -0.66, 1.0); DC = 0.85
     elif JS == 'silip':    build_manananggal(0, 0, 0, wing=0.8); P0 = (W / 2 + 0.6, WY, 1.05); FL = (0, -0.1, 0.66); DC = 0.8
     elif JS == 'bangungot': build_kumot_batibat(0, 0); P0 = (-1.4, 0.05, 0.0); FL = (0, -0.5, 2.12); DC = 0.55
-    elif JS == 'kumotu':   build_kumot_batibat(0, 0); P0 = (-0.62, 1.55, -1.95); FL = (0, -0.5, 2.12); DC = 0.42   # from the gap under the bed
+    elif JS == 'kumotu':   build_kumot_batibat(0, 0); P0 = (-0.15, 1.75, 0); FL = (0, -0.5, 2.12); DC = 0.42   # at the gap under the bed
     elif JS == 'malikh':   build_tiyanak(0, 0, 0.0, crawl=True); P0 = LW(0.3, 2.15, 0); FL = (0, -0.34, 0.6); DC = 0.42   # round the end of the sofa
     elif JS == 'barang':   build_barang((0, 0, 0), 0.0, stage=4, glow=1.0); P0 = (fx - 0.05, AY + 0.1, 0); FL = (0, -0.23, 1.45); DC = 0.42
     e = group_at(before, (0, 0, 0), 0.0)
-    cam = bpy.context.scene.camera; C = cam.location.copy(); bpy.context.view_layer.update()
-    fwd0 = cam.matrix_world.to_quaternion() @ mathutils.Vector((0, 0, -1)); lens0 = cam.data.lens
-    def face_rot(F):   # turn so its front (-y) faces the camera
-        v = C - F; return math.atan2(-v.x, v.y) + math.pi
-    def place(F):
-        r = face_rot(F); e.rotation_euler = (0, 0, r)
-        off = mathutils.Matrix.Rotation(r, 3, 'Z') @ mathutils.Vector(FL); e.location = F - off
-    r0 = face_rot(mathutils.Vector(P0) + mathutils.Vector(FL)); F0 = mathutils.Vector(P0) + mathutils.Matrix.Rotation(r0, 3, 'Z') @ mathutils.Vector(FL)
-    d = (F0 - C); dh = mathutils.Vector((d.x, d.y, 0)).normalized()
-    F1 = C + dh * DC + mathutils.Vector((0, 0, 0.04))
-    side = mathutils.Vector((-dh.y, dh.x, 0)) * SIDE[f]
-    F = F0.lerp(F1, k) + side; place(F)
-    if JS == 'silip' and f >= 2:   # she comes through the window: grill and capiz give way
-        for o in bpy.data.objects:
-            if o.name.startswith(('bar', 'barH', 'cz', 'sashV')): o.hide_render = True
-    # a sick key light rides with it; from frame 3 your own light catches the face
-    point('jsKey', tuple(F + mathutils.Vector((0.25, 0, 0.55))), 6 + 10 * k, color=(1.0, 0.75, 0.55), radius=0.15)
-    if f >= 3:
-        src = C + mathutils.Vector((0.1, 0, -0.15)); spot('jsTorch', tuple(src), (F - src).to_track_quat('-Z', 'Y').to_euler(), 25 + 45 * k, angle=math.radians(38), color=(1.0, 0.92, 0.8), blend=0.6)
-    # the camera does not move: it only turns toward the face (and the world lurches) and narrows a little
-    tgt = (C + fwd0 * 3).lerp(F, min(1, k * 1.4))
-    fwd = (tgt - C).normalized()
-    cam.rotation_euler = (mathutils.Quaternion(fwd, math.radians(TILT[f])) @ fwd.to_track_quat('-Z', 'Y')).to_euler()
-    cam.data.lens = lens0 + (30 - lens0) * k
+    def aim(cam_, F_, tilt_, lens_):   # turn the camera to the face (with a lurch) and narrow the lens
+        fwd_ = (F_ - cam_.location).normalized()
+        cam_.rotation_euler = (mathutils.Quaternion(fwd_, math.radians(tilt_)) @ fwd_.to_track_quat('-Z', 'Y')).to_euler(); cam_.data.lens = lens_
+    def face_at():
+        bpy.context.view_layer.update(); return e.matrix_world @ mathutils.Vector(FL)
+    if JS == 'kumotu':
+        # Caught under the bed. She stands right at the gap with the blanket up; then she drags you out by the ankles (you
+        # slide out along the floor, under the rail) and bends down over you. Nothing goes through the bed or the floor.
+        cam = bpy.context.scene.camera; C0 = cam.location.copy(); lens0 = cam.data.lens; fwd0 = cam.matrix_world.to_quaternion() @ mathutils.Vector((0, 0, -1))
+        KA = mathutils.Vector((-0.15, 1.75, 0)); KB = mathutils.Vector((0.0, 2.4, 0)); C1 = mathutils.Vector((0.6, 0.75, 0.24))   # she steps back as she bends; you end 1.8 m from her feet
+        if f < 2:
+            e.location = (-0.15 + SIDE[f], 1.75, 0); e.rotation_euler = (0, 0, math.radians(-52))
+            aim(cam, C0 + fwd0 * 3, 0, lens0); F = face_at()
+        else:
+            q = (f - 2) / 5.0; qe = 1 - (1 - q) ** 2
+            cam.location = C0.lerp(C1, min(1.0, qe * 1.3))
+            KP = KA.lerp(KB, min(1.0, qe * 1.5)); d_ = C1 - KP; e.location = KP; e.rotation_euler = (math.radians(56 * qe), 0, math.atan2(d_.x, -d_.y))
+            F = face_at(); aim(cam, (cam.location + fwd0 * 3).lerp(F, min(1, 0.35 + qe)), TILT[f], lens0 + (30 - lens0) * qe)
+        point('jsKey', tuple(F + mathutils.Vector((0.2, 0.15, 0.45))), 6 + 12 * k, color=(1.0, 0.75, 0.55), radius=0.15)
+    elif JS == 'malikh':
+        # Behind the sofa. It comes out from behind the arm to the left (never through the sofa), then springs at your face.
+        cam = bpy.context.scene.camera; C = cam.location.copy(); lens0 = cam.data.lens; fwd0 = cam.matrix_world.to_quaternion() @ mathutils.Vector((0, 0, -1))
+        P0v = mathutils.Vector(LW(0.3, 2.15, 0)); WP = mathutils.Vector(LW(-0.16, 1.65, 0)); Ch = mathutils.Vector((C.x, C.y, 0))
+        dirv = (WP - Ch).normalized(); P1 = Ch + dirv * 0.78 + mathutils.Vector((0, 0, 0.12))
+        if k < 0.4: O = P0v.lerp(WP, k / 0.4)
+        else: O = WP.lerp(P1, (k - 0.4) / 0.6)
+        O = O + mathutils.Vector((-dirv.y, dirv.x, 0)) * SIDE[f]
+        v_ = Ch - O; e.location = O; e.rotation_euler = (0, 0, math.atan2(-v_.x, v_.y) + math.pi)
+        F = face_at(); aim(cam, (C + fwd0 * 3).lerp(F, min(1, k * 1.4)), TILT[f], lens0 + (30 - lens0) * k)
+        point('jsKey', tuple(F + mathutils.Vector((0.15, 0.25, 0.4))), 4 + 8 * k, color=(0.6, 0.9, 1.0), radius=0.15)
+    if JS in ('kumotu', 'malikh') and f >= 3:
+        src = cam.location + mathutils.Vector((0.05, 0, -0.05)); spot('jsTorch', tuple(src), (F - src).to_track_quat('-Z', 'Y').to_euler(), 5 + 12 * k, angle=math.radians(38), color=(1.0, 0.92, 0.8), blend=0.6)
+    if JS not in ('kumotu', 'malikh'):
+        cam = bpy.context.scene.camera; C = cam.location.copy(); bpy.context.view_layer.update()
+        fwd0 = cam.matrix_world.to_quaternion() @ mathutils.Vector((0, 0, -1)); lens0 = cam.data.lens
+        def face_rot(F):   # turn so its front (-y) faces the camera
+            v = C - F; return math.atan2(-v.x, v.y) + math.pi
+        def place(F):
+            r = face_rot(F); e.rotation_euler = (0, 0, r)
+            off = mathutils.Matrix.Rotation(r, 3, 'Z') @ mathutils.Vector(FL); e.location = F - off
+        r0 = face_rot(mathutils.Vector(P0) + mathutils.Vector(FL)); F0 = mathutils.Vector(P0) + mathutils.Matrix.Rotation(r0, 3, 'Z') @ mathutils.Vector(FL)
+        d = (F0 - C); dh = mathutils.Vector((d.x, d.y, 0)).normalized()
+        F1 = C + dh * DC + mathutils.Vector((0, 0, 0.04))
+        side = mathutils.Vector((-dh.y, dh.x, 0)) * SIDE[f]
+        F = F0.lerp(F1, k) + side; place(F)
+        if JS == 'silip' and f >= 2:   # she comes through the window: grill and capiz give way
+            for o in bpy.data.objects:
+                if o.name.startswith(('bar', 'barH', 'cz', 'sashV')): o.hide_render = True
+        # a sick key light rides with it; from frame 3 your own light catches the face
+        point('jsKey', tuple(F + mathutils.Vector((0.25, 0, 0.55))), 6 + 10 * k, color=(1.0, 0.75, 0.55), radius=0.15)
+        if f >= 3:
+            src = C + mathutils.Vector((0.1, 0, -0.15)); spot('jsTorch', tuple(src), (F - src).to_track_quat('-Z', 'Y').to_euler(), 25 + 45 * k, angle=math.radians(38), color=(1.0, 0.92, 0.8), blend=0.6)
+        # the camera does not move: it only turns toward the face (and the world lurches) and narrows a little
+        tgt = (C + fwd0 * 3).lerp(F, min(1, k * 1.4))
+        fwd = (tgt - C).normalized()
+        cam.rotation_euler = (mathutils.Quaternion(fwd, math.radians(TILT[f])) @ fwd.to_track_quat('-Z', 'Y')).to_euler()
+        cam.data.lens = lens0 + (30 - lens0) * k
     for o in bpy.data.objects:   # the bulb stutters as it comes
         if o.type == 'LIGHT' and f >= 2: o.data.energy *= (1.25 if f % 2 else 0.8)
 if 'lit' in OPT:   # the player's flashlight, from the camera
