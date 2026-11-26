@@ -175,7 +175,7 @@ var C1 = (function () {
         if (s.held >= 5) { s.st = 0; s.t = 10; s.held = 0; emit('silip_leave', { fought: true }); return; }
       }
       var watching = p.pos === 'window' && !p.travel && g.house.curtain && s.st >= 1 && s.st < 3;
-      if (watching) { s.stare = (s.stare || 0) + dt; if (s.stare >= 10) { s.stare = 0; s.st--; s.t = 8; if (s.st === 0) emit('silip_leave', { fought: true }); else emit('silip_near', { st: s.st }); return; } }
+      if (watching) { s.stare = (s.stare || 0) + dt; if (s.stare >= 6) { s.stare = 0; s.st--; s.t = 8; if (s.st === 0) emit('silip_leave', { fought: true }); else emit('silip_near', { st: s.st }); return; } }
       else s.stare = Math.max(0, (s.stare || 0) - dt * 0.5);
       if (s.st < 3) {
         s.t -= dt;
