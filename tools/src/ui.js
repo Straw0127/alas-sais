@@ -131,7 +131,7 @@
     var total = IMG.length + SFX.length + VOICE.length, done = 0;
     function tick() { done++; onProgress(done / total); }
     var jobs = [];
-    ['hubx_k3', 'hubx_s2c', 'hubx_s3c', 'hubx_s2o', 'hubx_s3o', 'hubx_b2', 'hubx_b3', 'hubx_b4'].forEach(function (k) { var i = new Image(); i.src = IMGDIR(k) + k + '.webp'; imgs[k] = i; });
+    ['hubx_b1', 'hubx_k3', 'hubx_s2c', 'hubx_s3c', 'hubx_s2o', 'hubx_s3o', 'hubx_b2', 'hubx_b3', 'hubx_b4'].forEach(function (k) { var i = new Image(); i.src = IMGDIR(k) + k + '.webp'; imgs[k] = i; });
     IMG.forEach(function (k) { jobs.push(new Promise(function (res) { var i = new Image(); i.onload = i.onerror = function () { tick(); res(); }; i.src = IMGDIR(k) + k + '.jpg'; imgs[k] = i; })); });
     SFX.forEach(function (k) { jobs.push(fetch('assets/sfx/' + k + '.mp3').then(function (r) { return r.ok ? r.arrayBuffer() : null; }).then(function (b) { rawAudio[k] = b; tick(); }).catch(function () { tick(); })); });
     VOICE.forEach(function (k) { jobs.push(fetch('assets/voice/' + k + '.mp3').then(function (r) { return r.ok ? r.arrayBuffer() : null; }).then(function (b) { rawAudio['v_' + k] = b; tick(); }).catch(function () { tick(); })); });
@@ -959,7 +959,7 @@
     var dark = !g.house.power && !g.dark && g.p.room !== 'curtain' && !(g.chapter === 1 && g.p.pos === 'window');
     var sofa = g.p.hidden === 'sofa' && !(viewLock && performance.now() < viewLock.until);
     var sig = key + '|' + dark + '|' + sofa;
-    if (sig !== lastView && lastView && flkOK()) { flicker(); instant = true; }
+    if (sig !== lastView && lastView && flkOK() && !isC1()) { flicker(); instant = true; }
     if (sig !== lastView || force) {
       var back = front === 'bgA' ? 'bgB' : 'bgA';
       var b = $(back), f = $(front);
@@ -1248,12 +1248,18 @@
   var peekSt = 0;
   // what the room shows from the middle, one cut-out per entity: Kumot at the doorway, Silip at the window, Barang's aparador
   var ovlSig = '';
+  function c1Shadow() {   // her shadow down the hall, seen from the door without your light (she is coming: steps 1-2)
+    var el = $('c1shadow'), g = game; if (!el) return;
+    var on = g && g.chapter === 1 && g.k.on && (g.k.st === 1 || g.k.st === 2) && g.at('door') && !g.p.peek && !g.p.holdDoor;
+    var st = on ? g.k.st : 0;
+    if (el._st !== st) { el._st = st; el.style.opacity = st ? (st === 1 ? 0.45 : 0.7) : 0; if (st) { var h = st === 1 ? 52 : 68; el.style.height = h + '%'; el.style.top = (st === 1 ? 84 : 91) - h + '%'; el.style.left = (st === 1 ? 52.5 : 52) + '%'; } }
+  }
   function c1Overlays() {
+    c1Shadow();
     var g = game, p = g.p, H = g.house, k = g.k, s = g.s, b = g.b, keys = [];
     if (g.chapter === 1 && p.pos === 'center' && !p.travel && !p.hidden && H.power && k.st !== 4) {
-      if (k.on && k.st === 3) keys.push('hubx_k3');
       if (s.on && s.st >= 2) keys.push('hubx_s' + Math.min(3, s.st) + (H.curtain ? 'o' : 'c'));
-      if (b.on && b.st >= 2) keys.push('hubx_b' + Math.min(4, b.st));
+      if (b.on && b.st >= 1) keys.push('hubx_b' + Math.max(2, Math.min(4, b.st)));
     }
     ovlSwap(keys);
   }
@@ -1331,7 +1337,7 @@
     switch (e.type) {
       case 'cue': play(d.id, { room: d.room, vol: (d.vol || 1) * fanMask(), delay: d.delay || 0 }); break;
       case 'travel': c1Travel(d); break;
-      case 'kumot_back': case 'barang_back': case 'silip_leave': case 'kumot_leave': if (!d.inside) flicker(); if (e.type === 'kumot_back') play('scuffs_far', { vol: 0.5 }); break;
+      case 'kumot_back': case 'barang_back': case 'silip_leave': case 'kumot_leave': if (!d.inside && (e.type !== 'barang_back' || true)) flicker(); if (e.type === 'kumot_back') play('scuffs_far', { vol: 0.5 }); break;
       case 'arrive': if (d.to !== 'bed' && d.from !== 'bed') c1Arrive(d); break;
       case 'door_shut': if (isC1()) { c1Swing(true); break; } play('door_close_shut', { vol: 0.85 }); setView(true, true); jolt(); break;
       case 'peek':   /* Chapter 1 has two sightings: down the hall (2) and at the door (3); the light stays on until switched off */

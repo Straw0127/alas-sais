@@ -1,15 +1,15 @@
 // Chapter 1 — Lola's bedroom. Pure rules, no DOM. The player never leaves the room.
 // Spots: center, door, window, cabinet, bed (under the bed). Entities: Kumot (door), Silip (curtain), Barang (aparador).
 var C1 = (function () {
-  var HOUR = 40;                                    // 6 hours x 40 s = a 4-minute night
+  var HOUR = 70;                                    // 6 hours x 70 s = a 7-minute night
   // AI levels (0-20) per night for [12-2 AM, 2-4 AM, 4-6 AM]; null = not active
   var NIGHTS = [
     // chance per check that it moves (k: door, s: window, b: aparador) and that the e-fan switches itself off
-    { k: [1], P: { k: 0.30, fan: 0.50 } },
-    { k: [1], s: [1], P: { k: 0.20, s: 0.50, fan: 0.35 } },
-    { k: [1], s: [1], b: [1], P: { s: 0.25, k: 0.30, b: 0.50, fan: 0.40 } },
-    { k: [1], s: [1], b: [1], P: { s: 0.30, k: 0.35, b: 0.55, fan: 0.50 } },
-    { k: [1], s: [1], b: [1], P: { s: 0.40, k: 0.60, b: 0.50, fan: 0.50 }, blackout: 4 }
+    { k: [1], P: { k: 0.40, fan: 0.80 } },
+    { k: [1], s: [1], P: { k: 0.25, s: 0.30, fan: 0.81 } },
+    { k: [1], s: [1], b: [1], P: { k: 0.15, s: 0.15, b: 0.30, fan: 0.82 } },
+    { k: [1], s: [1], b: [1], P: { k: 0.15, s: 0.35, b: 0.15, fan: 0.83 } },
+    { k: [1], s: [1], b: [1], P: { k: 0.35, s: 0.20, b: 0.15, fan: 0.84 }, blackout: 4 }
   ];
   var MOVE = { center: { door: 0.45, window: 0.45, cabinet: 0.5, bed: 0.55 } };
   // walking inside Lola's room: the length of each walking clip, at a brisk pace (x0.8). The bed is a crawl, not a walk.
@@ -37,7 +37,7 @@ var C1 = (function () {
     var EASE = 0.4;   // story difficulty (easier): tense but fair (custom nights are not eased)
     function level(who) { var L = N[who]; if (!L) return 0; var h = g.hour(); return Math.round(L[h < 2 ? 0 : h < 4 ? 1 : 2] * EASE); }
     function diff(who) { return N.P ? (N.P[who] || 0) * 0.6 : level(who) / 20; }
-    function roll(who) { return N.P ? rng() < (N.P[who] || 0) : rng() * 20 < level(who); }
+    function roll(who, mul) { return N.P ? rng() < Math.min(0.95, (N.P[who] || 0) * (mul || 1)) : rng() * 20 < level(who); }
     // fairness: on the early nights only one thing comes for you at a time; later, at most two
     function critical(except) {
       var n = (except !== 'k' && g.k.st >= 3 ? 1 : 0) + (except !== 's' && g.s.st >= 3 ? 1 : 0) + (except !== 'b' && g.b.st >= 4 ? 1 : 0);
@@ -59,7 +59,7 @@ var C1 = (function () {
     var S_UP = 2.5, S_DRAIN = 100 / 65;
     function energy(dt) {
       var p = g.p, e0 = p.energy, H = g.house;
-      if (g.time >= g.fanNext.fan) { g.fanNext.fan = g.time + (N.P ? 24 : gap()); if (H.fan && H.power && (!N.P || rng() < (N.P.fan || 0))) { H.fan = false; emit('fan', { on: false, which: 'fan', auto: true }); } }   // every 24 s a chance it goes off
+      if (g.time >= g.fanNext.fan) { g.fanNext.fan = g.time + (N.P ? 45 : gap()); if (H.fan && H.power && (!N.P || rng() < (N.P.fan || 0))) { H.fan = false; emit('fan', { on: false, which: 'fan', auto: true }); } }   // every 24 s a chance it goes off
       if (H.fan && H.power) p.energy = Math.min(100, p.energy + dt * S_UP);
       else p.energy = Math.max(0, p.energy - dt * S_DRAIN * (H.power ? 1 : 0.5));
       if (e0 > 30 && p.energy <= 30) emit('tired', { lvl: 1 });
@@ -95,7 +95,7 @@ var C1 = (function () {
           if (p.pos !== 'center') return false;
           if (!g.house.power) { emit('fan_nopower'); return false; }
           if (g.house.fan) return false;
-          g.house.fan = true; g.fanNext.fan = g.time + (N.P ? 24 : gap()); emit('fan', { on: true, which: 'fan' }); return true;
+          g.house.fan = true; g.fanNext.fan = g.time + (N.P ? 45 : gap()); emit('fan', { on: true, which: 'fan' }); return true;
         case 'curtain':
           if (p.pos !== 'window') return false;
           if (g.house.curtain) { g.house.curtain = false; emit('curtain_close'); if (g.s.phase === 'seen') { g.s.phase = ''; emit('silip_grip'); } }
@@ -174,11 +174,14 @@ var C1 = (function () {
         s.held += dt;
         if (s.held >= 5) { s.st = 0; s.t = 10; s.held = 0; emit('silip_leave', { fought: true }); return; }
       }
+      var watching = p.pos === 'window' && !p.travel && g.house.curtain && s.st >= 1 && s.st < 3;
+      if (watching) { s.stare = (s.stare || 0) + dt; if (s.stare >= 10) { s.stare = 0; s.st--; s.t = 8; if (s.st === 0) emit('silip_leave', { fought: true }); else emit('silip_near', { st: s.st }); return; } }
+      else s.stare = Math.max(0, (s.stare || 0) - dt * 0.5);
       if (s.st < 3) {
         s.t -= dt;
         if (s.t <= 0) {
           s.t = 6;
-          if (!(s.st === 2 && (holding || critical('s'))) && roll('s')) {
+          if (!watching && !(s.st === 2 && (holding || critical('s'))) && roll('s', g.house.curtain && p.pos !== 'window' ? 1.5 : 1)) {
             s.st++;
             if (s.st < 3) emit('silip_near', { st: s.st });
             else { s.t3 = lerp(17, 12, diff('s')); emit('silip_scratch'); if (g.house.curtain) seen(); }
@@ -203,7 +206,7 @@ var C1 = (function () {
         b.t -= dt;
         if (b.t <= 0) {
           b.t = 10;
-          if (!lit && roll('b') && !(b.st === 3 && critical('b'))) { b.st++; emit('barang_step', { st: b.st }); if (b.st === 4) b.atk = 3.0; }
+          if (!lit && roll('b') && !(b.st === 3 && critical('b'))) { b.st++; emit('barang_step', { st: b.st }); if (b.st === 4) b.atk = 1.2; }
         }
       } else if (!lit) { b.atk -= dt; if (b.atk <= 0) die('barang'); }
     }

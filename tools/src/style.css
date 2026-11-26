@@ -452,3 +452,5 @@ h1.logo,#intro-n,.over h1,.cred-title,.chnum{background-image:url(assets/ui/tex_
 #intro-rules.many .rule b{font-size:16px}
 #intro-rules.many .rule div div{font-size:14px !important;line-height:1.35 !important;margin-top:3px !important}
 #intro-go{flex:none}
+
+#c1shadow{position:absolute;transform:translateX(-50%);opacity:0;pointer-events:none;transition:opacity .6s;filter:blur(3px)}

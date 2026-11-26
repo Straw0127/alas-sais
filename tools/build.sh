@@ -29,6 +29,11 @@ for src in sorted(glob.glob('/home/claude/render/out/cut/*.png')):
     o = Image.open('/tmp/cut_out.png').convert('RGBA'); o.putalpha(a)
     if k.startswith('cutstand'): o = o.crop(o.getbbox())   # just the figure (placed in doorways by the game)
     o.save(dst, 'WEBP', quality=82, method=6)
+# Kumot's shadow down the hall (Chapter 1, at the door): her standing figure as a soft dark silhouette
+st = 'dist/assets/img/cutstand_kumot.webp'
+if os.path.exists(st):
+    im = Image.open(st).convert('RGBA'); a = im.getchannel('A').point(lambda v: int(v * 0.85))
+    sh = Image.new('RGBA', im.size, (6, 5, 5, 0)); sh.putalpha(a); sh.save('dist/assets/img/c1_shadow.webp', 'WEBP', quality=80)
 PY
 # Lettering and the phone, rendered in Blender (render/words.py, render/phone.py): trimmed, transparent WebP
 mkdir -p dist/assets/ui dist/assets/fonts; cp -u fonts/*.woff2 dist/assets/fonts/

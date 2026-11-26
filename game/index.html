@@ -462,6 +462,8 @@ h1.logo,#intro-n,.over h1,.cred-title,.chnum{background-image:url(assets/ui/tex_
 #intro-rules.many .rule b{font-size:16px}
 #intro-rules.many .rule div div{font-size:14px !important;line-height:1.35 !important;margin-top:3px !important}
 #intro-go{flex:none}
+
+#c1shadow{position:absolute;transform:translateX(-50%);opacity:0;pointer-events:none;transition:opacity .6s;filter:blur(3px)}
 </style>
 </head>
 <body>
@@ -480,6 +482,7 @@ h1.logo,#intro-n,.over h1,.cred-title,.chnum{background-image:url(assets/ui/tex_
       <div id="fog" class="layer"><div class="hand" style="left:500px;top:230px"></div><div class="hand" style="left:690px;top:260px;transform:rotate(12deg)"></div></div>
     </div>
     <div id="dark" class="layer"></div>
+    <img id="c1shadow" alt="" src="assets/img/c1_shadow.webp">
     <div id="iris" class="layer"></div>
     <div id="black" class="layer"></div>
   </div>
@@ -1341,15 +1344,15 @@ if (typeof module !== 'undefined') module.exports = AS;
 // Chapter 1 — Lola's bedroom. Pure rules, no DOM. The player never leaves the room.
 // Spots: center, door, window, cabinet, bed (under the bed). Entities: Kumot (door), Silip (curtain), Barang (aparador).
 var C1 = (function () {
-  var HOUR = 40;                                    // 6 hours x 40 s = a 4-minute night
+  var HOUR = 70;                                    // 6 hours x 70 s = a 7-minute night
   // AI levels (0-20) per night for [12-2 AM, 2-4 AM, 4-6 AM]; null = not active
   var NIGHTS = [
     // chance per check that it moves (k: door, s: window, b: aparador) and that the e-fan switches itself off
-    { k: [1], P: { k: 0.30, fan: 0.50 } },
-    { k: [1], s: [1], P: { k: 0.20, s: 0.50, fan: 0.35 } },
-    { k: [1], s: [1], b: [1], P: { s: 0.25, k: 0.30, b: 0.50, fan: 0.40 } },
-    { k: [1], s: [1], b: [1], P: { s: 0.30, k: 0.35, b: 0.55, fan: 0.50 } },
-    { k: [1], s: [1], b: [1], P: { s: 0.40, k: 0.60, b: 0.50, fan: 0.50 }, blackout: 4 }
+    { k: [1], P: { k: 0.40, fan: 0.80 } },
+    { k: [1], s: [1], P: { k: 0.25, s: 0.30, fan: 0.81 } },
+    { k: [1], s: [1], b: [1], P: { k: 0.15, s: 0.15, b: 0.30, fan: 0.82 } },
+    { k: [1], s: [1], b: [1], P: { k: 0.15, s: 0.35, b: 0.15, fan: 0.83 } },
+    { k: [1], s: [1], b: [1], P: { k: 0.35, s: 0.20, b: 0.15, fan: 0.84 }, blackout: 4 }
   ];
   var MOVE = { center: { door: 0.45, window: 0.45, cabinet: 0.5, bed: 0.55 } };
   // walking inside Lola's room: the length of each walking clip, at a brisk pace (x0.8). The bed is a crawl, not a walk.
@@ -1377,7 +1380,7 @@ var C1 = (function () {
     var EASE = 0.4;   // story difficulty (easier): tense but fair (custom nights are not eased)
     function level(who) { var L = N[who]; if (!L) return 0; var h = g.hour(); return Math.round(L[h < 2 ? 0 : h < 4 ? 1 : 2] * EASE); }
     function diff(who) { return N.P ? (N.P[who] || 0) * 0.6 : level(who) / 20; }
-    function roll(who) { return N.P ? rng() < (N.P[who] || 0) : rng() * 20 < level(who); }
+    function roll(who, mul) { return N.P ? rng() < Math.min(0.95, (N.P[who] || 0) * (mul || 1)) : rng() * 20 < level(who); }
     // fairness: on the early nights only one thing comes for you at a time; later, at most two
     function critical(except) {
       var n = (except !== 'k' && g.k.st >= 3 ? 1 : 0) + (except !== 's' && g.s.st >= 3 ? 1 : 0) + (except !== 'b' && g.b.st >= 4 ? 1 : 0);
@@ -1399,7 +1402,7 @@ var C1 = (function () {
     var S_UP = 2.5, S_DRAIN = 100 / 65;
     function energy(dt) {
       var p = g.p, e0 = p.energy, H = g.house;
-      if (g.time >= g.fanNext.fan) { g.fanNext.fan = g.time + (N.P ? 24 : gap()); if (H.fan && H.power && (!N.P || rng() < (N.P.fan || 0))) { H.fan = false; emit('fan', { on: false, which: 'fan', auto: true }); } }   // every 24 s a chance it goes off
+      if (g.time >= g.fanNext.fan) { g.fanNext.fan = g.time + (N.P ? 45 : gap()); if (H.fan && H.power && (!N.P || rng() < (N.P.fan || 0))) { H.fan = false; emit('fan', { on: false, which: 'fan', auto: true }); } }   // every 24 s a chance it goes off
       if (H.fan && H.power) p.energy = Math.min(100, p.energy + dt * S_UP);
       else p.energy = Math.max(0, p.energy - dt * S_DRAIN * (H.power ? 1 : 0.5));
       if (e0 > 30 && p.energy <= 30) emit('tired', { lvl: 1 });
@@ -1435,7 +1438,7 @@ var C1 = (function () {
           if (p.pos !== 'center') return false;
           if (!g.house.power) { emit('fan_nopower'); return false; }
           if (g.house.fan) return false;
-          g.house.fan = true; g.fanNext.fan = g.time + (N.P ? 24 : gap()); emit('fan', { on: true, which: 'fan' }); return true;
+          g.house.fan = true; g.fanNext.fan = g.time + (N.P ? 45 : gap()); emit('fan', { on: true, which: 'fan' }); return true;
         case 'curtain':
           if (p.pos !== 'window') return false;
           if (g.house.curtain) { g.house.curtain = false; emit('curtain_close'); if (g.s.phase === 'seen') { g.s.phase = ''; emit('silip_grip'); } }
@@ -1514,11 +1517,14 @@ var C1 = (function () {
         s.held += dt;
         if (s.held >= 5) { s.st = 0; s.t = 10; s.held = 0; emit('silip_leave', { fought: true }); return; }
       }
+      var watching = p.pos === 'window' && !p.travel && g.house.curtain && s.st >= 1 && s.st < 3;
+      if (watching) { s.stare = (s.stare || 0) + dt; if (s.stare >= 10) { s.stare = 0; s.st--; s.t = 8; if (s.st === 0) emit('silip_leave', { fought: true }); else emit('silip_near', { st: s.st }); return; } }
+      else s.stare = Math.max(0, (s.stare || 0) - dt * 0.5);
       if (s.st < 3) {
         s.t -= dt;
         if (s.t <= 0) {
           s.t = 6;
-          if (!(s.st === 2 && (holding || critical('s'))) && roll('s')) {
+          if (!watching && !(s.st === 2 && (holding || critical('s'))) && roll('s', g.house.curtain && p.pos !== 'window' ? 1.5 : 1)) {
             s.st++;
             if (s.st < 3) emit('silip_near', { st: s.st });
             else { s.t3 = lerp(17, 12, diff('s')); emit('silip_scratch'); if (g.house.curtain) seen(); }
@@ -1543,7 +1549,7 @@ var C1 = (function () {
         b.t -= dt;
         if (b.t <= 0) {
           b.t = 10;
-          if (!lit && roll('b') && !(b.st === 3 && critical('b'))) { b.st++; emit('barang_step', { st: b.st }); if (b.st === 4) b.atk = 3.0; }
+          if (!lit && roll('b') && !(b.st === 3 && critical('b'))) { b.st++; emit('barang_step', { st: b.st }); if (b.st === 4) b.atk = 1.2; }
         }
       } else if (!lit) { b.atk -= dt; if (b.atk <= 0) die('barang'); }
     }
@@ -1717,7 +1723,7 @@ if (typeof module !== 'undefined') module.exports = C1;
     var total = IMG.length + SFX.length + VOICE.length, done = 0;
     function tick() { done++; onProgress(done / total); }
     var jobs = [];
-    ['hubx_k3', 'hubx_s2c', 'hubx_s3c', 'hubx_s2o', 'hubx_s3o', 'hubx_b2', 'hubx_b3', 'hubx_b4'].forEach(function (k) { var i = new Image(); i.src = IMGDIR(k) + k + '.webp'; imgs[k] = i; });
+    ['hubx_b1', 'hubx_k3', 'hubx_s2c', 'hubx_s3c', 'hubx_s2o', 'hubx_s3o', 'hubx_b2', 'hubx_b3', 'hubx_b4'].forEach(function (k) { var i = new Image(); i.src = IMGDIR(k) + k + '.webp'; imgs[k] = i; });
     IMG.forEach(function (k) { jobs.push(new Promise(function (res) { var i = new Image(); i.onload = i.onerror = function () { tick(); res(); }; i.src = IMGDIR(k) + k + '.jpg'; imgs[k] = i; })); });
     SFX.forEach(function (k) { jobs.push(fetch('assets/sfx/' + k + '.mp3').then(function (r) { return r.ok ? r.arrayBuffer() : null; }).then(function (b) { rawAudio[k] = b; tick(); }).catch(function () { tick(); })); });
     VOICE.forEach(function (k) { jobs.push(fetch('assets/voice/' + k + '.mp3').then(function (r) { return r.ok ? r.arrayBuffer() : null; }).then(function (b) { rawAudio['v_' + k] = b; tick(); }).catch(function () { tick(); })); });
@@ -2545,7 +2551,7 @@ if (typeof module !== 'undefined') module.exports = C1;
     var dark = !g.house.power && !g.dark && g.p.room !== 'curtain' && !(g.chapter === 1 && g.p.pos === 'window');
     var sofa = g.p.hidden === 'sofa' && !(viewLock && performance.now() < viewLock.until);
     var sig = key + '|' + dark + '|' + sofa;
-    if (sig !== lastView && lastView && flkOK()) { flicker(); instant = true; }
+    if (sig !== lastView && lastView && flkOK() && !isC1()) { flicker(); instant = true; }
     if (sig !== lastView || force) {
       var back = front === 'bgA' ? 'bgB' : 'bgA';
       var b = $(back), f = $(front);
@@ -2834,12 +2840,18 @@ if (typeof module !== 'undefined') module.exports = C1;
   var peekSt = 0;
   // what the room shows from the middle, one cut-out per entity: Kumot at the doorway, Silip at the window, Barang's aparador
   var ovlSig = '';
+  function c1Shadow() {   // her shadow down the hall, seen from the door without your light (she is coming: steps 1-2)
+    var el = $('c1shadow'), g = game; if (!el) return;
+    var on = g && g.chapter === 1 && g.k.on && (g.k.st === 1 || g.k.st === 2) && g.at('door') && !g.p.peek && !g.p.holdDoor;
+    var st = on ? g.k.st : 0;
+    if (el._st !== st) { el._st = st; el.style.opacity = st ? (st === 1 ? 0.45 : 0.7) : 0; if (st) { var h = st === 1 ? 52 : 68; el.style.height = h + '%'; el.style.top = (st === 1 ? 84 : 91) - h + '%'; el.style.left = (st === 1 ? 52.5 : 52) + '%'; } }
+  }
   function c1Overlays() {
+    c1Shadow();
     var g = game, p = g.p, H = g.house, k = g.k, s = g.s, b = g.b, keys = [];
     if (g.chapter === 1 && p.pos === 'center' && !p.travel && !p.hidden && H.power && k.st !== 4) {
-      if (k.on && k.st === 3) keys.push('hubx_k3');
       if (s.on && s.st >= 2) keys.push('hubx_s' + Math.min(3, s.st) + (H.curtain ? 'o' : 'c'));
-      if (b.on && b.st >= 2) keys.push('hubx_b' + Math.min(4, b.st));
+      if (b.on && b.st >= 1) keys.push('hubx_b' + Math.max(2, Math.min(4, b.st)));
     }
     ovlSwap(keys);
   }
@@ -2917,7 +2929,7 @@ if (typeof module !== 'undefined') module.exports = C1;
     switch (e.type) {
       case 'cue': play(d.id, { room: d.room, vol: (d.vol || 1) * fanMask(), delay: d.delay || 0 }); break;
       case 'travel': c1Travel(d); break;
-      case 'kumot_back': case 'barang_back': case 'silip_leave': case 'kumot_leave': if (!d.inside) flicker(); if (e.type === 'kumot_back') play('scuffs_far', { vol: 0.5 }); break;
+      case 'kumot_back': case 'barang_back': case 'silip_leave': case 'kumot_leave': if (!d.inside && (e.type !== 'barang_back' || true)) flicker(); if (e.type === 'kumot_back') play('scuffs_far', { vol: 0.5 }); break;
       case 'arrive': if (d.to !== 'bed' && d.from !== 'bed') c1Arrive(d); break;
       case 'door_shut': if (isC1()) { c1Swing(true); break; } play('door_close_shut', { vol: 0.85 }); setView(true, true); jolt(); break;
       case 'peek':   /* Chapter 1 has two sightings: down the hall (2) and at the door (3); the light stays on until switched off */
