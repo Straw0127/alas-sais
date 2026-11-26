@@ -1348,11 +1348,11 @@ var C1 = (function () {
   // AI levels (0-20) per night for [12-2 AM, 2-4 AM, 4-6 AM]; null = not active
   var NIGHTS = [
     // chance per check that it moves (k: door, s: window, b: aparador) and that the e-fan switches itself off
-    { k: [1], P: { k: 0.40, fan: 0.80 } },
-    { k: [1], s: [1], P: { k: 0.25, s: 0.30, fan: 0.81 } },
-    { k: [1], s: [1], b: [1], P: { k: 0.15, s: 0.15, b: 0.30, fan: 0.82 } },
-    { k: [1], s: [1], b: [1], P: { k: 0.15, s: 0.35, b: 0.15, fan: 0.83 } },
-    { k: [1], s: [1], b: [1], P: { k: 0.35, s: 0.20, b: 0.15, fan: 0.84 }, blackout: 4 }
+    { k: [1], P: { k: 0.50, fan: 0.82 } },
+    { k: [1], s: [1], P: { k: 0.35, s: 0.40, fan: 0.84 } },
+    { s: [1], b: [1], P: { s: 0.35, b: 0.40, fan: 0.85 } },   // night 3: window and aparador only, no door
+    { k: [1], s: [1], b: [1], P: { k: 0.30, s: 0.42, b: 0.25, fan: 0.86 } },
+    { k: [1], s: [1], b: [1], P: { k: 0.45, s: 0.30, b: 0.25, fan: 0.84 }, blackout: 4 }
   ];
   var MOVE = { center: { door: 0.45, window: 0.45, cabinet: 0.5, bed: 0.55 } };
   // walking inside Lola's room: the length of each walking clip, at a brisk pace (x0.8). The bed is a crawl, not a walk.
@@ -1404,7 +1404,7 @@ var C1 = (function () {
       var p = g.p, e0 = p.energy, H = g.house;
       if (g.time >= g.fanNext.fan) { g.fanNext.fan = g.time + (N.P ? 45 : gap()); if (H.fan && H.power && (!N.P || rng() < (N.P.fan || 0))) { H.fan = false; emit('fan', { on: false, which: 'fan', auto: true }); } }   // every 24 s a chance it goes off
       if (H.fan && H.power) p.energy = Math.min(100, p.energy + dt * S_UP);
-      else p.energy = Math.max(0, p.energy - dt * S_DRAIN * (H.power ? 1 : 0.5));
+      else p.energy = Math.max(0, p.energy - dt * S_DRAIN * (H.power ? 1 : 0.3));
       if (e0 > 30 && p.energy <= 30) emit('tired', { lvl: 1 });
       if (e0 > 12 && p.energy <= 12) emit('tired', { lvl: 2 });
       if (e0 <= 30 && p.energy > 30) emit('tired', { lvl: 0 });
@@ -2864,7 +2864,7 @@ if (typeof module !== 'undefined') module.exports = C1;
     Promise.all(ims.map(function (im) { return im.decode ? im.decode().catch(function () {}) : null; })).then(function () {
       if (ovlWant !== sig) return;
       var hadSome = ovlSig !== '' || sig !== '';
-      if (hadSome && flkOK()) flicker();
+      // no blink when something moves: the player has to look and listen
       ovlSig = sig; var box = $('ovl'); box.innerHTML = ''; box._pw = box._pl = null; ims.forEach(function (im) { box.appendChild(im); }); panLayout();
     });
   }

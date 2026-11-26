@@ -1272,7 +1272,7 @@
     Promise.all(ims.map(function (im) { return im.decode ? im.decode().catch(function () {}) : null; })).then(function () {
       if (ovlWant !== sig) return;
       var hadSome = ovlSig !== '' || sig !== '';
-      if (hadSome && flkOK()) flicker();
+      // no blink when something moves: the player has to look and listen
       ovlSig = sig; var box = $('ovl'); box.innerHTML = ''; box._pw = box._pl = null; ims.forEach(function (im) { box.appendChild(im); }); panLayout();
     });
   }
