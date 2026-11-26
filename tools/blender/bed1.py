@@ -31,7 +31,7 @@ def _built(fn, prefix, **kw):
         if o.parent is None: o.parent = e; o.matrix_parent_inverse = e.matrix_world.inverted()
     return e, dims
 KIT, KDIM = _built(build_kitchen, 'k_', KAL='kal' in OPT, LIT=HOUSE_LIT, KALIN='kalin' in OPT)
-LIV, LDIM = _built(build_living, 'l_', MALIK='malik' in OPT, LIGHTS=SALA == 'lights' or 'lights' in OPT, TVOFF=not (SALA == 'tv' or 'tv' in OPT), LIT=HOUSE_LIT)
+LIV, LDIM = _built(build_living, 'l_', MALIK='malik' in OPT and OPT.get('view') != 'sofa', LIGHTS=SALA == 'lights' or 'lights' in OPT, TVOFF=not (SALA == 'tv' or 'tv' in OPT), LIT=HOUSE_LIT)
 bpy.data.objects.remove(bpy.data.objects['l_WallFront'], do_unlink=True)      # the hallway wall is the living room's front wall
 bpy.data.objects['l_WallL'].location.x += 0.1                                  # back to back with the kitchen wall, not overlapping
 bpy.data.objects['k_WallFront'].location.y = -0.05
@@ -383,10 +383,27 @@ if KPOS > 0:   # what the flashlight finds down the hallway
     build_kumot_batibat(0, 0, peer=(KPOS == 3))
     kp = {1: ((HXP(3.85), CY, 0), 90), 2: ((dx - 0.75, D + 0.9, 0), 25) if VIEW == 'door' else ((HXP(1.7), CY + 0.1, 0), 90), 3: ((dx - 0.15, D + 0.5, 0), 12)}[KPOS]
     group_at(before, kp[0], math.radians(kp[1]))
+KST = OPT.get('kumot', '1')
 if KUMOT:
     from entities import build_kumot_batibat
-    if VIEW == 'under': build_kumot_batibat(-0.45, 1.9)   # standing right beside the bed, searching
+    if VIEW == 'under':
+        if KST == 'in':     # just inside the doorway: from under the bed you see her from the waist down
+            build_kumot_batibat(0.3, 3.0)
+        elif KST == 'lift':   # down on the floor at the edge of the bed, the blanket lifted: her face at the gap
+            before_ = set(o.name for o in bpy.data.objects); build_kumot_batibat(0, 0)
+            group_at(before_, (-0.62, 1.55, -1.95), math.radians(-46))
+            point('liftKey', (-0.3, 1.0, 0.35), 2.5, color=(1.0, 0.7, 0.45), radius=0.1)
+        else: build_kumot_batibat(-0.45, 1.9)   # standing right beside the bed, searching
     else: build_kumot_batibat(-0.6, 3.1)
+if VIEW == 'under' and ((KUMOT and KST == 'lift') or OPT.get('js') == 'kumotu'):   # the hanging blanket is lifted
+    for o_ in bpy.data.objects:
+        if o_.data and getattr(o_.data, 'materials', None) and any(m_ and m_.name.startswith('blanketHang') for m_ in o_.data.materials):
+            o_.location.z = 0.78; o_.rotation_euler.x += math.radians(-25)
+if VIEW == 'sofa' and 'malik' in OPT and not OPT.get('js'):   # half of her shows past the end of the sofa
+    from entities import build_tiyanak
+    before_ = set(o.name for o in bpy.data.objects); build_tiyanak(0, 0, 0.0, crawl=True)
+    group_at(before_, LW(0.3, 2.15, 0), math.radians(-8))
+    point('tyKeyS', LW(0.1, 2.9, 0.8), 2.5, color=(0.55, 0.9, 1.0), radius=0.2)
 
 if VIEW == 'hub' and CURT == 'open' and 'morning' not in OPT:   # from the middle of the room the moon patch read as a ghost: keep it soft
     bpy.data.objects['moonWin'].data.energy *= 0.35; bpy.data.objects['moonWin'].data.size = 0.35; bpy.data.objects['moonWin'].data.size_y = 0.35
@@ -440,6 +457,12 @@ elif VIEW == 'living':
     if 'pano' in OPT:   # turnable view from beside the sofa's far end: the sofa to hide behind on the left, the TV on the right
         camera(LW(2.05, 2.35, 1.55), LW(-2.5, 2.7, 1.2), lens=22)
     else: camera(LW(-0.35, 1.0, 1.55), LW(0.25, LDIM[1], 1.1), lens=22)
+elif VIEW == 'sofa':   # hiding: lying on the floor behind the left end of the sofa (the hall door behind you), the TV ahead
+    c_ = camera(LW(0.08, 0.36, 0.2), LW(-0.02, LDIM[1] - 0.33, 0.62), lens=24)
+    import mathutils
+    c_.rotation_euler = (c_.rotation_euler.to_quaternion() @ mathutils.Quaternion((0, 0, 1), math.radians(-5))).to_euler()   # head on the floor
+    point('sofaFill', LW(0.5, 0.5, 0.9), 1.2, color=(1.0, 0.65, 0.4), radius=0.2)
+    if not ('lights' in OPT or SALA == 'lights'): point('sofaAmb', LW(-0.2, 3.1, 2.4), 35 if 'candles' not in OPT else 6, color=(0.5, 0.6, 0.95), radius=0.5)   # the street light's spill, so the TV and the floor still read
 elif VIEW == 'plan':   # debug: the whole house from above, cut at ceiling height
     c_ = camera((dx - 2.0, D + 0.8, 12), (dx - 2.0, D + 0.8, 0), lens=30)
     c_.data.type = 'ORTHO'; c_.data.ortho_scale = 15; c_.data.clip_start = 9.5
@@ -496,6 +519,8 @@ if JS:
     elif JS == 'kalansing': build_kalansing(0, 0); add_aswang_tongue(0, 0); P0 = KW(0.2, KDIM[1] - 0.9, 0); FL = (0, -0.66, 1.0); DC = 0.85
     elif JS == 'silip':    build_manananggal(0, 0, 0, wing=0.8); P0 = (W / 2 + 0.6, WY, 1.05); FL = (0, -0.1, 0.66); DC = 0.8
     elif JS == 'bangungot': build_kumot_batibat(0, 0); P0 = (-1.4, 0.05, 0.0); FL = (0, -0.5, 2.12); DC = 0.55
+    elif JS == 'kumotu':   build_kumot_batibat(0, 0); P0 = (-0.62, 1.55, -1.95); FL = (0, -0.5, 2.12); DC = 0.42   # from the gap under the bed
+    elif JS == 'malikh':   build_tiyanak(0, 0, 0.0, crawl=True); P0 = LW(0.3, 2.15, 0); FL = (0, -0.34, 0.6); DC = 0.42   # round the end of the sofa
     elif JS == 'barang':   build_barang((0, 0, 0), 0.0, stage=4, glow=1.0); P0 = (fx - 0.05, AY + 0.1, 0); FL = (0, -0.23, 1.45); DC = 0.42
     e = group_at(before, (0, 0, 0), 0.0)
     cam = bpy.context.scene.camera; C = cam.location.copy(); bpy.context.view_layer.update()
@@ -669,4 +694,5 @@ if 'pano' in OPT and VIEW in ('hub', 'living', 'kitchen'):
                 print('PROBE', pat, [round(min(xs), 1), round(min(ys), 1), round(max(xs) - min(xs), 1), round(max(ys) - min(ys), 1)])
         raise SystemExit
 
+if OPT.get("pct"): bpy.context.scene.render.resolution_percentage = int(OPT["pct"])
 render(out)
