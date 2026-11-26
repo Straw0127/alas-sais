@@ -2841,11 +2841,11 @@ if (typeof module !== 'undefined') module.exports = C1;
   var peekSt = 0;
   // what the room shows from the middle, one cut-out per entity: Kumot at the doorway, Silip at the window, Barang's aparador
   var ovlSig = '';
-  function c1Shadow() {   // her shadow down the hall, seen from the door without your light (she is coming: steps 1-2)
+  function c1Shadow() {   // her shadow far down the hall, seen from the door without your light (only at her second step)
     var el = $('c1shadow'), g = game; if (!el) return;
-    var on = g && g.chapter === 1 && g.k.on && (g.k.st === 1 || g.k.st === 2) && g.at('door') && !g.p.peek && !g.p.holdDoor;
+    var on = g && g.chapter === 1 && g.k.on && g.k.st === 2 && g.at('door') && !g.p.peek && !g.p.holdDoor;
     var st = on ? g.k.st : 0;
-    if (el._st !== st) { el._st = st; el.style.opacity = st ? (st === 1 ? 0.45 : 0.7) : 0; if (st) { var h = st === 1 ? 52 : 68; el.style.height = h + '%'; el.style.top = (st === 1 ? 84 : 91) - h + '%'; el.style.left = (st === 1 ? 52.5 : 52) + '%'; } }
+    if (el._st !== st) { el._st = st; el.style.opacity = st ? 0.45 : 0; if (st) { el.style.height = '52%'; el.style.top = '32%'; el.style.left = '52.5%'; } }   // one far shadow only, and only at her second step; no nearer one
   }
   function c1Overlays() {
     c1Shadow();
@@ -2984,9 +2984,9 @@ if (typeof module !== 'undefined') module.exports = C1;
     if (g.k.on && !amb.kbreath) amb.kbreath = play('kumot_breath', { bus: 'sfx', loop: true, vol: 0 });
     if (amb.kbreath) {
       var kb = 0, st = g.k.st;
-      if (st === 2) kb = pos === 'door' ? 0.4 : 0.14;
-      else if (st === 3) kb = pos === 'door' ? (p.holdDoor ? 0.85 : 1.0) : pos === 'center' ? 0.6 : 0.42;
-      else if (st === 4) kb = pos === 'bed' ? 0.95 : 0.8;
+      if (st === 2) kb = pos === 'door' ? 0.24 : 0.08;   // quieter: you have to listen for her
+      else if (st === 3) kb = pos === 'door' ? (p.holdDoor ? 0.5 : 0.6) : pos === 'center' ? 0.36 : 0.25;
+      else if (st === 4) kb = pos === 'bed' ? 0.6 : 0.5;
       setLoopVol(amb.kbreath, kb * fanMask());
     }
   }
