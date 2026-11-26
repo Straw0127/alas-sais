@@ -13,7 +13,7 @@ var C1 = (function () {
   var MOVE = { center: { door: 0.45, window: 0.45, cabinet: 0.5, bed: 0.55 } };
   // walking inside Lola's room: the length of each walking clip, at a brisk pace (x0.8). The bed is a crawl, not a walk.
   var WALK1 = {"cabinet-center": 2.87, "cabinet-door": 1.25, "cabinet-window": 1.7, "center-cabinet": 2.52, "center-door": 2.23, "center-window": 2.03, "door-cabinet": 1.21, "door-center": 3.04, "door-window": 1.9, "window-cabinet": 1.86, "window-center": 2.27, "window-door": 1.52};
-  function moveTime(a, b) { if (a === b) return 0; var w = WALK1[a + '-' + b]; if (w) return w * 0.8; if (a === 'center') return MOVE.center[b]; if (b === 'center') return MOVE.center[a]; return MOVE.center[a] + MOVE.center[b] - 0.1; }
+  function moveTime(a, b) { if (a === b) return 0; var w = WALK1[a + '-' + b]; if (w) return Math.max(0.7, w * 0.4); if (a === 'center') return MOVE.center[b]; if (b === 'center') return MOVE.center[a]; return MOVE.center[a] + MOVE.center[b] - 0.1; }
   function lerp(a, b, t) { return a + (b - a) * Math.max(0, Math.min(1, t)); }
 
   function create(nightIdx, opt) {
@@ -33,7 +33,7 @@ var C1 = (function () {
     };
     function emit(type, data) { g.events.push({ type: type, data: data || {} }); }
     g.emit = emit;
-    var EASE = 0.5;   // story difficulty: tense but fair (custom nights are not eased)
+    var EASE = 0.4;   // story difficulty (easier): tense but fair (custom nights are not eased)
     function level(who) { var L = N[who]; if (!L) return 0; var h = g.hour(); return Math.round(L[h < 2 ? 0 : h < 4 ? 1 : 2] * EASE); }
     function diff(who) { return level(who) / 20; }
     function roll(who) { return rng() * 20 < level(who); }

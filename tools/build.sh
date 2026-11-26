@@ -79,7 +79,8 @@ python3 - <<'PY'
 import os, json, glob, subprocess, shutil, numpy as np, sys
 from PIL import Image
 sys.path.insert(0, '/home/claude/render'); from post import grade
-SRC = '/home/claude/render/out/walk'; DST = 'dist/assets/walk'; os.makedirs(DST, exist_ok=True)
+SRC = '/home/claude/render/out/walk' if os.environ.get('WALK_VIDEO') else '/nonexistent'; DST = 'dist/assets/walk'   # walking clips are off (stills + camera move instead)
+shutil.rmtree(DST, ignore_errors=True); os.makedirs(DST, exist_ok=True)
 GR = {'bedroom': 'warm', 'hallway': 'warm', 'living': 'cold', 'kitchen': 'sick', 'curtain': 'night', 'c1': 'warm'}
 man = {}
 for js in sorted(glob.glob(SRC + '/*.json')):

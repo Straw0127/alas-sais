@@ -83,6 +83,9 @@ input[type=range]{width:100%;accent-color:#b3261e;height:30px}
 /* camera rig + in-scene pieces */
 #cam{transform-origin:50% 50%;will-change:transform}
 #black{background:#000;opacity:0;pointer-events:none}
+/* moving (FNAF4): the view closes in round where you are going, then dark static, then the new place */
+#iris{pointer-events:none;opacity:0}
+#black.static{background:#020306 var(--noise) 0 0/256px 256px}
 #fx{pointer-events:none;perspective:1100px}
 .leaf{position:absolute;background-repeat:no-repeat;background-size:1280px 720px;transform-origin:0 50%;box-shadow:0 0 30px rgba(0,0,0,.6)}
 .half{position:absolute;top:0;height:100%;width:50%;background-repeat:no-repeat;background-size:1280px 720px}

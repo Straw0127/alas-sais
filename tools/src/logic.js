@@ -48,7 +48,8 @@ var AS = (function () {
   function travelTime(from, to, run) {
     if (from === to) return 0;
     var t = WALKT[from + '-' + to] || Math.max(0.7, (LEG[from] + LEG[to]) * 0.6);
-    return run ? t / 1.8 : t;
+    t = Math.max(0.8, t * 0.4);   // quick: a 5 s walk takes 2 s
+    return run ? Math.max(0.5, t * 0.5) : t;   // running: about 1 s
   }
 
   function create(nightIdx, opts) {
@@ -59,6 +60,7 @@ var AS = (function () {
     var rnd = opts.rng || rngFrom(opts.seed || (Date.now() & 0xffffff));
     var nightNo = nightIdx + 1;
     var diff = CH3 ? Math.min(nightIdx, 6) / 6 : Math.min(nightIdx, 4) / 4; // 0..1 across nights
+    var WINX = custom ? 1 : 1.2;   // story nights: 20% more time to react
 
     var g = {
       night: nightNo, time: 0, hourSec: N.hourSec, over: false, won: false, dead: null, deathRoom: null,
@@ -67,10 +69,10 @@ var AS = (function () {
            light: false, battery: 100, breath: 8, salt: 2, lastActT: -99, energy: 100 },
       house: { door: false /* closed? */, tv: false, lights: false, curtain: false, power: true, cricketsOff: 0, fan: false, fanB: false },
       noise: 0,
-      k: { st: 0, t: 0, tick: 0, cool: 3, held: 0, win: lerp(16, 10, diff), lift: false, grace: 0, rattle: 0, away: 0 },
-      m: { st: 0, t: 0, tick: 0, cool: 6, lock: 0, exposed: 0, hunt: 0, giggle: 0, win: lerp(14, 9, diff), darkT: 0 },
-      c: { st: 0, t: 0, tick: 0, cool: 8, grace: 0, win: lerp(13, 9, diff), sniff: 0 },
-      s: { st: 0, t: 0, tick: 0, cool: 10, flash: 0, held: 0, win: lerp(15, 11, diff), openT: 0, tap: 0 },
+      k: { st: 0, t: 0, tick: 0, cool: 3, held: 0, win: lerp(16, 10, diff) * WINX, lift: false, grace: 0, rattle: 0, away: 0 },
+      m: { st: 0, t: 0, tick: 0, cool: 6, lock: 0, exposed: 0, hunt: 0, giggle: 0, win: lerp(14, 9, diff) * WINX, darkT: 0 },
+      c: { st: 0, t: 0, tick: 0, cool: 8, grace: 0, win: lerp(13, 9, diff) * WINX, sniff: 0 },
+      s: { st: 0, t: 0, tick: 0, cool: 10, flash: 0, held: 0, win: lerp(15, 11, diff) * WINX, openT: 0, tap: 0 },
       b: { st: 0, tick: 0, flash: 0, atk: 0 },
       blackoutAt: [], heartbeat: false, msgs: []
     };
@@ -90,8 +92,8 @@ var AS = (function () {
       if (custom) return custom[name] || 0;
       var r = N.lv[name]; if (!r || !r[1]) return 0;
       var h = g.hour(); var step = h >= 4 ? 1 : h >= 3 ? 0.66 : h >= 2 ? 0.33 : 0;
-      var lv = Math.round(lerp(r[0], r[1], step) * (g.dark ? 0.45 : (CH3 ? 0.48 : 0.56)));   // story difficulty: tense but fair (candle nights gentler: you can barely see)
-      if ((nightNo === 5 || (CH3 && nightNo === 7)) && h >= 5) lv += 2;
+      var lv = Math.round(lerp(r[0], r[1], step) * (g.dark ? 0.4 : (CH3 ? 0.44 : 0.5)));   // story difficulty: easier, every night survivable (Custom Night 20s stay brutal) (candle nights gentler: you can barely see)
+      if ((nightNo === 5 || (CH3 && nightNo === 7)) && h >= 5) lv += 1;
       return lv;
     }
     g.level = level;

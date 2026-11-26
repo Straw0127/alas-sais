@@ -460,27 +460,85 @@
     }
     return f;
   }
+  // MOVING between places (quick, frame by frame on the pictures): you push into the view you are leaving with a head bob,
+  // a short dip to dark at the halfway point, then the place you are going to comes up and settles as you step in.
+  // Running: faster steps, more sway. Reduce motion: only the dip to dark.
+  var travT = [], travAnim = false;
+  function travClear() { travT.forEach(clearTimeout); travT = []; travAnim = false; var c_ = $('cam'); if (c_) c_.style.filter = ''; var ir = $('iris'); if (ir) ir.style.opacity = 0; var bk = $('black'); if (bk) bk.classList.remove('static'); }
+  function destKey(to) {   // the picture you will see on arriving (state as it is now)
+    var g = game, p = g.p, tr = p.travel, k;
+    if (isC1()) { var pp = p.pos; p.travel = null; p.pos = to; k = c1Key(); p.pos = pp; p.travel = tr; }
+    else { var r = p.room; p.travel = null; p.room = to; k = viewKeyRaw(); p.room = r; p.travel = tr; }
+    return k;
+  }
+  // dark blue-black static (made once), shown in the dark between two places
+  var noiseURL = null;
+  function noiseTex() {
+    if (noiseURL) return noiseURL;
+    var c = document.createElement('canvas'); c.width = c.height = 256; var x = c.getContext('2d'), im = x.createImageData(256, 256);
+    for (var i = 0; i < im.data.length; i += 4) { var v = Math.random() * 46; im.data[i] = v * 0.55; im.data[i + 1] = v * 0.62; im.data[i + 2] = v; im.data[i + 3] = 255; }
+    x.putImageData(im, 0, 0); noiseURL = c.toDataURL(); document.documentElement.style.setProperty('--noise', 'url(' + noiseURL + ')'); return noiseURL;
+  }
+  function irisRun(pt, ms) {   // a dark ring closing in on the point you walk to
+    var el = $('iris'), t0 = performance.now(); if (!el) return;
+    (function step() {
+      var k = Math.min(1, (performance.now() - t0) / ms); if (!travAnim) { el.style.opacity = 0; return; }
+      var r0 = 95 - 80 * k * k, r1 = r0 + 22;
+      el.style.background = 'radial-gradient(circle at ' + pt[0] + '% ' + pt[1] + '%, rgba(0,0,0,0) ' + r0.toFixed(1) + '%, rgba(0,0,0,.97) ' + r1.toFixed(1) + '%)';
+      el.style.opacity = 1;
+      if (k < 1) requestAnimationFrame(step);
+    })();
+  }
+  function staticRun(ms) {   // the static crawls while it is dark
+    var b = $('black'), t0 = performance.now(); noiseTex(); b.classList.add('static');
+    (function step() {
+      if (performance.now() - t0 > ms || !travAnim) { b.classList.remove('static'); b.style.backgroundPosition = ''; return; }
+      if (!save.set.motion) b.style.backgroundPosition = ((Math.random() * 256) | 0) + 'px ' + ((Math.random() * 256) | 0) + 'px';
+      requestAnimationFrame(step);
+    })();
+  }
+  function travelAnim(to, ms, run, outPt, inPt, place) {
+    // FNAF4: you lean into the point you are going to while the view closes round it, a moment of dark static, then the
+    // new place comes up out of the dark and settles. Running is the same, only quicker.
+    travClear(); travAnim = true;
+    var A = ms * 0.42, S = ms * 0.2, B = ms - A - S, c_ = $('cam'), pt = outPt || walkPt;
+    var swap = function () {
+      if (!game || !game.p.travel) return;
+      if (place) { pan.x = pan.t = pan.mem[place] !== undefined ? pan.mem[place] : (PAN_HOME[place] || 0.5); }
+      viewLock = { key: destKey(to), until: performance.now() + B + 600 }; setView(true, true); buildHot();
+      $('iris').style.opacity = 0; c_.style.filter = '';
+      if (!lowFx()) camAnim([{ transform: 'scale(1.1)' }, { transform: 'scale(1)' }], B, inPt || (isC1() && to === 'center' && C1PT[game.p.travel.from] ? panToView(C1PT[game.p.travel.from]) : [50, 55]), 'cubic-bezier(.2,.7,.3,1)');
+      black(0, B * 0.8);
+    };
+    if (lowFx()) {   // reduce motion: no zoom or ring, just the dark (with still static) and the new place
+      black(1, Math.min(220, A)); travT.push(setTimeout(function () { staticRun(S); }, A)); travT.push(setTimeout(swap, A + S)); return;
+    }
+    camAnim([{ transform: 'scale(1)' }, { transform: 'scale(' + (run ? 1.75 : 1.55) + ')' }], A, pt, 'cubic-bezier(.5,0,.85,.4)');
+    c_.style.filter = run ? 'blur(1.2px)' : '';
+    irisRun(pt, A);
+    black(1, A * 0.25, A * 0.8);
+    travT.push(setTimeout(function () { staticRun(S + B * 0.3); }, A));
+    travT.push(setTimeout(swap, A + S));
+  }
   function onTravel(d) {
     $('hint').style.opacity = 0;
     var run = d.run, ms = d.t * 1000 / speed();
     var surf = d.to === 'kitchen' || d.to === 'living' || d.from === 'kitchen' || d.from === 'living';
     play('turn_whoosh', { vol: 0.5 });
-    steps(Math.max(2, Math.round(ms / (run ? 230 : 330))), ms, surf ? 'cement' : 'wood', run);
+    steps(Math.max(2, Math.round(ms / (run ? 200 : 300))), ms, surf ? 'cement' : 'wood', run);
     if (run) { if (runH) stop(runH, 0.1); runH = play('run_pant', { vol: 0.5 }); play('floor_creak', { vol: 0.7 }); }
     releaseHolds(); buildHot();
     if (walkStart(d.from, d.to, d.t / speed())) return;
-    if (lowFx()) { black(1, Math.min(250, ms * 0.5)); return; }
-    var n = Math.max(2, Math.round(ms / (run ? 230 : 330)));
-    camAnim(bobFrames(n, run ? 2.5 : 2.0, run ? 14 : 9, run ? 1.1 : 0.6), ms, walkPt, 'linear');
-    black(1, Math.min(260, ms * 0.35), Math.max(0, ms * 0.62));
+    travelAnim(d.to, ms, run, walkPt, [50, 55], ({ bedroom: 1, living: 1, kitchen: 1 })[d.to] ? d.to : '');
   }
   function onArrive() {
     if (runH) { stop(runH, 1.2); runH = null; }
-    camClear(); setView(true, true); panTick(0); buildHot();
+    var ours = travAnim; travClear(); viewLock = null;
+    if (!ours) camClear();
+    setView(true, true); panTick(0); buildHot();
     if (Math.random() < 0.35) play('floor_creak', { vol: 0.4 });
-    black(0, 320);
-    if (walkEnd() || lowFx()) return;
-    camAnim(bobFrames(2, 1, 7, 0.4, 1.28), 620, [50, 55], 'ease-out');
+    black(0, 200); var c_ = $('cam'); if (c_) c_.style.filter = '';
+    walkEnd();
     if (game && game.p.room === 'hall' && game.night === 1 && !onArrive._hallHint) { onArrive._hallHint = 1; hint(T('h_light'), 4); }
   }
   // swing the bedroom door: a cut-out of the closed door rotating on its hinge
@@ -1236,22 +1294,16 @@
     var ms = d.t * 1000 / speed(); $('hint').style.opacity = 0;
     releaseHolds(); buildHot();
     if (d.hide || d.unhide) { onHide('bed', !!d.hide, ms); return; }
-    var n = Math.max(1, Math.round(ms / 300)); steps(n, ms, 'wood', false);
+    var n = Math.max(1, Math.round(ms / 280)); steps(n, ms, 'wood', false);
     if (walkStart(d.from, d.to, d.t / speed())) return;
-    if (lowFx()) { black(1, Math.min(180, ms * 0.5)); return; }
-    if (d.from === 'center') {   // walk toward the spot in the hub picture
-      camAnim(bobFrames(n, 1.9, 8, 0.5), ms, panToView(C1PT[d.to]), 'ease-in');
-      black(0.85, Math.min(200, ms * 0.4), ms * 0.6);
-    } else {                     // step back from the spot: the spot view slides back and darkens
-      camAnim([{ transform: 'scale(1) translateY(0)' }, { transform: 'scale(1.06) translateY(10px)', offset: 0.5 }, { transform: 'scale(0.98) translateY(4px)' }], ms, [50, 60], 'ease-in');
-      black(0.85, Math.min(200, ms * 0.4), ms * 0.55);
-    }
+    // toward a spot: push into it in the hub picture; back to the middle: the hub comes up from that corner
+    travelAnim(d.to, ms, false, d.from === 'center' ? panToView(C1PT[d.to]) : [50, 60], d.to === 'center' && C1PT[d.from] ? null : [50, 55], d.to === 'center' ? 'c1hub' : '');
   }
   function c1Arrive(d) {
-    camClear(); setView(true, true); panTick(0); buildHot(); black(0, 260);
-    if (walkEnd() || lowFx()) return;
-    if (d.to === 'center' && C1PT[d.from]) camAnim([{ transform: 'scale(1.7)' }, { transform: 'scale(1.0)' }], 520, panToView(C1PT[d.from]), 'cubic-bezier(.2,.7,.3,1)');   // pulled back out of that corner
-    else camAnim(bobFrames(1, 1, 5, 0.3, 1.18), 480, [50, 55], 'ease-out');
+    var ours = travAnim; travClear(); viewLock = null;
+    if (!ours) camClear();
+    setView(true, true); panTick(0); buildHot(); black(0, 200); var c_ = $('cam'); if (c_) c_.style.filter = '';
+    walkEnd();
     if (Math.random() < 0.25) play('floor_creak', { vol: 0.3 });
   }
   function c1Events(e) {
@@ -1479,7 +1531,7 @@
   }
 
   // ------------------------------------------------------------ win / death
-  function cleanupScene() { walkEnd(); var td = $('tired'); if (td) { css(td, 'opacity', '0'); td.classList.remove('heavy'); } ['efan_fan', 'efan_fanB'].forEach(function (k) { if (amb[k]) { stop(amb[k], 0.2); amb[k] = null; } }); fanSpin.fan.v = fanSpin.fanB.v = 0; endCall(true); releaseHolds(); camClear(); viewLock = null; $('fx').innerHTML = ''; $('hot').innerHTML = ''; hotSig = 'none'; black(0, 10); if (runH) { stop(runH); runH = null; } }
+  function cleanupScene() { travClear(); walkEnd(); var td = $('tired'); if (td) { css(td, 'opacity', '0'); td.classList.remove('heavy'); } ['efan_fan', 'efan_fanB'].forEach(function (k) { if (amb[k]) { stop(amb[k], 0.2); amb[k] = null; } }); fanSpin.fan.v = fanSpin.fanB.v = 0; endCall(true); releaseHolds(); camClear(); viewLock = null; $('fx').innerHTML = ''; $('hot').innerHTML = ''; hotSig = 'none'; black(0, 10); if (runH) { stop(runH); runH = null; } }
   function onWin() {
     cleanupScene(); stopBreath(); stopAll(); play('bell_6am', { bus: 'music', vol: 0.9 }); play('rooster_dawn', { bus: 'amb', vol: 0.6, delay: 2 });
     var secs = Math.round((performance.now() - nightStart) / 1000);
