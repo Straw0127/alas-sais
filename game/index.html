@@ -14,7 +14,7 @@ body{font-family:Inter,system-ui,sans-serif;color:#e9dfcb}
 #wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#000}
 #stage{position:absolute;left:0;top:0;width:1280px;height:720px;transform-origin:0 0;overflow:hidden;background:#000}
 .layer{position:absolute;inset:0}
-.bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:opacity .3s ease,filter .4s ease,transform .6s ease;pointer-events:none}
+.bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:opacity .3s ease,filter .4s ease;pointer-events:none;will-change:transform;backface-visibility:hidden}
 .bg.now{transition:none}
 #dark{pointer-events:none;opacity:0;transition:opacity .3s}
 #grain{pointer-events:none;opacity:0;mix-blend-mode:overlay}
@@ -413,6 +413,7 @@ h1.logo,#intro-n,.over h1,.cred-title,.chnum{background-image:url(assets/ui/tex_
 #clock{background:none !important;border:0 !important;box-shadow:none !important}
 /* text you read (subtitles, warnings, notes, descriptions): the same paint with hardly any chips, so every letter stays whole */
 #sub-t,#pp-sub,.warnbox p,.cred-desc,.chcard p,.rule span,#msg p,.over p,.dossier .field>span{background-image:url(assets/ui/tex_lite.webp),linear-gradient(180deg,#e2d6cb 0%,#c3b5aa 60%,#a29489 100%) !important}
+#ovl,#hotp,#cam{will-change:transform}
 </style>
 </head>
 <body>
@@ -1888,11 +1889,11 @@ if (typeof module !== 'undefined') module.exports = C1;
     var lk_ = c3 ? 'c3_bed_closed' + sfx : 'bedroom_closed', K_ = kOf(lk_);
     if (K_ > 1.01) {   // turnable bedroom: the door's place in the panorama, where the panorama sits right now
       var W_ = K_ * 1280, o_ = -pan.x * (K_ - 1) * 1280, P_ = DOOR3P;
-      leaf.style.cssText = 'left:' + (P_.x * W_ + o_) + 'px;top:' + P_.y * 720 + 'px;width:' + P_.w * W_ + 'px;height:' + P_.h * 720 + 'px;background-image:url(' + IMGDIR() + lk_ + '.jpg);background-size:' + W_ + 'px 720px;background-position:-' + P_.x * W_ + 'px -' + P_.y * 720 + 'px;transform-origin:100% 50%';
+      leaf.style.cssText = 'left:' + (P_.x * W_ + o_) + 'px;top:' + P_.y * 720 + 'px;width:' + P_.w * W_ + 'px;height:' + P_.h * 720 + 'px;background-image:url(' + IMGDIR() + lk_ + '.jpg);background-size:' + W_ + 'px 720px;background-position:-' + P_.x * W_ + 'px -' + P_.y * 720 + 'px;transform-origin:0 50%';
     } else
     leaf.style.cssText = 'left:' + R.x + 'px;top:' + R.y + 'px;width:' + R.w + 'px;height:' + R.h + 'px;background-image:url(assets/img/' + lk_ + '.jpg);background-position:-' + R.x + 'px -' + R.y + 'px';
     fx.appendChild(leaf);
-    var open = K_ > 1.01 ? 'perspective(900px) rotateY(78deg)' : 'rotateY(-78deg)', shut = K_ > 1.01 ? 'perspective(900px) rotateY(0deg)' : 'rotateY(0deg)';   // the real door hangs on its right jamb
+    var open = K_ > 1.01 ? 'perspective(900px) rotateY(-78deg)' : 'rotateY(-78deg)', shut = K_ > 1.01 ? 'perspective(900px) rotateY(0deg)' : 'rotateY(0deg)';   // the real door hangs on its left jamb
     // the room behind the leaf is the "open" picture during the swing
     viewLock = { key: closing ? (c3 ? 'c3_bed' + sfx : 'bedroom_empty') : viewKeyRaw(), until: performance.now() + ms };
     setView(true, true);
@@ -2037,7 +2038,8 @@ if (typeof module !== 'undefined') module.exports = C1;
   // ============================================================ turning: the bedroom, sala and kitchen are panoramas you
   // slide left / right in (FNAF4). PANO lists every picture wider than the 16:9 screen (filled in by the build).
   var PANO = /*PANO*/{"c1_hub": 3.4556, "c1_hub_kumot": 3.4556, "c1_hub_lit": 3.4556, "c1_hub_off": 3.4556, "c1_hub_off_lit": 3.4556, "c1_hub_open": 3.4556, "c3_bed": 3.4556, "c3_bed_c": 3.4556, "c3_bed_cl": 3.4556, "c3_bed_closed": 3.4556, "c3_bed_closed_c": 3.4556, "c3_bed_closed_cl": 3.4556, "c3_bed_kumot": 3.4556, "c3_bed_kumot_c": 3.4556, "c3_bed_kumot_cl": 3.4556, "kitchen_empty": 3.125, "kitchen_empty_c": 3.125, "kitchen_empty_cl": 3.125, "kitchen_kal": 3.125, "kitchen_kal_c": 3.125, "kitchen_kal_cl": 3.125, "living_empty": 3.2611, "living_lights": 3.2611, "living_lights_off_tv": 3.2611, "living_malik": 3.2611, "living_malik_c": 3.2611, "living_malik_cl": 3.2611, "living_tvoff": 3.2611, "living_tvoff_c": 3.2611, "living_tvoff_cl": 3.2611};
-  var pan = { x: 0, place: '', v: 0, mem: {} }, PAN_HOME = { c1hub: 0, bedroom: 0, living: 0.5, kitchen: 0.5 };
+  // pan.t is where you are turning to, pan.x where the view is (it eases after the finger, then coasts on a fling)
+  var pan = { x: 0, t: 0, place: '', v: 0, mem: {}, fv: 0 }, PAN_HOME = { c1hub: 0, bedroom: 0, living: 0.5, kitchen: 0.5 };
   function kOf(key) { var a = key && PANO[key]; return a ? Math.max(1, a / (16 / 9)) : 1; }
   function panK() { return kOf(lastKey); }
   function panPlace() {
@@ -2045,23 +2047,33 @@ if (typeof module !== 'undefined') module.exports = C1;
     if (isC1()) return game.p.pos === 'center' ? 'c1hub' : '';
     return game.p.hidden ? '' : game.p.room;
   }
-  function panSet(place, x) { pan.mem[place] = Math.max(0, Math.min(1, x)); if (pan.place === place) pan.x = pan.mem[place]; }
+  function clamp01(v) { return v < 0 ? 0 : v > 1 ? 1 : v; }
+  function panSet(place, x) { pan.mem[place] = clamp01(x); if (pan.place === place) pan.x = pan.t = pan.mem[place]; }
   function panTick(dt) {
     var pl = panPlace();
-    if (pl && pl !== pan.place) { pan.place = pl; pan.x = pan.mem[pl] !== undefined ? pan.mem[pl] : (PAN_HOME[pl] || 0.5); }
-    if (pan.v && pan.place) { pan.x = Math.max(0, Math.min(1, pan.x + pan.v * dt * (save.set.sens || 1) / Math.max(0.3, panK() - 1))); pan.mem[pan.place] = pan.x; }
+    if (pl && pl !== pan.place) { pan.place = pl; pan.x = pan.t = pan.mem[pl] !== undefined ? pan.mem[pl] : (PAN_HOME[pl] || 0.5); pan.fv = 0; }
+    var K = panK(), span = Math.max(0.3, K - 1);
+    if (pan.place && !pg) {
+      if (pan.v) pan.t = clamp01(pan.t + pan.v * dt * (save.set.sens || 1) / span);
+      if (pan.fv) { pan.t = clamp01(pan.t + pan.fv * dt); pan.fv *= Math.exp(-dt * 5); if (Math.abs(pan.fv) < 0.01 || pan.t <= 0 || pan.t >= 1) pan.fv = 0; }
+    }
+    var k = 1 - Math.exp(-dt * (pg ? 22 : 12)); pan.x += (pan.t - pan.x) * k;
+    if (Math.abs(pan.t - pan.x) < 0.0004) pan.x = pan.t;
+    if (pan.place) pan.mem[pan.place] = pan.t;
     panLayout();
   }
+  // each layer is sized once for its picture, then only moved with a GPU transform (no layout while turning)
   function panPlaceEl(el, k) {
-    if (!el) return; var w = (k * 100).toFixed(3), l = (-pan.x * (k - 1) * 100).toFixed(3);
-    if (el._pw === w && el._pl === l) return; el._pw = w; el._pl = l;
-    el.style.width = w + '%'; el.style.left = l + '%'; el.style.right = 'auto';
+    if (!el) return;
+    var w = (k * 100).toFixed(2); if (el._pw !== w) { el._pw = w; el.style.width = w + '%'; el.style.left = '0'; el.style.right = 'auto'; }
+    var px = -pan.x * (k - 1) * 1280, tr = 'translate3d(' + px.toFixed(1) + 'px,0,0)' + (el._extra ? ' ' + el._extra : '');
+    if (el._tr !== tr) { el._tr = tr; el.style.transform = tr; }
   }
   function panLayout() {
     ['bgA', 'bgB', 'litImg'].forEach(function (id) { var el = $(id); panPlaceEl(el, kOf(el.getAttribute('data-k'))); });
     var K = panK(); panPlaceEl($('ovl'), K); panPlaceEl($('hotp'), K);
     var can = K > 1.01 && !!pan.place && !(game && (game.p.travel || game.over)), pl = $('pan-l'), pr = $('pan-r');
-    if (pl) { pl.classList.toggle('on', can && pan.x > 0.02); pr.classList.toggle('on', can && pan.x < 0.98); }
+    if (pl) { pl.classList.toggle('on', can && pan.t > 0.02); pr.classList.toggle('on', can && pan.t < 0.98); }
   }
   // a point in the panorama (in %) -> where it is on screen right now (in %), for camera moves toward a spot
   function panToView(pt) { var K = panK(); return K > 1.01 ? [(pt[0] / 100 * K - pan.x * (K - 1)) * 100, pt[1]] : pt; }
@@ -2069,17 +2081,25 @@ if (typeof module !== 'undefined') module.exports = C1;
   var pg = null, panDrag = false;
   function panWire() {
     var hot = $('hot');
-    hot.addEventListener('pointerdown', function (e) { if (panK() <= 1.01 || !pan.place) { pg = null; return; } var p = toStage(e); pg = { id: e.pointerId, x: p[0], y: p[1], x0: pan.x, moved: false }; }, true);
+    hot.addEventListener('pointerdown', function (e) { if (panK() <= 1.01 || !pan.place) { pg = null; return; } var p = toStage(e); pan.fv = 0; pg = { id: e.pointerId, x: p[0], y: p[1], t0: pan.t, moved: false, lx: p[0], lt: performance.now(), vel: 0 }; }, true);
     window.addEventListener('pointermove', function (e) {
       if (e.pointerType === 'mouse' && !e.buttons && panK() > 1.01 && pan.place && !paused) {   // desktop: rest the mouse near an edge to turn
         var q = toStage(e); pan.v = q[0] < 70 ? -0.9 : q[0] > 1210 ? 0.9 : (heldKeys.panL ? -1 : heldKeys.panR ? 1 : 0);
       }
       if (!pg || e.pointerId !== pg.id) return;
-      var p = toStage(e), dx = p[0] - pg.x;
-      if (!pg.moved && Math.abs(dx) > 16 && Math.abs(dx) > Math.abs(p[1] - pg.y) * 1.2) { pg.moved = true; panDrag = true; ['door', 'curtain', 'breath'].forEach(function (h) { if (game) game.hold(h, false); }); if (holdH) { stop(holdH, 0.2); holdH = null; } document.querySelectorAll('.spot.down,.spot.press').forEach(function (b) { b.classList.remove('down', 'press'); }); }
-      if (pg.moved) { var K = panK(); if (K > 1.01) { pan.x = Math.max(0, Math.min(1, pg.x0 - dx * (save.set.sens || 1) / (1280 * (K - 1)))); pan.mem[pan.place] = pan.x; } }
+      var p = toStage(e), dx = p[0] - pg.x, now = performance.now();
+      if (!pg.moved && Math.abs(dx) > 14 && Math.abs(dx) > Math.abs(p[1] - pg.y) * 1.1) { pg.moved = true; panDrag = true; ['door', 'curtain', 'breath'].forEach(function (h) { if (game) game.hold(h, false); }); if (holdH) { stop(holdH, 0.2); holdH = null; } document.querySelectorAll('.spot.down,.spot.press').forEach(function (b) { b.classList.remove('down', 'press'); }); }
+      if (pg.moved) {
+        var K = panK(), per = (save.set.sens || 1) / (1280 * Math.max(0.3, K - 1));
+        pan.t = clamp01(pg.t0 - dx * per);
+        var dtm = Math.max(1, now - pg.lt); pg.vel = pg.vel * 0.6 + (-(p[0] - pg.lx) * per / (dtm / 1000)) * 0.4; pg.lx = p[0]; pg.lt = now;
+      }
     }, true);
-    var end = function (e) { if (!pg || e.pointerId !== pg.id) return; pg = null; if (panDrag) setTimeout(function () { panDrag = false; }, 0); };
+    var end = function (e) {
+      if (!pg || e.pointerId !== pg.id) return;
+      if (pg.moved && performance.now() - pg.lt < 80) pan.fv = Math.max(-2.5, Math.min(2.5, pg.vel * 0.5));   // a flick keeps turning a little
+      pg = null; if (panDrag) setTimeout(function () { panDrag = false; }, 0);
+    };
     window.addEventListener('pointerup', end, true); window.addEventListener('pointercancel', end, true);
     window.addEventListener('mouseleave', function () { pan.v = 0; });
     // the edge arrows: hold to turn (touch), they also show which way there is more to see
@@ -2107,6 +2127,7 @@ if (typeof module !== 'undefined') module.exports = C1;
     var b = $('black'), seq = [[0, 0.93, 0], [90, 0, 60], [170, 0.78, 0], [235, 0, 150]];
     seq.forEach(function (st) { setTimeout(function () { if (paused) return; b.style.transition = st[2] ? 'opacity ' + st[2] + 'ms ease' : 'none'; b.style.opacity = st[1]; }, st[0]); });
   }
+  function css(el, prop, v) { var k = '_c_' + prop; if (el[k] === v) return; el[k] = v; el.style[prop] = v; }
   function setView(force, instant) {
     var g = game; if (!g) return;
     var key = viewKey();
@@ -2120,7 +2141,7 @@ if (typeof module !== 'undefined') module.exports = C1;
       b.classList.toggle('now', !!instant); f.classList.toggle('now', !!instant);
       if (b.getAttribute('data-k') !== key) { b.src = IMGDIR() + key + '.jpg'; b.setAttribute('data-k', key); }
       b.style.filter = dark && key.indexOf('menu_') !== 0 ? 'brightness(.32) saturate(.6)' : (sofa ? 'brightness(.55)' : 'brightness(1.05)');
-      b.style.transform = sofa ? 'scale(1.35) translateY(-6%)' : 'none';
+      b._extra = sofa ? 'scale(1.35) translateY(-6%)' : ''; b._tr = null;
       b.style.opacity = 1; f.style.opacity = 0; front = back; lastView = sig; lastKey = key;
     }
     // the beam reveals the flashlight-lit render underneath the finger
@@ -2129,13 +2150,13 @@ if (typeof module !== 'undefined') module.exports = C1;
     var torch3 = !isC1() && g.p.light && (g.dark || !g.house.power) && !g.p.travel;
     var litOK = torch3 && g.dark && /_c$/.test(key) && key.indexOf('cabinet') < 0;
     if (torch3) lk = litOK ? key + 'l' : key;   // candle nights: the same view lit by the torch (rendered), revealed under the beam
-    li.style.filter = torch3 && g.dark && !litOK ? 'brightness(4.2) saturate(.75) contrast(1.05)' : '';
+    css(li, 'filter', torch3 && g.dark && !litOK ? 'brightness(4.2) saturate(.75) contrast(1.05)' : '');
     if (lk) {
       if (li.getAttribute('data-k') !== lk) { li.src = IMGDIR() + lk + '.jpg'; li.setAttribute('data-k', lk); }
       var lkK = kOf(lk), bxo = beam[0] + pan.x * (lkK - 1) * 1280;
       var m = 'radial-gradient(circle at ' + bxo + 'px ' + beam[1] + 'px, #000 0, #000 120px, rgba(0,0,0,.6) 190px, transparent 280px)';
-      li.style.webkitMaskImage = li.style.maskImage = m; li.style.opacity = 1;
-    } else li.style.opacity = 0;
+      if (li._m !== m) { li._m = m; li.style.webkitMaskImage = li.style.maskImage = m; } css(li, 'opacity', '1');
+    } else css(li, 'opacity', '0');
     if (pz && (!game || game.over || game.p.room !== 'kitchen' || game.p.travel || game.house.power)) puzzleClose();
     if (isC1()) c1Overlays(); else if (game.chapter === 3) c3Overlays(); else if (ovlSig || ovlWant) { ovlSig = ovlWant = ''; $('ovl').innerHTML = ''; }
     // flashlight beam follows the finger
@@ -2143,12 +2164,12 @@ if (typeof module !== 'undefined') module.exports = C1;
     var needDark = dark || (g.p.room === 'curtain' && g.house.curtain) || g.p.room === 'hall' && !g.house.power || (isC1() && g.p.pos === 'cabinet');
     var bx = beam[0], by = beam[1];
     if (needDark) {
-      dk.style.opacity = 1;
-      dk.style.background = lit ? 'radial-gradient(circle at ' + bx + 'px ' + by + 'px, rgba(255,244,220,.06) 0, rgba(0,0,0,0) 170px, rgba(0,0,0,.45) 280px, rgba(0,0,0,.9) 470px)' : (dark ? 'rgba(0,0,0,.62)' : 'rgba(0,0,0,.35)');
-    } else if (lit) { dk.style.opacity = 1; dk.style.background = 'radial-gradient(circle at ' + bx + 'px ' + by + 'px, rgba(255,240,210,.16) 0, rgba(255,240,210,.06) 170px, rgba(0,0,0,.25) 420px)'; }
-    else dk.style.opacity = 0;
-    $('fog').style.opacity = (!isC1() && g.p.room === 'curtain' && !g.house.curtain && g.s.st === 4 && !g.p.travel) ? 1 : 0;
-    $('grain').style.backgroundPosition = (Math.random() * 160 | 0) + 'px ' + (Math.random() * 160 | 0) + 'px';
+      css(dk, 'opacity', '1');
+      css(dk, 'background', lit ? 'radial-gradient(circle at ' + bx + 'px ' + by + 'px, rgba(255,244,220,.06) 0, rgba(0,0,0,0) 170px, rgba(0,0,0,.45) 280px, rgba(0,0,0,.9) 470px)' : (dark ? 'rgba(0,0,0,.62)' : 'rgba(0,0,0,.35)'));
+    } else if (lit) { css(dk, 'opacity', '1'); css(dk, 'background', 'radial-gradient(circle at ' + bx + 'px ' + by + 'px, rgba(255,240,210,.16) 0, rgba(255,240,210,.06) 170px, rgba(0,0,0,.25) 420px)'); }
+    else css(dk, 'opacity', '0');
+    css($('fog'), 'opacity', (!isC1() && g.p.room === 'curtain' && !g.house.curtain && g.s.st === 4 && !g.p.travel) ? '1' : '0');
+    var nowG = performance.now(); if (!(nowG < setView._g)) { setView._g = nowG + 85; $('grain').style.backgroundPosition = (Math.random() * 160 | 0) + 'px ' + (Math.random() * 160 | 0) + 'px'; }
     flkPlace = flkWhere();
   }
   var beam = [660, 340];
@@ -2513,6 +2534,7 @@ if (typeof module !== 'undefined') module.exports = C1;
     if (swing) { clearTimeout(swing.to); var cur = swing.seq[swing.i]; start = Math.max(0, seq.indexOf(cur)); }
     swing = { seq: seq, i: start, close: close };
     play(close ? 'door_creak' : 'door_creak', { vol: close ? 0.4 : 0.3 });
+    if (close && !lowFx()) camAnim([{ transform: 'scale(1)' }, { transform: 'scale(1.045) translateX(-1.2%)' }, { transform: 'scale(1.015)' }, { transform: 'scale(1)' }], 520, [32, 55], 'ease-out');   // you lean into it as you pull it shut
     (function step() {
       setView(true, true);
       if (!swing) return;   // walked away mid-swing
