@@ -129,9 +129,8 @@ if PEEK >= 0: DOOR = 'peek'
 SWING = 0 if DOOR == 'closed' and VIEW == 'door' else (int(DOOR[2:]) if DOOR.startswith('sw') else None)
 # closing the door is one continuous move: you step back from the doorway into the room as the real door swings shut
 # in front of you. Each frame name is a step of that move: camera spot, door angle, and how far the gaze has turned to the door.
-CLOSE_FR = {80: ((0.08, -0.05), 84, 0.1), 62: ((0.02, -0.5), 80, 0.3), 46: ((-0.05, -0.95), 60, 0.55), 32: ((-0.1, -1.1), 35, 0.8),
-            18: ((-0.1, -1.1), 15, 0.92), 0: ((-0.1, -1.1), 0, 1.0)}
-hinge.rotation_euler = (0, 0, -math.radians(CLOSE_FR[SWING][1] if SWING is not None else {'ajar': 84, 'gap': 84, 'peek': 84, 'open': 92, 'closed': 0}[DOOR]))
+SW_ANG = {80: 70, 62: 56, 46: 42, 32: 28, 18: 14, 0: 0}   # the closing frames (names kept for the game): door angle
+hinge.rotation_euler = (0, 0, -math.radians(SW_ANG[SWING] if SWING is not None else {'ajar': 84, 'gap': 84, 'peek': 84, 'open': 92, 'closed': 0}[DOOR]))
 sw = mat_basic('sw', (0.75, 0.7, 0.6), 0.5)
 box('switch', (0.08, 0.02, 0.12), (dx + 0.75, D - 0.01, 1.3), sw, bevel=0.005)
 
@@ -456,12 +455,12 @@ elif VIEW == 'door':
     # hall toward the kitchen. The door hangs on the left jamb: open, it rests against the wall on the left; held, it swings
     # across the opening in front of you (sw80..sw18, closed). The flashlight (peek) lights this same view.
     import mathutils
-    cpos = mathutils.Vector((dx + 0.8, D - 2.25, 1.55)); ctg = mathutils.Vector((dx - 0.2, D + 1.1, 1.18))
-    cam_ = camera(tuple(cpos), tuple(ctg), lens=19)
+    cpos = mathutils.Vector((dx + 0.5, D - 1.55, 1.55)); ctg = mathutils.Vector((dx - 0.2, D + 1.2, 1.25))   # right at the door: it shuts at arm's length
+    cam_ = camera(tuple(cpos), tuple(ctg), lens=17)
     if PEEK >= 0:
         src_ = cpos + mathutils.Vector((0.12, 0.15, -0.2)); tg_ = mathutils.Vector((dx - 0.4, D + 0.85, 1.1))
         spot('peekTorch', tuple(src_), (tg_ - src_).to_track_quat('-Z', 'Y').to_euler(), 520, angle=math.radians(38), color=(1.0, 0.93, 0.8), blend=0.9)
-    point('doorFill', (dx + 0.6, D - 1.8, 2.2), 5, color=(1.0, 0.7, 0.42), radius=0.4)
+    point('doorFill', (dx + 0.5, D - 1.7, 2.2), 6, color=(1.0, 0.7, 0.42), radius=0.4)
     point('viewFill', (dx + 0.9, D - 1.2, 1.9), 3, color=(1.0, 0.65, 0.35), radius=0.3)
 elif VIEW == 'window':
     camera((0.15, WY - 0.05, 1.52), (W / 2 + 1, WY, 1.48), lens=22)
