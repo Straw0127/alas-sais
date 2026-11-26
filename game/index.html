@@ -1480,7 +1480,7 @@ var C1 = (function () {
       if (k.st < 3) {
         k.t -= dt;
         if (k.t <= 0) {
-          k.t = 5;
+          k.t = 5.5;   // balance: she is the hardest to notice (sound and a far shadow only)
           if (!(k.st === 2 && (holding || critical('k'))) && roll('k')) {
             k.st++;
             k.flashN = 0;
@@ -1548,8 +1548,8 @@ var C1 = (function () {
       if (b.st < 4) {
         b.t -= dt;
         if (b.t <= 0) {
-          b.t = 10;
-          if (!lit && roll('b') && !(b.st === 3 && critical('b'))) { b.st++; emit('barang_step', { st: b.st }); if (b.st === 4) b.atk = 1.2; }
+          b.t = 9;   // balance: seen from anywhere in the room, but the last step gives you little time
+          if (!lit && roll('b') && !(b.st === 3 && critical('b'))) { b.st++; emit('barang_step', { st: b.st }); if (b.st === 4) b.atk = 2.2; }   // fully open: about two seconds to get your light on her
         }
       } else if (!lit) { b.atk -= dt; if (b.atk <= 0) die('barang'); }
     }
