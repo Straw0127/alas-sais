@@ -40,9 +40,9 @@ var STR = {
     made_desc: 'A current student who created an original survival horror game inspired by Five Nights at Freddy\'s 4.',
     attributions: 'Scenes rendered in Blender (Cycles) · Sound effects and music synthesized for this game · Tita Cora\'s voice: Microsoft neural text-to-speech (fil-PH Blessica) · Fonts: Oswald, Special Elite, Inter (SIL Open Font License) · Entities inspired by Filipino folklore: Batibat, Manananggal, Mambabarang, Tiyanak, Aswang.',
     c1_hint: {
-      kumot: 'The door never closes on its own. Listen at it. Double-tap anywhere to switch your flashlight on down the hallway (double-tap again to switch it off). When she is close, HOLD the door shut for about five seconds. Never shine the light when she is breathing right behind it. If she gets in, hide under the bed and keep holding your breath until she leaves.',
-      silip: 'The curtain stays closed. Double-tap to open it and check where she is. When she is close or at the window, press and HOLD anywhere to pull it shut until she flies away. If she reaches the window and nobody holds the curtain, she tears through.',
-      barang: 'Check the aparador. When you hear crawling or the door creaks, double-tap to keep your flashlight on it until it shuts again.'
+      kumot: 'The door never closes on its own. Listen at it. When you hear her footsteps in the hall, double-tap two or three times to flash your light down it: she goes back. If she is already at the door, HOLD it shut for about five seconds. Never shine the light when she is breathing right behind it. If she gets in, hide under the bed and keep holding your breath until she leaves.',
+      silip: 'The curtain stays closed. Double-tap to open it and check where she is. When she is close, press and HOLD anywhere to keep it shut for about five seconds: the light blinks and she flies away. If she reaches the window and nobody holds the curtain, she tears through.',
+      barang: 'Check the aparador. When its door creaks open, flash your light on it twice (double-tap, then again): each two flashes push it back one step. Fully open is game over.'
     },
     rooms: { bedroom: 'Bedroom', hall: 'Hallway', living: 'Living room', kitchen: 'Kitchen', curtain: 'Curtain' },
     run: 'Run', walk: 'Walk',
@@ -133,9 +133,9 @@ var STR = {
     made_desc: 'Isang estudyante na gumawa ng orihinal na survival horror game na hango sa Five Nights at Freddy\'s 4.',
     attributions: 'Mga eksenang ni-render sa Blender (Cycles) · Mga sound effect at musikang ginawa para sa larong ito · Boses ni Tita Cora: Microsoft neural text-to-speech (fil-PH Blessica) · Fonts: Oswald, Special Elite, Inter (SIL Open Font License) · Mga nilalang na hango sa alamat ng Pilipinas: Batibat, Manananggal, Mambabarang, Tiyanak, Aswang.',
     c1_hint: {
-      kumot: 'Hindi kusang sumasara ang pinto. Pakinggan mo. I-double-tap kahit saan para buksan ang flashlight sa pasilyo (i-double-tap ulit para patayin). Kapag malapit na, HAWAKAN ang pinto nang mga limang segundo. Huwag mong iilawan kapag humihinga na siya sa likod nito. Kapag nakapasok, magtago sa ilalim ng kama at pigilan ang hininga hanggang umalis siya.',
-      silip: 'Laging sarado ang kurtina. I-double-tap para buksan at silipin kung nasaan siya. Kapag malapit na o nasa bintana na, pindutin nang MATAGAL kahit saan para isara at hawakan hanggang lumipad siya palayo. Kapag umabot siya sa bintana at walang humahawak, pupunitin niya ang kurtina.',
-      barang: 'Bantayan ang aparador. Kapag may gumagapang o lumangitngit ang pinto nito, i-double-tap para ilawan ito hanggang sumara ulit.'
+      kumot: 'Hindi kusang sumasara ang pinto. Pakinggan mo. Kapag narinig mo ang yabag niya sa pasilyo, i-double-tap nang dalawa o tatlong beses para ilawan ito: babalik siya. Kapag nasa pinto na siya, HAWAKAN ang pinto nang mga limang segundo. Huwag mong iilawan kapag humihinga na siya sa likod nito. Kapag nakapasok, magtago sa ilalim ng kama at pigilan ang hininga hanggang umalis siya.',
+      silip: 'Laging sarado ang kurtina. I-double-tap para buksan at silipin kung nasaan siya. Kapag malapit na siya, pindutin nang MATAGAL kahit saan para manatiling sarado nang mga limang segundo: kukurap ang ilaw at lilipad siya palayo. Kapag umabot siya sa bintana at walang humahawak, pupunitin niya ang kurtina.',
+      barang: 'Bantayan ang aparador. Kapag lumangitngit ang pinto nito, ilawan ito nang dalawang beses: bawat dalawang ilaw, aatras ito ng isang hakbang. Kapag tuluyang bumukas, game over.'
     },
     rooms: { bedroom: 'Kwarto', hall: 'Pasilyo', living: 'Sala', kitchen: 'Kusina', curtain: 'Kurtina' },
     run: 'Takbo', walk: 'Lakad',

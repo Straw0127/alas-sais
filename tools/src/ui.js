@@ -202,13 +202,14 @@
       el.textContent = ''; el.appendChild(im);
     });
     $('m-sub').textContent = T('title_sub');
+    if (RELEASE_CH1 && save.cur.ch > 1) save.cur = { ch: 1, n: Math.min(5, (save.prog.c1 || 0) + 1) };
     var cur = save.cur;
     $('m-cont').querySelector('small').textContent = T('ch_n', cur.ch) + ' · ' + T('night_n', cur.n);
     $('m-cont').disabled = save.prog.c1 === 0 && !save.pro.c1;
-    $('m-nights').querySelector('small').textContent = (save.prog.c1 + save.prog.c2 + save.prog.c3) + ' / 17';
+    $('m-nights').querySelector('small').textContent = RELEASE_CH1 ? Math.min(5, save.prog.c1) + ' / 5' : (save.prog.c1 + save.prog.c2 + save.prog.c3) + ' / 17';
     var cuOpen = save.custom.unlocked || PREVIEW_ALL;
     $('m-custom').querySelector('small').textContent = cuOpen ? '' : T('locked');
-    $('m-custom').disabled = !cuOpen;
+    $('m-custom').disabled = !cuOpen; $('m-custom').style.display = RELEASE_CH1 ? 'none' : '';
     document.querySelectorAll('.langbtn').forEach(function (b) { b.classList.toggle('cur', b.getAttribute('data-lang') === save.set.lang); });
     renderSettings(); renderNights();
   }
@@ -224,10 +225,11 @@
   var CH_NIGHTS = { 1: 5, 2: 5, 3: 7 }, CH_READY = { 1: true, 2: true, 3: true };
   // PREVIEW: everything open so the whole game can be checked. Set to false to bring the normal unlocks back.
   var PREVIEW_ALL = false;
-  function chUnlocked(ch) { return PREVIEW_ALL || ch === 1 || (ch === 2 && save.prog.c1 >= 5) || (ch === 3 && save.prog.c1 >= 5 && save.prog.c2 >= 5); }
+  var RELEASE_CH1 = true;   // this release: Chapter 1 only (Chapters 2-3 and Custom Night stay in the game, hidden)
+  function chUnlocked(ch) { if (RELEASE_CH1 && ch > 1) return false; return PREVIEW_ALL || ch === 1 || (ch === 2 && save.prog.c1 >= 5) || (ch === 3 && save.prog.c1 >= 5 && save.prog.c2 >= 5); }
   function renderNights() {
     var box = $('night-list'); box.innerHTML = '';
-    [1, 2, 3].forEach(function (ch) {
+    (RELEASE_CH1 ? [1] : [1, 2, 3]).forEach(function (ch) {
       var card = document.createElement('div'); card.className = 'chcard' + (chUnlocked(ch) && CH_READY[ch] ? '' : ' locked');
       card.style.backgroundImage = 'linear-gradient(180deg,rgba(0,0,0,.15),rgba(0,0,0,.88) 62%),url(' + IMGDIR() + { 1: 'menu_bed', 2: 'hallway_empty', 3: 'menu_living_on' }[ch] + '.jpg)';
       var num = document.createElement('div'); num.className = 'chnum'; num.textContent = ch; card.appendChild(num);
@@ -834,8 +836,10 @@
     '<circle class="fdisc" r="44" fill="url(#fblur)"/><g class="fbl">' +
     [0, 120, 240].map(function (r) { return '<path transform="rotate(' + r + ')" d="M0,-6 C10,-14 30,-40 14,-44 C2,-46 -8,-30 -6,-8 Z" fill="#3a3e43" fill-opacity=".92" stroke="#1f2226" stroke-width="1.2"/>'; }).join('') +
     '</g><circle r="7" fill="#2a3036"/><circle r="3" fill="#6d7780"/></svg>';
+  var fanT = 0;
   function fanTick(dt) {
     var px = $('panx'); if (!px) return;
+    fanT += dt;
     ['fan', 'fanB'].forEach(function (w) {
       var f = fanSpin[w], on = fanOn(w);
       f.v += ((on ? 1 : 0) - f.v) * Math.min(1, dt * (on ? 0.9 : 0.45));
@@ -845,6 +849,7 @@
     var fw = game && !game.p.travel ? fanWhere(lastKey) : null;
     if (!fw) { if (px._fan) { px.innerHTML = ''; px._fan = null; } return; }
     if (px._fan !== fw.pos) { px.innerHTML = '<div class="efan">' + FAN_SVG + '</div>'; px._fan = fw.pos; var e = px.firstChild; e.style.left = fw.pos.x + '%'; e.style.top = fw.pos.y + '%'; e.style.width = fw.pos.w + '%'; e.style.height = fw.pos.h + '%'; }
+    if (fanT < 0.033) return; fanT = 0;
     var f = fanSpin[fw.which], el = px.firstChild;
     el.querySelector('.fbl').setAttribute('transform', 'rotate(' + f.a.toFixed(1) + ')');
     el.querySelector('.fbl').setAttribute('opacity', (1 - 0.75 * Math.min(1, f.v * 1.4)).toFixed(2));
@@ -885,7 +890,7 @@
     var w = off.length ? (off.length === fans.length && fans.length > 1 ? T('fan_off_all') : T('fan_off_' + (isC1() ? 'c1' : off[0]))) : '';
     if (en._w !== w) { en._w = w; $('sn-w').textContent = w ? '⚠ ' + w : ''; }
     en.classList.toggle('warn', !!w); en.classList.toggle('drain', off.length === fans.length); en.classList.toggle('low', e < 20);
-    var v = Math.max(fanSpin.fan.v, fanSpin.fanB.v); en._a = ((en._a || 0) + v * 14) % 360;
+    var v = Math.max(fanSpin.fan.v, fanSpin.fanB.v); en._a = ((en._a || 0) + v * 14) % 360; en._f = (en._f || 0) + 1; if (en._f % 2) return;
     var fg2 = en.querySelector('.sn-fan g'); if (fg2) fg2.setAttribute('transform', 'rotate(' + en._a.toFixed(0) + ')');
   }
   // tiredness: the edges close in below a third of your energy, and your eyes start to drop near the end
@@ -960,7 +965,7 @@
       var b = $(back), f = $(front);
       b.classList.toggle('now', !!instant); f.classList.toggle('now', !!instant);
       if (b.getAttribute('data-k') !== key) { b.src = IMGDIR(key) + key + '.jpg'; b.setAttribute('data-k', key); }
-      b.style.filter = dark && key.indexOf('menu_') !== 0 ? 'brightness(.32) saturate(.6)' : 'brightness(1.05)';
+      b.style.filter = dark && key.indexOf('menu_') !== 0 ? 'brightness(.32) saturate(.6)' : '';
 
       // never show a picture before it is decoded: the hidden layer still holds the last place it showed (the door, say),
       // and on a phone that old picture would flash for a frame or two before the new one appears
@@ -994,7 +999,7 @@
     } else if (lit) { css(dk, 'opacity', '1'); css(dk, 'background', 'radial-gradient(circle at ' + bx + 'px ' + by + 'px, rgba(255,240,210,.16) 0, rgba(255,240,210,.06) 170px, rgba(0,0,0,.25) 420px)'); }
     else css(dk, 'opacity', '0');
     css($('fog'), 'opacity', (!isC1() && g.p.room === 'curtain' && !g.house.curtain && g.s.st === 4 && !g.p.travel) ? '1' : '0');
-    var nowG = performance.now(); if (!(nowG < setView._g)) { setView._g = nowG + 85; $('grain').style.backgroundPosition = (Math.random() * 160 | 0) + 'px ' + (Math.random() * 160 | 0) + 'px'; }
+    var nowG = performance.now(); if (!(nowG < setView._g)) { setView._g = nowG + 140; $('grain').style.backgroundPosition = (Math.random() * 160 | 0) + 'px ' + (Math.random() * 160 | 0) + 'px'; }
     flkPlace = flkWhere();
   }
   var beam = [660, 340];
@@ -1326,6 +1331,7 @@
     switch (e.type) {
       case 'cue': play(d.id, { room: d.room, vol: (d.vol || 1) * fanMask(), delay: d.delay || 0 }); break;
       case 'travel': c1Travel(d); break;
+      case 'kumot_back': case 'barang_back': case 'silip_leave': case 'kumot_leave': if (!d.inside) flicker(); if (e.type === 'kumot_back') play('scuffs_far', { vol: 0.5 }); break;
       case 'arrive': if (d.to !== 'bed' && d.from !== 'bed') c1Arrive(d); break;
       case 'door_shut': if (isC1()) { c1Swing(true); break; } play('door_close_shut', { vol: 0.85 }); setView(true, true); jolt(); break;
       case 'peek':   /* Chapter 1 has two sightings: down the hall (2) and at the door (3); the light stays on until switched off */
@@ -1560,7 +1566,7 @@
     }
     var key = 'c' + curCh, n = game.night, last = n >= CH_NIGHTS[curCh];
     save.prog[key] = Math.max(save.prog[key] || 0, n);
-    if (!last) save.cur = { ch: curCh, n: n + 1 }; else if (curCh < 3) save.cur = { ch: curCh + 1, n: 1 };
+    if (!last) save.cur = { ch: curCh, n: n + 1 }; else if (curCh < 3 && !RELEASE_CH1) save.cur = { ch: curCh + 1, n: 1 };
     if (save.prog.c1 >= 5 && save.prog.c2 >= 5 && save.prog.c3 >= 7) save.custom.unlocked = true;
     store(); renderTexts();
     game = null;

@@ -4,11 +4,12 @@ var C1 = (function () {
   var HOUR = 40;                                    // 6 hours x 40 s = a 4-minute night
   // AI levels (0-20) per night for [12-2 AM, 2-4 AM, 4-6 AM]; null = not active
   var NIGHTS = [
-    { k: [5, 6, 8], s: null, b: null },
-    { k: [5, 6, 7], s: [7, 8, 10], b: null },
-    { k: [12, 14, 16], s: null, b: [14, 16, 18] },
-    { k: [9, 10, 12], s: [9, 10, 12], b: [9, 10, 12] },
-    { k: [12, 14, 16], s: [12, 14, 16], b: [12, 14, 16], blackout: 4 }
+    // chance per check that it moves (k: door, s: window, b: aparador) and that the e-fan switches itself off
+    { k: [1], P: { k: 0.30, fan: 0.50 } },
+    { k: [1], s: [1], P: { k: 0.20, s: 0.50, fan: 0.35 } },
+    { k: [1], s: [1], b: [1], P: { s: 0.25, k: 0.30, b: 0.50, fan: 0.40 } },
+    { k: [1], s: [1], b: [1], P: { s: 0.30, k: 0.35, b: 0.55, fan: 0.50 } },
+    { k: [1], s: [1], b: [1], P: { s: 0.40, k: 0.60, b: 0.50, fan: 0.50 }, blackout: 4 }
   ];
   var MOVE = { center: { door: 0.45, window: 0.45, cabinet: 0.5, bed: 0.55 } };
   // walking inside Lola's room: the length of each walking clip, at a brisk pace (x0.8). The bed is a crawl, not a walk.
@@ -35,8 +36,8 @@ var C1 = (function () {
     g.emit = emit;
     var EASE = 0.4;   // story difficulty (easier): tense but fair (custom nights are not eased)
     function level(who) { var L = N[who]; if (!L) return 0; var h = g.hour(); return Math.round(L[h < 2 ? 0 : h < 4 ? 1 : 2] * EASE); }
-    function diff(who) { return level(who) / 20; }
-    function roll(who) { return rng() * 20 < level(who); }
+    function diff(who) { return N.P ? (N.P[who] || 0) * 0.6 : level(who) / 20; }
+    function roll(who) { return N.P ? rng() < (N.P[who] || 0) : rng() * 20 < level(who); }
     // fairness: on the early nights only one thing comes for you at a time; later, at most two
     function critical(except) {
       var n = (except !== 'k' && g.k.st >= 3 ? 1 : 0) + (except !== 's' && g.s.st >= 3 ? 1 : 0) + (except !== 'b' && g.b.st >= 4 ? 1 : 0);
@@ -54,11 +55,11 @@ var C1 = (function () {
     var tier = g.night <= 2 ? 0 : g.night <= 5 ? 1 : 2;
     var GAP = [[150, 240], [70, 115], [36, 60]][tier];
     function gap() { return GAP[0] + rng() * (GAP[1] - GAP[0]); }
-    g.house.fan = true; g.fanNext = { fan: 18 + rng() * 20 + gap() * 0.6 };
+    g.house.fan = true; g.fanNext = { fan: N.P ? 20 : 18 + rng() * 20 + gap() * 0.6 };
     var S_UP = 2.5, S_DRAIN = 100 / 65;
     function energy(dt) {
       var p = g.p, e0 = p.energy, H = g.house;
-      if (g.time >= g.fanNext.fan) { g.fanNext.fan = g.time + gap(); if (H.fan && H.power) { H.fan = false; emit('fan', { on: false, which: 'fan', auto: true }); } }
+      if (g.time >= g.fanNext.fan) { g.fanNext.fan = g.time + (N.P ? 24 : gap()); if (H.fan && H.power && (!N.P || rng() < (N.P.fan || 0))) { H.fan = false; emit('fan', { on: false, which: 'fan', auto: true }); } }   // every 24 s a chance it goes off
       if (H.fan && H.power) p.energy = Math.min(100, p.energy + dt * S_UP);
       else p.energy = Math.max(0, p.energy - dt * S_DRAIN * (H.power ? 1 : 0.5));
       if (e0 > 30 && p.energy <= 30) emit('tired', { lvl: 1 });
@@ -94,7 +95,7 @@ var C1 = (function () {
           if (p.pos !== 'center') return false;
           if (!g.house.power) { emit('fan_nopower'); return false; }
           if (g.house.fan) return false;
-          g.house.fan = true; g.fanNext.fan = g.time + gap(); emit('fan', { on: true, which: 'fan' }); return true;
+          g.house.fan = true; g.fanNext.fan = g.time + (N.P ? 24 : gap()); emit('fan', { on: true, which: 'fan' }); return true;
         case 'curtain':
           if (p.pos !== 'window') return false;
           if (g.house.curtain) { g.house.curtain = false; emit('curtain_close'); if (g.s.phase === 'seen') { g.s.phase = ''; emit('silip_grip'); } }
@@ -105,6 +106,7 @@ var C1 = (function () {
           if (p.peek > 0) { p.peek = 0; emit('peek_off'); return true; }
           if (p.holdDoor || p.battery <= 0) return false;
           p.peek = 1; p.peekSt = g.k.on ? Math.min(3, g.k.st) : 0; p.battery = Math.max(0, p.battery - 1); emit('peek', { st: p.peekSt });
+          if (g.k.on && g.k.st >= 1 && g.k.st <= 2) { g.k.flashN = (g.k.flashN || 0) + 1; if (g.k.flashN >= 2) { g.k.flashN = 0; g.k.st = 0; g.k.t = 9; emit('kumot_back'); } }   // light her up twice in the hall: she goes back
           if (g.k.st === 3) { g.k.win = Math.min(g.k.win, 1.1); emit('kumot_startled'); }   // she was right there: she shoves
           return true;
       }
@@ -138,6 +140,7 @@ var C1 = (function () {
           k.t = 5;
           if (!(k.st === 2 && (holding || critical('k'))) && roll('k')) {
             k.st++;
+            k.flashN = 0;
             if (k.st === 1) emit('cue', { id: 'scuffs_far', room: 'hall', vol: 0.55 });
             else if (k.st === 2) emit('cue', { id: 'scuffs_near', room: 'hall', vol: 0.85 });
             else { k.win = lerp(10, 6, diff('k')); emit('kumot_door'); }
@@ -169,7 +172,7 @@ var C1 = (function () {
       if (s.phase === 'seen') { s.grace -= dt; if (s.grace <= 0) die('silip'); return; }
       if (s.st >= 2 && holding) {                         // hold the curtain shut until she flies off
         s.held += dt;
-        if (s.held >= lerp(8, 12, diff('s'))) { s.st = 0; s.t = 10; s.held = 0; emit('silip_leave', { fought: true }); return; }
+        if (s.held >= 5) { s.st = 0; s.t = 10; s.held = 0; emit('silip_leave', { fought: true }); return; }
       }
       if (s.st < 3) {
         s.t -= dt;
@@ -190,6 +193,8 @@ var C1 = (function () {
     function updB(dt) {
       var b = g.b, p = g.p; if (!b.on) return;
       var lit = p.light && p.pos === 'cabinet' && !p.travel;
+      if (lit && !b.wasLit && b.st > 0) { b.flashN = (b.flashN || 0) + 1; if (b.flashN >= 2) { b.flashN = 0; b.st--; b.flash = 0; b.t = 8; b.atk = 0; emit('barang_back', { st: b.st }); } }
+      b.wasLit = lit;
       if (lit && b.st > 0) {
         b.flash += dt;
         if (b.flash >= 1.4) { b.st--; b.flash = 0; b.t = 8; b.atk = 0; emit('barang_back', { st: b.st }); }
@@ -197,8 +202,8 @@ var C1 = (function () {
       if (b.st < 4) {
         b.t -= dt;
         if (b.t <= 0) {
-          b.t = 7;
-          if (!lit && roll('b') && !(b.st === 3 && critical('b'))) { b.st++; emit('barang_step', { st: b.st }); if (b.st === 4) b.atk = lerp(7.5, 4.2, diff('b')); }
+          b.t = 10;
+          if (!lit && roll('b') && !(b.st === 3 && critical('b'))) { b.st++; emit('barang_step', { st: b.st }); if (b.st === 4) b.atk = 3.0; }
         }
       } else if (!lit) { b.atk -= dt; if (b.atk <= 0) die('barang'); }
     }
