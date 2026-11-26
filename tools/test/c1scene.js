@@ -53,6 +53,7 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
   await page.evaluate(() => { const g = window.__AS_UI.game; g.b.on = true; g.b.st = 3; }); await sleep(300); await shot('a16_cabinet_st3');
   await dblXY(420, 170); await sleep(1700); await shot('a17_flashlight'); log.push('light: ' + (await st()).light + ' barang st ' + await page.evaluate(() => window.__AS_UI.game.b.st));
   await dblXY(420, 170); await sleep(200); log.push('light off: ' + !(await st()).light);
+  log.push('back from window, still turned: ' + await page.evaluate(() => window.__AS_UI.pan.x.toFixed(2)));
   await tapSel(spot('back')); await sleep(1000); await swipe(150, 750, 200); log.push('turned back: ' + await page.evaluate(() => window.__AS_UI.pan.x.toFixed(2))); await tapSel(spot('bed')); await sleep(350); await shot('a18_crouch'); await sleep(1000); await shot('a19_under_bed'); log.push('bed: ' + JSON.stringify(await st()));
   await touch('touchStart', 420, 150); await sleep(700); log.push('breath: ' + (await st()).hb); await shot('a20_breath'); await touch('touchEnd'); await sleep(300);
   await tapSel(spot('out')); await sleep(1300); log.push('out: ' + JSON.stringify(await st()));

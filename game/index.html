@@ -1604,8 +1604,9 @@ if (typeof module !== 'undefined') module.exports = C1;
     $('m-cont').querySelector('small').textContent = T('ch_n', cur.ch) + ' · ' + T('night_n', cur.n);
     $('m-cont').disabled = save.prog.c1 === 0 && !save.pro.c1;
     $('m-nights').querySelector('small').textContent = (save.prog.c1 + save.prog.c2 + save.prog.c3) + ' / 17';
-    $('m-custom').querySelector('small').textContent = save.custom.unlocked ? '' : T('locked');
-    $('m-custom').disabled = !save.custom.unlocked;
+    var cuOpen = save.custom.unlocked || PREVIEW_ALL;
+    $('m-custom').querySelector('small').textContent = cuOpen ? '' : T('locked');
+    $('m-custom').disabled = !cuOpen;
     document.querySelectorAll('.langbtn').forEach(function (b) { b.classList.toggle('cur', b.getAttribute('data-lang') === save.set.lang); });
     renderSettings(); renderNights();
   }
@@ -1619,7 +1620,9 @@ if (typeof module !== 'undefined') module.exports = C1;
     applyGfx();
   }
   var CH_NIGHTS = { 1: 5, 2: 5, 3: 7 }, CH_READY = { 1: true, 2: true, 3: true };
-  function chUnlocked(ch) { return ch === 1 || (ch === 2 && save.prog.c1 >= 5) || (ch === 3 && save.prog.c1 >= 5 && save.prog.c2 >= 5); }
+  // PREVIEW: everything open so the whole game can be checked. Set to false to bring the normal unlocks back.
+  var PREVIEW_ALL = true;
+  function chUnlocked(ch) { return PREVIEW_ALL || ch === 1 || (ch === 2 && save.prog.c1 >= 5) || (ch === 3 && save.prog.c1 >= 5 && save.prog.c2 >= 5); }
   function renderNights() {
     var box = $('night-list'); box.innerHTML = '';
     [1, 2, 3].forEach(function (ch) {
@@ -1636,7 +1639,7 @@ if (typeof module !== 'undefined') module.exports = C1;
         var cleared = save.prog['c' + ch];
         for (var i = 1; i <= CH_NIGHTS[ch]; i++) {
           var b = document.createElement('button'); b.type = 'button'; b.textContent = i;
-          b.disabled = !chUnlocked(ch) || i > cleared + 1; if (i <= cleared) b.className = 'done';
+          b.disabled = !chUnlocked(ch) || (!PREVIEW_ALL && i > cleared + 1); if (i <= cleared) b.className = 'done';
           (function (n) { b.addEventListener('click', function () { startNight(n - 1, ch); }); })(i);
           row.appendChild(b);
         }
@@ -1717,6 +1720,7 @@ if (typeof module !== 'undefined') module.exports = C1;
     'hallway_empty_c', 'hallway_kumot_c', 'living_tvoff_c', 'living_malik_c', 'kitchen_empty_c', 'kitchen_kal_c', 'cabinet_empty_c', 'cabinet_kal_c', 'curtain_closed_c', 'curtain_shadow_c',
     'curtain_open_c', 'curtain_s1_c', 'curtain_s2_c', 'curtain_silip_c', 'curtain_glass_c', 'c1_under', 'c1_under_kumot', 'c1_peek_0', 'c1_peek_2', 'c1_peek_3', 'hero_barang'];
   function beginNight() {
+    pan.mem = {}; pan.place = ''; pan.fv = 0; pan.v = 0;   // each night starts facing the door; within a night every room remembers where you left the view
     if (curCh === 3) C2_IMG.concat(C3_IMG, C3_LIT.map(function (k) { return k + 'l'; })).forEach(function (k) { if (!imgs[k]) { var i = new Image(); i.src = IMGDIR() + k + '.jpg'; imgs[k] = i; } });
     if (curCh === 2) C2_IMG.forEach(function (k) { if (!imgs[k]) { var i = new Image(); i.src = IMGDIR() + k + '.jpg'; imgs[k] = i; } });
     initAudio().then(function () {
@@ -2459,7 +2463,6 @@ if (typeof module !== 'undefined') module.exports = C1;
     }
   }
   function c1Arrive(d) {
-    if (d.to === 'center' && d.from) panSet('c1hub', d.from === 'window' || d.from === 'cabinet' ? 1 : 0);   // back in the middle, still facing where you were
     camClear(); setView(true, true); panTick(0); buildHot(); black(0, 260);
     if (lowFx()) return;
     if (d.to === 'center' && C1PT[d.from]) camAnim([{ transform: 'scale(1.7)' }, { transform: 'scale(1.0)' }], 520, panToView(C1PT[d.from]), 'cubic-bezier(.2,.7,.3,1)');   // pulled back out of that corner
