@@ -51,9 +51,19 @@ var STR = {
     a_curtain_open: 'Open curtain', a_curtain_close: 'Close curtain', a_hold_curtain: 'HOLD CURTAIN', a_light: 'FLASHLIGHT', a_salt: 'Throw asin ({n})', a_breaker: 'Reset breaker',
     begin: 'Tap to begin', survived: 'You survived', time_survived: 'Time survived', next: 'Continue',
     caught: 'caught you.', retry: 'Retry Night', rotate: 'Turn your phone sideways', play_anyway: 'Play anyway',
-    who: { kumot: 'KUMOT', malik: 'MALIKMATA', kal: 'KALANSING', silip: 'SILIP', barang: 'BARANG' },
+    who: { kumot: 'KUMOT', malik: 'MALIKMATA', kal: 'KALANSING', silip: 'SILIP', barang: 'BARANG', bangungot: 'BANGUNGOT' },
+    s_fan: 'Turn on e-fan', s_fan_off: 'Turn off e-fan', fan_on_hint: 'The e-fan is running again: your sanity slowly comes back. Its hum covers quiet sounds.', fan_nopower: 'No power: the fan will not turn.',
+    pant_hint: 'You ran: you are out of breath and cannot hold it as long for a while. Walking is quieter.',
+    c3_hall_lit: 'The hall light is on: you can already see down it.',
+    tired1: 'Your mind is slipping. Switch an e-fan back on.', tired2: 'You are about to faint. Get to a fan NOW.',
+    hint_bangungot: 'Your sanity ran out and you fainted: Kumot sat on you. When an e-fan switches off, switch it back on.', fan_rule_t: 'Sanity · E-fan',
+    fan_rule_c1: 'The e-fan in the corner of the room (look right) keeps you sane. Now and then it switches itself off: go and switch it back on. While it is off your sanity drains; at zero you faint and the bangungot takes you.',
+    fan_rule_c2: 'The e-fan in the living room keeps you sane. Now and then it switches itself off: go and switch it back on. While it is off your sanity drains, and a blackout stops it until the power is back.',
+    fan_rule_c3: 'The e-fans in the bedroom and the living room keep you sane. Now and then one switches itself off. One off: your sanity comes back slower. Both off: it drains. Switch them back on.',
+    fan_off_hint: 'An e-fan switched itself off! Go and switch it back on before your sanity runs out.', fan_off_c1: 'E-fan off', fan_off_fan: 'Living room fan off', fan_off_fanB: 'Bedroom fan off', fan_off_all: 'All fans off', fan_rule_n12: 'Tonight it rarely switches off.', fan_rule_n35: 'Tonight it switches off now and then.', fan_rule_n67: 'Tonight it switches off often: keep an eye on it.', fan_rule_dark: 'No power tonight, but the fans are rechargeable.', sanity: 'Sanity',
+
     hint: {
-      kumot: 'When the handle rattles, close the door and HOLD it. If she gets in, hide under the bed and hold your breath when the blanket moves.',
+      kumot: 'Tap the bedroom door to stand at it. Double-tap there for your flashlight down the hall; when the handle rattles, HOLD to keep it shut. If she gets in, hide under the bed and hold your breath when the blanket moves.',
       malik: 'When the TV turns on by itself, switch it off fast. If it is already out: lights off, hide, and do not move.',
       kal: 'Do not run. When the metal clinks get close, throw asin or hide in the cabinet and do not touch anything.',
       silip: 'When the crickets go quiet, check the curtain and hold the flashlight on her. If she is at the glass, keep the curtain shut and HOLD it.'
@@ -72,7 +82,7 @@ var STR = {
       cap_clinks_far: '[ faint metal clinking in the kitchen ]', cap_clinks_near: '[ metal clinking, getting closer ]', cap_sniff: '[ sniffing ]', cap_kal_in: '[ she is in the kitchen ]', cap_taps: '[ tapping on the cabinet doors ]',
       cap_nails: '[ fingernails on the glass ]', crickets: '[ the crickets go silent ]', blackout: '[ the power dies ]', breaker: '[ power restored ]',
       kal_retreat: '[ she hisses at the salt and backs away ]', silip_back: '[ wings flap, she pulls back into the dark ]', malik_return: '[ the static fades, the TV goes dark ]',
-      kumot_enter: '[ the door bursts open ]', battery_dead: '[ the flashlight dies ]', gasp: '[ you gasp for air ]', no_power: '[ no power ]'
+      kumot_enter: '[ the door bursts open ]', bangungot: '[ you cannot move. Something is climbing onto the bed ]', battery_dead: '[ the flashlight dies ]', gasp: '[ you gasp for air ]', no_power: '[ no power ]'
     },
     texts: {
       1: ['Migo, lock up by midnight. Close the bedroom door. If you hear the handle, HOLD it shut.', 'If something comes in, get under the bed and don\'t breathe. I mean it.', 'Don\'t leave before the 6 AM bell. - Tita Cora'],
@@ -133,9 +143,19 @@ var STR = {
     a_curtain_open: 'Buksan ang kurtina', a_curtain_close: 'Isara ang kurtina', a_hold_curtain: 'HAWAKAN ANG KURTINA', a_light: 'FLASHLIGHT', a_salt: 'Ihagis ang asin ({n})', a_breaker: 'I-reset ang breaker',
     begin: 'I-tap para magsimula', survived: 'Nakaligtas ka', time_survived: 'Tagal ng pagligtas', next: 'Ituloy',
     caught: 'ang nakahuli sa\'yo.', retry: 'Ulitin ang Gabi', rotate: 'Ipahiga ang phone mo', play_anyway: 'Laruin pa rin',
-    who: { kumot: 'KUMOT', malik: 'MALIKMATA', kal: 'KALANSING', silip: 'SILIP', barang: 'BARANG' },
+    who: { kumot: 'KUMOT', malik: 'MALIKMATA', kal: 'KALANSING', silip: 'SILIP', barang: 'BARANG', bangungot: 'BANGUNGOT' },
+    s_fan: 'Buksan ang e-fan', s_fan_off: 'Patayin ang e-fan', fan_on_hint: 'Umaandar na ulit ang electric fan: unti-unting bumabalik ang sanity mo. Natatakpan ng ugong nito ang mahihinang tunog.', fan_nopower: 'Walang kuryente: hindi aandar ang electric fan.',
+    pant_hint: 'Tumakbo ka: hingal ka at hindi mo kayang pigilan ang hininga nang matagal sa ngayon. Mas tahimik ang paglalakad.',
+    c3_hall_lit: 'Bukas ang ilaw sa pasilyo: kita mo na ang daan.',
+    tired1: 'Nawawala ka na sa sarili. Buksan ulit ang electric fan.', tired2: 'Mahihimatay ka na. Pumunta sa electric fan NGAYON.',
+    hint_bangungot: 'Naubos ang sanity mo at nahimatay ka: dinaganan ka ni Kumot. Kapag namatay ang electric fan, buksan ito ulit.', fan_rule_t: 'Sanity · Electric fan',
+    fan_rule_c1: 'Ang electric fan sa sulok ng kwarto (lumingon pakanan) ang nagpapanatili ng sanity mo. Paminsan-minsan, namamatay ito nang kusa: puntahan at buksan ulit. Habang patay ito, nababawasan ang sanity mo; kapag naubos, mahihimatay ka at mababangungot.',
+    fan_rule_c2: 'Ang electric fan sa sala ang nagpapanatili ng sanity mo. Paminsan-minsan, namamatay ito nang kusa: puntahan at buksan ulit. Habang patay ito, nababawasan ang sanity mo, at titigil ito kapag nag-brownout hanggang bumalik ang kuryente.',
+    fan_rule_c3: 'Ang mga electric fan sa kwarto at sa sala ang nagpapanatili ng sanity mo. Paminsan-minsan, namamatay ang isa nang kusa. Isa ang patay: mas mabagal bumalik ang sanity mo. Parehong patay: nababawasan ito. Buksan ulit.',
+    fan_off_hint: 'Namatay ang electric fan! Puntahan at buksan ulit bago maubos ang sanity mo.', fan_off_c1: 'Patay ang fan', fan_off_fan: 'Patay ang fan sa sala', fan_off_fanB: 'Patay ang fan sa kwarto', fan_off_all: 'Patay lahat ng fan', fan_rule_n12: 'Ngayong gabi, bihira itong mamatay.', fan_rule_n35: 'Ngayong gabi, paminsan-minsan itong namamatay.', fan_rule_n67: 'Ngayong gabi, madalas itong mamatay: bantayan mo.', fan_rule_dark: 'Walang kuryente ngayong gabi, pero rechargeable ang mga electric fan.', sanity: 'Sanity',
+
     hint: {
-      kumot: 'Pag kumalansing ang hawakan ng pinto, isara at HAWAKAN. Pag nakapasok siya, magtago sa ilalim ng kama at pigilan ang hininga pag gumalaw ang kulambo.',
+      kumot: 'I-tap ang pinto ng kwarto para lumapit dito. I-double-tap doon para sa flashlight sa pasilyo; pag kumalansing ang hawakan, I-HOLD para manatiling sarado. Pag nakapasok siya, magtago sa ilalim ng kama at pigilan ang hininga pag gumalaw ang kumot',
       malik: 'Pag kusang bumukas ang TV, patayin agad. Pag nakalabas na: patayin ang ilaw, magtago, at \'wag gagalaw.',
       kal: '\'Wag tatakbo. Pag malapit na ang kalansing, ihagis ang asin o magtago sa kabinet at \'wag hahawak ng kahit ano.',
       silip: 'Pag tumahimik ang mga kuliglig, silipin ang kurtina at itutok ang flashlight sa kanya. Pag nasa salamin na siya, isara at HAWAKAN ang kurtina.'
@@ -152,7 +172,7 @@ var STR = {
       cap_clinks_far: '[ mahinang kalansing ng bakal sa kusina ]', cap_clinks_near: '[ kalansing ng bakal, papalapit ]', cap_sniff: '[ may sumisinghot ]', cap_kal_in: '[ nasa kusina na siya ]', cap_taps: '[ kinakatok ang mga pinto ng kabinet ]',
       cap_nails: '[ mga kuko sa salamin ]', crickets: '[ tumahimik ang mga kuliglig ]', blackout: '[ nawalan ng kuryente ]', breaker: '[ bumalik ang kuryente ]',
       kal_retreat: '[ sumirit siya sa asin at umatras ]', silip_back: '[ pumagaspas ang pakpak, umatras siya sa dilim ]', malik_return: '[ nawala ang static, namatay ang TV ]',
-      kumot_enter: '[ biglang bumukas ang pinto ]', battery_dead: '[ namatay ang flashlight ]', gasp: '[ napahingal ka ]', no_power: '[ walang kuryente ]'
+      kumot_enter: '[ biglang bumukas ang pinto ]', bangungot: '[ hindi ka makagalaw. May umaakyat sa kama ]', battery_dead: '[ namatay ang flashlight ]', gasp: '[ napahingal ka ]', no_power: '[ walang kuryente ]'
     },
     texts: {
       1: ['Migo, mag-lock ka bago maghatinggabi. Isara mo ang pinto ng kwarto. Pag narinig mo ang hawakan, HAWAKAN mo.', 'Pag may pumasok, sa ilalim ka ng kama at \'wag kang hihinga. Seryoso ako.', '\'Wag kang aalis hangga\'t hindi tumutunog ang kampana ng alas-sais. - Tita Cora'],

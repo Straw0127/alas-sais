@@ -42,11 +42,13 @@ var AS = (function () {
     return function () { s ^= s << 13; s >>>= 0; s ^= s >>> 17; s ^= s << 5; s >>>= 0; return (s % 100000) / 100000; };
   }
 
+  // seconds to walk each way through the house (the length of the walking clip: turn round, walk the real distance,
+  // turn to face the room); running takes a little over half as long, but the floor is loud and you are out of breath
+  var WALKT = {"bedroom-curtain": 4.06, "bedroom-hall": 4.06, "bedroom-kitchen": 7.04, "bedroom-living": 5.46, "curtain-bedroom": 4.19, "curtain-hall": 1.35, "curtain-kitchen": 5.68, "curtain-living": 4.1, "hall-bedroom": 4.09, "hall-curtain": 1.25, "hall-kitchen": 5.57, "hall-living": 4.0, "kitchen-bedroom": 7.12, "kitchen-curtain": 5.63, "kitchen-hall": 5.62, "kitchen-living": 5.75, "living-bedroom": 5.68, "living-curtain": 4.18, "living-hall": 4.18, "living-kitchen": 5.89};
   function travelTime(from, to, run) {
     if (from === to) return 0;
-    var t = (from === 'hall' || to === 'hall') ? LEG[from] + LEG[to] : LEG[from] + LEG[to];
-    t = Math.max(0.7, t * 0.6);
-    return run ? t * 0.6 : t;
+    var t = WALKT[from + '-' + to] || Math.max(0.7, (LEG[from] + LEG[to]) * 0.6);
+    return run ? t / 1.8 : t;
   }
 
   function create(nightIdx, opts) {
@@ -62,13 +64,13 @@ var AS = (function () {
       night: nightNo, time: 0, hourSec: N.hourSec, over: false, won: false, dead: null, deathRoom: null,
       events: [],
       p: { room: 'bedroom', travel: null, run: false, hidden: null, holdDoor: false, holdBreath: false, holdCurtain: false,
-           light: false, battery: 100, breath: 8, salt: 2, lastActT: -99 },
-      house: { door: false /* closed? */, tv: false, lights: false, curtain: false, power: true, cricketsOff: 0 },
+           light: false, battery: 100, breath: 8, salt: 2, lastActT: -99, energy: 100 },
+      house: { door: false /* closed? */, tv: false, lights: false, curtain: false, power: true, cricketsOff: 0, fan: false, fanB: false },
       noise: 0,
-      k: { st: 0, t: 0, tick: 0, cool: 3, held: 0, win: lerp(10, 5, diff), lift: false, grace: 0, rattle: 0, away: 0 },
-      m: { st: 0, t: 0, tick: 0, cool: 6, lock: 0, exposed: 0, hunt: 0, giggle: 0, win: lerp(8, 4, diff), darkT: 0 },
-      c: { st: 0, t: 0, tick: 0, cool: 8, grace: 0, win: lerp(6, 3, diff), sniff: 0 },
-      s: { st: 0, t: 0, tick: 0, cool: 10, flash: 0, held: 0, win: lerp(9, 6.5, diff), openT: 0, tap: 0 },
+      k: { st: 0, t: 0, tick: 0, cool: 3, held: 0, win: lerp(16, 10, diff), lift: false, grace: 0, rattle: 0, away: 0 },
+      m: { st: 0, t: 0, tick: 0, cool: 6, lock: 0, exposed: 0, hunt: 0, giggle: 0, win: lerp(14, 9, diff), darkT: 0 },
+      c: { st: 0, t: 0, tick: 0, cool: 8, grace: 0, win: lerp(13, 9, diff), sniff: 0 },
+      s: { st: 0, t: 0, tick: 0, cool: 10, flash: 0, held: 0, win: lerp(15, 11, diff), openT: 0, tap: 0 },
       b: { st: 0, tick: 0, flash: 0, atk: 0 },
       blackoutAt: [], heartbeat: false, msgs: []
     };
@@ -88,7 +90,7 @@ var AS = (function () {
       if (custom) return custom[name] || 0;
       var r = N.lv[name]; if (!r || !r[1]) return 0;
       var h = g.hour(); var step = h >= 4 ? 1 : h >= 3 ? 0.66 : h >= 2 ? 0.33 : 0;
-      var lv = Math.round(lerp(r[0], r[1], step) * (g.dark ? 0.56 : 0.66));   // story difficulty: tense but fair (candle nights gentler: you can barely see)
+      var lv = Math.round(lerp(r[0], r[1], step) * (g.dark ? 0.45 : (CH3 ? 0.48 : 0.56)));   // story difficulty: tense but fair (candle nights gentler: you can barely see)
       if ((nightNo === 5 || (CH3 && nightNo === 7)) && h >= 5) lv += 2;
       return lv;
     }
@@ -106,17 +108,55 @@ var AS = (function () {
     function canEscalate() { return fatalCount() < cap; }
 
     function here(room) { return !g.p.travel && g.p.room === room; }
+    // SANITY and the e-fans (like the music box in FNAF 2). The fans run all night, but now and then one switches itself off:
+    // rarely on nights 1-2, sometimes on 3-5, often on 6-7. Switch it back on (one tap, no holding).
+    // Every fan running: sanity slowly comes back. Only some: it comes back slower. None: it drains, and at zero you faint and
+    // Kumot gives you bangungot. On the candle nights the fans are the rechargeable kind, so they still run without power.
+    function fanHere() { var r = g.p.room; return r === 'living' ? 'fan' : (r === 'bedroom' && CH3) ? 'fanB' : null; }
+    g.fanHere = fanHere;
+    var FANS = CH3 ? ['fan', 'fanB'] : ['fan'];
+    var avgLv = 0; if (custom) { var ks = Object.keys(custom).filter(function (k) { return typeof custom[k] === 'number'; }); ks.forEach(function (k) { avgLv += custom[k]; }); avgLv /= Math.max(1, ks.length); }
+    var tier = custom ? (avgLv >= 12 ? 2 : avgLv >= 6 ? 1 : 0) : nightNo <= 2 ? 0 : nightNo <= 5 ? 1 : 2;
+    var GAP = [[150, 240], [70, 115], [36, 60]][tier], gapMul = FANS.length > 1 ? 1.4 : 1;
+    function gap() { return (GAP[0] + rnd() * (GAP[1] - GAP[0])) * gapMul; }
+    g.fanNext = {}; FANS.forEach(function (f) { g.house[f] = true; g.fanNext[f] = 18 + rnd() * 20 + gap() * 0.6; });
+    function fanRuns(f) { return !!g.house[f] && (g.house.power || !!g.dark); }
+    g.fanRuns = fanRuns;
+    g.fans = FANS;
+    var S_UP = 2.5, S_SOME = 1.0, S_DRAIN = (100 / 65) * (tier === 2 ? 1.1 : 1);
+    function energy(dt) {
+      var p = g.p, H = g.house, e0 = p.energy;
+      FANS.forEach(function (f) {
+        if (g.time < g.fanNext[f]) return;
+        g.fanNext[f] = g.time + gap();
+        if (H[f] && (H.power || g.dark)) { H[f] = false; emit('fan', { on: false, which: f, auto: true }); }
+      });
+      var n = 0; FANS.forEach(function (f) { if (fanRuns(f)) n++; });
+      if (n === FANS.length) p.energy = Math.min(100, p.energy + dt * S_UP);
+      else if (n > 0) p.energy = Math.min(100, p.energy + dt * S_SOME);
+      else p.energy = Math.max(0, p.energy - dt * S_DRAIN * (H.power || g.dark ? 1 : 0.5));
+      if (e0 > 30 && p.energy <= 30) emit('tired', { lvl: 1 });
+      if (e0 > 12 && p.energy <= 12) emit('tired', { lvl: 2 });
+      if (e0 <= 30 && p.energy > 30) emit('tired', { lvl: 0 });
+      if (p.energy <= 0) { kill('bangungot'); return true; }
+      return false;
+    }
     function kill(who) { if (g.over) return; g.over = true; g.dead = who; g.deathRoom = g.p.room; emit('death', { who: who }); }
 
     // ---------------------------------------------------------------- player actions
     g.act = function (a, arg) {
+      if (a === 'fan') {
+        var f = fanHere(); if (!f || g.p.hidden || g.p.travel || g.over || g.house[f]) return false;
+        if (!g.house.power && !g.dark) { emit('fan_nopower'); return false; }
+        g.house[f] = true; g.fanNext[f] = g.time + gap(); emit('fan', { on: true, which: f }); return true;
+      }
       if (g.over) return false;
       var p = g.p, H = g.house;
       if (a === 'go') {
         if (p.travel || p.hidden || arg === p.room) return false;
         if (CH2 && arg === 'bedroom') { emit('forbidden'); return false; }
         var tt = travelTime(p.room, arg, p.run);
-        p.travel = { from: p.room, to: arg, t: tt, total: tt };
+        p.travel = { from: p.room, to: arg, t: tt, total: tt, run: p.run };
         p.light = false; p.holdDoor = p.holdBreath = p.holdCurtain = false;
         g.noise = clamp(g.noise + (p.run ? 35 : (arg === 'kitchen' ? 8 : 3)), 0, 100);
         emit('travel', { from: p.room, to: arg, run: p.run, t: tt });
@@ -173,7 +213,14 @@ var AS = (function () {
     g.hold = function (what, on) {
       var p = g.p;
       if (g.over || p.travel) { p.holdDoor = p.holdBreath = p.holdCurtain = p.light = false; return; }
-      if (what === 'door') p.holdDoor = !!on && p.room === 'bedroom' && g.house.door && !p.hidden;
+      if (what === 'door') {
+        if (g.doorView) {   // Chapter 3 at the door (as in Chapter 1): holding pulls it shut and keeps it shut; let go and it swings back open
+          var hv = !!on && p.room === 'bedroom' && !p.hidden;
+          if (hv && !g.house.door) { g.house.door = true; emit('door_close', { held: true }); }
+          if (!hv && g.house.door && p.holdDoor) { g.house.door = false; emit('door_open', { held: true }); }
+          p.holdDoor = hv;
+        } else p.holdDoor = !!on && p.room === 'bedroom' && g.house.door && !p.hidden;
+      }
       if (what === 'breath') { if (on && p.breath < 1.5) return; p.holdBreath = !!on && !!p.hidden; if (!on && p.breath < 8) {} }
       if (what === 'curtain') p.holdCurtain = !!on && p.room === 'curtain' && !g.house.curtain;
       if (what === 'light') p.light = !!on && p.battery > 0 && !p.hidden;
@@ -194,11 +241,14 @@ var AS = (function () {
       // travel
       if (p.travel) {
         p.travel.t -= dt;
-        if (p.travel.t <= 0) { p.room = p.travel.to; p.travel = null; emit('arrive', { room: p.room }); onArrive(); }
+        if (p.travel.t <= 0) { var wasRun = p.travel.run; p.room = p.travel.to; p.travel = null; emit('arrive', { room: p.room }); if (wasRun) { p.puff = Math.min(1, (p.puff || 0) + 0.45); emit('pant', { v: p.puff }); } onArrive(); }
       }
       // breath / battery / noise
-      if (p.holdBreath) { p.breath -= dt; if (p.breath <= 0) { p.breath = 0; p.holdBreath = false; emit('gasp'); g.noise = clamp(g.noise + 25, 0, 100); g._gasp = g.time; } }
-      else p.breath = Math.min(8, p.breath + dt * 1.6);
+      // after a run you are panting: you cannot hold your breath as long until you get it back
+      p.puff = Math.max(0, (p.puff || 0) - dt * 0.12);
+      var bmax = 8 * (1 - 0.55 * p.puff);
+      if (p.holdBreath) { p.breath -= dt * (1 + p.puff); if (p.breath <= 0) { p.breath = 0; p.holdBreath = false; emit('gasp'); g.noise = clamp(g.noise + 25, 0, 100); g._gasp = g.time; } }
+      else p.breath = Math.min(bmax, p.breath + dt * 1.6 * (1 - 0.5 * p.puff));
       if (p.light) { p.battery -= dt * (g.dark ? 0.45 : 0.55); if (p.battery <= 0) { p.battery = 0; p.light = false; emit('battery_dead'); } }
       g.noise = Math.max(0, g.noise - dt * 6);
 
@@ -210,6 +260,7 @@ var AS = (function () {
         }
       }
       if (H.cricketsOff > 0) H.cricketsOff -= dt;
+      if (!g.quiet && energy(dt)) return;
 
       if (!g.quiet) { // quiet = the tutorial call on night 1: the house waits until Tita Cora hangs up
         updateKumot(dt); if (g.over) return;
@@ -225,7 +276,7 @@ var AS = (function () {
 
     function onArrive() {
       var p = g.p;
-      if (p.room === 'bedroom' && g.k.st === 4) g.k.grace = 1.6;
+      if (p.room === 'bedroom' && g.k.st === 4) g.k.grace = 2.2;
       if (p.room === 'kitchen' && g.c.st === 3) g.c.grace = 1.8;
       if (p.room === 'living' && g.m.st === 2) g.m.exposed = Math.max(g.m.exposed, 0);
     }
@@ -258,7 +309,7 @@ var AS = (function () {
         }
         if (k.t <= 0) {
           if (H.door && k.held >= k.win * 0.5) { k.st = 0; k.cool = lerp(10, 6, diff); emit('kumot_leave'); emit('cue', { id: 'scuffs_far', room: 'hall', cap: 'cap_scuffs_leave' }); }
-          else { k.st = 4; k.t = 7; k.lift = false; k.warned = false; H.door = false; k.grace = 1.6; k.away = 0; emit('kumot_enter'); emit('door_open', { forced: true }); emit('cue', { id: 'lullaby_hum', room: 'bedroom', cap: 'cap_hum' }); }
+          else { k.st = 4; k.t = 7; k.lift = false; k.warned = false; H.door = false; k.grace = 2.2; k.away = 0; emit('kumot_enter'); emit('door_open', { forced: true }); emit('cue', { id: 'lullaby_hum', room: 'bedroom', cap: 'cap_hum' }); }
         }
         return;
       }

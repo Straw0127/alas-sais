@@ -25,6 +25,7 @@ function bot(g, mem, skill) {
   if (p.hidden && !(p.room === 'kitchen' && c.st === 3)) { g.act('hide'); return; }
   if (s.st === 4 && s.held < s.win * 0.4 + 0.3) { if (go('curtain')) return; if (H.curtain) { g.act('curtain'); return; } holdOnly('curtain'); return; }
   if (k.st === 3 && k.held < k.win * 0.5 + 0.3) { if (go('bedroom')) return; if (!H.door) { g.act('door'); return; } holdOnly('door'); return; }
+  if (H.power && !H.fan && p.energy < 30) { if (go('living')) return; g.act('fan'); return; }
   if (m.st === 1) { if (go('living')) return; g.act('tv'); mem.react = 0.3; return; }
   if (c.st === 2 && p.salt > 0) { if (go('kitchen')) return; g.act('salt'); return; }
   if (!H.power) { if (go('kitchen')) return; mem.puz = (mem.puz || 0) + DT * 30; if (mem.puz > skill.puzzle * 30 * (1 / 30) * 30) { mem.puz = 0; if (Math.random() < skill.puzzleOk) g.act('breaker'); else g.act('breaker_fail'); } return; }
@@ -37,6 +38,8 @@ function bot(g, mem, skill) {
     holdOnly(null); g.act('curtain'); mem.lastCheck = g.time; return;
   }
   // 3. rest in the bedroom with the door closed
+  // sanity: the sala fan switched itself off: go switch it back on
+  if (H.power && !H.fan) { if (go('living')) return; g.act('fan'); return; }
   if (go('hall')) return;   // Chapter 2: wait in the hallway, the bedroom is off-limits
   holdOnly(null);
 }

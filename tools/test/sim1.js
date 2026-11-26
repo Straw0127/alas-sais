@@ -17,7 +17,9 @@ function bot(g, skill, st) {
   const sUrg = s.st === 3 ? s.t3 : (s.st >= skill.curtain ? 40 : 99);
   const bUrg = b.st >= 4 ? b.atk : (b.st >= skill.barang ? 25 : 99);
   const m = Math.min(kUrg, sUrg, bUrg);
-  if (m >= 99) { relAll(); go('center'); return; }
+  // sanity: when the fan switches itself off, go switch it back on (sooner when sanity is low)
+  const fanOff = !g.house.fan && g.house.power;
+  if (m >= 99 || (fanOff && p.energy < 55 && m > 4)) { relAll(); if (go('center')) { if (fanOff) g.act('fan'); } return; }
   if (m === bUrg) { if (p.pos !== 'cabinet') relAll(); if (go('cabinet')) g.hold('light', true); return; }
   if (m === kUrg) { if (p.pos !== 'door') relAll(); if (go('door')) g.hold('door', k.st >= skill.holdAt); return; }
   if (p.pos !== 'window') relAll(); if (go('window')) { if (g.house.curtain) g.act('curtain'); else g.hold('curtain', true); }

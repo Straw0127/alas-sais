@@ -2,7 +2,7 @@
 import sys, glob, os, numpy as np
 from PIL import Image
 sys.path.insert(0, '/home/claude/render'); from post import grade
-G = {'js': 'red', 'ext': 'night', 'bedroom': 'warm', 'under': 'warm', 'hallway': 'warm', 'living': 'cold', 'kitchen': 'sick', 'cabinet': 'sick', 'curtain': 'night',
+G = {'js': 'red', 'ext': 'night', 'bedroom': 'warm', 'under': 'warm', 'hallway': 'warm', 'living': 'cold', 'sofa': 'cold', 'kitchen': 'sick', 'cabinet': 'sick', 'curtain': 'night',
      'c1': 'warm', 'menu': 'warm', 'menu_living_off_lit': 'cold', 'menu_morning': 'none', 'hero_barang': 'sick', 'c1_scare_barang': 'red',
      'hero_kumot': 'warm', 'hero_malikmata': 'cold', 'hero_kalansing': 'sick', 'hero_silip': 'night', 'scare_kumot': 'red', 'scare_malikmata': 'cold', 'scare_kalansing': 'red', 'scare_silip': 'red'}
 os.makedirs('dist/assets/img', exist_ok=True)
@@ -36,7 +36,7 @@ def family_base(k):
     Flashlight layers (_cl, _lit) and lights-on states keep their own."""
     if 'lights' in k or k.endswith('_lit') and not k.startswith('c1_cab'): return k
     suf = '_cl' if k.endswith('_cl') else '_c' if k.endswith('_c') else ''
-    fam = {'curtain': 'curtain_closed', 'hallway': 'hallway_empty', 'kitchen': 'kitchen_empty', 'living': 'living_empty', 'cabinet': 'cabinet_empty'}
+    fam = {'curtain': 'curtain_closed', 'hallway': 'hallway_empty', 'kitchen': 'kitchen_empty', 'living': 'living_empty', 'cabinet': 'cabinet_empty', 'sofa': 'sofa_tv'}
     pre = k.split('_')[0]
     if pre in fam: b = fam[pre] + suf
     elif re.match(r'c1_win_', k): b = 'c1_win_closed'
@@ -44,6 +44,7 @@ def family_base(k):
     elif re.match(r'c1_cab_\d$', k): b = 'c1_cab_0'
     elif re.match(r'c1_door_(ajar|k\d|sw\d+|closed)$', k): b = 'c1_door_sw46'
     elif k.startswith('c1_peek_'): b = 'c1_peek_0'
+    elif k.startswith('c1_under'): b = 'c1_under'
     elif k in ('c1_hub', 'c1_hub_open', 'c1_hub_kumot'): b = 'c1_hub'
     elif re.match(r'c3_bed(_closed|_kumot)?(_c|_cl)?$', k): b = 'c3_bed' + suf
     elif k.startswith('c3_look'): b = 'c3_look'
@@ -61,6 +62,8 @@ for src in sorted(glob.glob(R + '*.png')):
     target = 0.09 if k.startswith(('scare', 'hero', 'ext', 'js_')) else 0.15
     if lum < target and k not in KEEP_DARK:
         a = a ** max(np.log(target) / np.log(max(lum, 1e-3)), 0.5)
+    GAIN = {'living_tvoff': 2.3, 'menu_living_tvoff': 2.0, 'living_tvoff_c': 1.3, 'sofa_tvoff': 2.0, 'sofa_tvoff_c': 1.3}   # the dark sala must still be readable
+    if k in GAIN: a = np.clip(a * GAIN[k], 0, 1)
     tmp = '/tmp/lift_' + k + '.png'
     Image.fromarray((np.clip(a, 0, 1) * 255).astype(np.uint8)).save(tmp)
     grade(tmp, f, G.get(k) or G.get(k.split('_')[0], 'warm'), seed=7, strength=0.45)

@@ -27,6 +27,8 @@ function bot(g, mem, skill) {
   if (s.st === 4 && s.held < s.win * 0.4 + 0.3) { if (go('curtain')) return; if (H.curtain) { g.act('curtain'); return; } holdOnly('curtain'); return; }
   if (k.st === 3 && k.held < k.win * 0.5 + 0.3) { if (go('bedroom')) return; if (!H.door) { g.act('door'); return; } holdOnly('door'); return; }
   if (b.st >= 3 && p.battery > 3) { if (go('bedroom')) return; holdOnly('light'); return; }
+  const pw = H.power || g.dark;
+  if (pw && !H.fan && !H.fanB && p.energy < 35) { const r = p.room === 'living' || p.room === 'kitchen' ? 'living' : 'bedroom'; if (go(r)) return; g.act('fan'); return; }
   if (m.st === 1) { if (go('living')) return; if (g.dark) { holdOnly('light'); return; } g.act('tv'); mem.react = 0.3; return; }
   if (c.st === 2 && p.salt > 0) { if (go('kitchen')) return; g.act('salt'); return; }
   if (!H.power && !g.dark) { if (go('kitchen')) return; mem.puz = (mem.puz || 0) + DT; if (mem.puz > skill.puzzle) { mem.puz = 0; if (Math.random() < skill.puzzleOk) g.act('breaker'); else g.act('breaker_fail'); } return; }
@@ -38,9 +40,12 @@ function bot(g, mem, skill) {
     if (s.st >= 1 && s.st <= 3) { holdOnly('light'); return; }
     holdOnly(null); g.act('curtain'); mem.lastCheck = g.time; return;
   }
-  // 3. rest in the bedroom with the door closed
+  // sanity: the sala fan switched itself off and sanity is not full: go switch it back on
+  if (pw && !H.fan && p.energy < 75) { if (go('living')) return; g.act('fan'); return; }
+  // 3. rest in the bedroom with the door closed, the bedroom fan running while you need it
   if (go('bedroom')) return;
   if (!H.door) { g.act('door'); return; }
+  if (pw && !H.fanB) { g.act('fan'); return; }
   if (b.st >= 2 && p.battery > 8) { holdOnly('light'); return; }
   holdOnly(null);
 }

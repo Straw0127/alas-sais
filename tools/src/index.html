@@ -20,6 +20,8 @@
       <img id="litImg" class="bg" alt="" style="opacity:0;transition:none">
       <canvas id="dust" class="layer" style="pointer-events:none;display:none"></canvas>
       <div id="ovl" class="layer" style="pointer-events:none"></div>
+      <div id="panx" class="layer" style="pointer-events:none"></div>
+      <video id="walkv" class="layer" muted playsinline preload="auto" disablepictureinpicture></video>
       <div id="fx" class="layer"></div>
       <div id="fog" class="layer"><div class="hand" style="left:500px;top:230px"></div><div class="hand" style="left:690px;top:260px;transform:rotate(12deg)"></div></div>
     </div>
@@ -31,10 +33,12 @@
   <div id="hot" class="layer"></div>
   <div id="pan-l" class="pan-arrow" aria-label="Turn left"></div><div id="pan-r" class="pan-arrow" aria-label="Turn right"></div>
 
+  <div id="tired" class="layer"><span class="lid top"></span><span class="lid bot"></span></div>
   <div id="hud" class="layer">
     <div id="clock"><b id="clock-t">12:00 AM</b><span id="clock-n">NIGHT 1</span></div>
     <div id="topr">
       <div class="chip" id="salt" style="display:none">ASIN <b id="salt-n">2</b></div>
+      <div class="chip sanity" id="energy" aria-label="Sanity"><span class="sn-ring"><svg viewBox="0 0 48 48"><circle class="sn-bg" cx="24" cy="24" r="19"/><circle class="sn-fg" cx="24" cy="24" r="19" pathLength="100" stroke-dasharray="100 100"/></svg><svg class="sn-fan" viewBox="-50 -50 100 100"><g><path transform="rotate(0)" d="M0,-6 C10,-14 30,-40 14,-44 C2,-46 -8,-30 -6,-8 Z"/><path transform="rotate(120)" d="M0,-6 C10,-14 30,-40 14,-44 C2,-46 -8,-30 -6,-8 Z"/><path transform="rotate(240)" d="M0,-6 C10,-14 30,-40 14,-44 C2,-46 -8,-30 -6,-8 Z"/></g><circle r="8"/></svg></span><span class="sn-tx"><b class="sn-l" id="sn-l">Sanity</b><i class="sn-w" id="sn-w"></i></span></div>
       <div class="chip batt"><img id="batt-img" src="assets/ui/bat_5.webp" alt="Phone battery"><i id="batt-i" style="display:none"></i></div>
       <button id="runBtn" class="pe chip" type="button">WALK</button>
       <button id="pauseBtn" class="pe" type="button" aria-label="Pause">II</button>

@@ -11,7 +11,9 @@ var C1 = (function () {
     { k: [12, 14, 16], s: [12, 14, 16], b: [12, 14, 16], blackout: 4 }
   ];
   var MOVE = { center: { door: 0.45, window: 0.45, cabinet: 0.5, bed: 0.55 } };
-  function moveTime(a, b) { if (a === b) return 0; if (a === 'center') return MOVE.center[b]; if (b === 'center') return MOVE.center[a]; return MOVE.center[a] + MOVE.center[b] - 0.1; }
+  // walking inside Lola's room: the length of each walking clip, at a brisk pace (x0.8). The bed is a crawl, not a walk.
+  var WALK1 = {"cabinet-center": 2.87, "cabinet-door": 1.25, "cabinet-window": 1.7, "center-cabinet": 2.52, "center-door": 2.23, "center-window": 2.03, "door-cabinet": 1.21, "door-center": 3.04, "door-window": 1.9, "window-cabinet": 1.86, "window-center": 2.27, "window-door": 1.52};
+  function moveTime(a, b) { if (a === b) return 0; var w = WALK1[a + '-' + b]; if (w) return w * 0.8; if (a === 'center') return MOVE.center[b]; if (b === 'center') return MOVE.center[a]; return MOVE.center[a] + MOVE.center[b] - 0.1; }
   function lerp(a, b, t) { return a + (b - a) * Math.max(0, Math.min(1, t)); }
 
   function create(nightIdx, opt) {
@@ -21,8 +23,8 @@ var C1 = (function () {
     var rng = opt.rng || function () { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
     var g = {
       chapter: 1, night: nightIdx + 1, hourSec: opt.hourSec || HOUR, time: 0, over: false, result: null, events: [], quiet: false,
-      p: { pos: 'center', travel: null, holdDoor: false, holdCurtain: false, light: false, holdBreath: false, battery: 100, breath: 18, breathMax: 18, peek: 0 },
-      house: { curtain: false, power: true },
+      p: { pos: 'center', travel: null, holdDoor: false, holdCurtain: false, light: false, holdBreath: false, battery: 100, breath: 18, breathMax: 18, peek: 0, energy: 100 },
+      house: { curtain: false, power: true, fan: false },
       k: { on: !!N.k, st: 0, t: 6, win: 0, held: 0, grace: 0, search: 0, lifted: false, warned: false, slip: 0 },
       s: { on: !!N.s, st: 0, t: 8, phase: '', grace: 0, held: 0, t3: 0 },
       b: { on: !!N.b, st: 0, t: 9, flash: 0, atk: 0 },
@@ -31,7 +33,7 @@ var C1 = (function () {
     };
     function emit(type, data) { g.events.push({ type: type, data: data || {} }); }
     g.emit = emit;
-    var EASE = 0.66;   // story difficulty: tense but fair (custom nights are not eased)
+    var EASE = 0.5;   // story difficulty: tense but fair (custom nights are not eased)
     function level(who) { var L = N[who]; if (!L) return 0; var h = g.hour(); return Math.round(L[h < 2 ? 0 : h < 4 ? 1 : 2] * EASE); }
     function diff(who) { return level(who) / 20; }
     function roll(who) { return rng() * 20 < level(who); }
@@ -44,6 +46,27 @@ var C1 = (function () {
     g.clock = function () { var h = g.hour(); var m = Math.floor((g.time - h * g.hourSec) / g.hourSec * 60); return { h: h === 0 ? 12 : h, m: m }; };
     g.level = function (who) { return level(who); };
     g.at = function (pos) { return !g.p.travel && g.p.pos === pos; };
+    // ENERGY: staying awake. It drains slowly all night (more slowly in a blackout, when the fan can't run); the fan
+    // brings it back. At zero you drop asleep where you stand, and Kumot sits on you: bangungot.
+    // SANITY and the e-fan (like the music box in FNAF 2): it runs all night but now and then switches itself off (rarely on
+    // nights 1-2, sometimes on 3-5). Switch it back on (one tap, no holding). Running: sanity slowly comes back. Off: it drains;
+    // at zero you faint and Kumot gives you bangungot. A blackout stops it until the power is back.
+    var tier = g.night <= 2 ? 0 : g.night <= 5 ? 1 : 2;
+    var GAP = [[150, 240], [70, 115], [36, 60]][tier];
+    function gap() { return GAP[0] + rng() * (GAP[1] - GAP[0]); }
+    g.house.fan = true; g.fanNext = { fan: 18 + rng() * 20 + gap() * 0.6 };
+    var S_UP = 2.5, S_DRAIN = 100 / 65;
+    function energy(dt) {
+      var p = g.p, e0 = p.energy, H = g.house;
+      if (g.time >= g.fanNext.fan) { g.fanNext.fan = g.time + gap(); if (H.fan && H.power) { H.fan = false; emit('fan', { on: false, which: 'fan', auto: true }); } }
+      if (H.fan && H.power) p.energy = Math.min(100, p.energy + dt * S_UP);
+      else p.energy = Math.max(0, p.energy - dt * S_DRAIN * (H.power ? 1 : 0.5));
+      if (e0 > 30 && p.energy <= 30) emit('tired', { lvl: 1 });
+      if (e0 > 12 && p.energy <= 12) emit('tired', { lvl: 2 });
+      if (e0 <= 30 && p.energy > 30) emit('tired', { lvl: 0 });
+      if (p.energy <= 0) { die('bangungot'); return true; }
+      return false;
+    }
     function die(who) { if (g.over) return; g.over = true; g.result = 'death'; emit('death', { who: who }); }
 
     // ------------------------------------------------------------------ player
@@ -67,6 +90,11 @@ var C1 = (function () {
           if (p.pos !== 'bed') return false;
           releaseAll(); p.travel = { from: 'bed', to: 'center', t: MOVE.center.bed, left: MOVE.center.bed };
           emit('travel', { from: 'bed', to: 'center', t: MOVE.center.bed, unhide: true }); return true;
+        case 'fan':   // the stand fan in the corner: on, it gives you back your strength (but its hum covers small sounds)
+          if (p.pos !== 'center') return false;
+          if (!g.house.power) { emit('fan_nopower'); return false; }
+          if (g.house.fan) return false;
+          g.house.fan = true; g.fanNext.fan = g.time + gap(); emit('fan', { on: true, which: 'fan' }); return true;
         case 'curtain':
           if (p.pos !== 'window') return false;
           if (g.house.curtain) { g.house.curtain = false; emit('curtain_close'); if (g.s.phase === 'seen') { g.s.phase = ''; emit('silip_grip'); } }
@@ -150,7 +178,7 @@ var C1 = (function () {
           if (!(s.st === 2 && (holding || critical('s'))) && roll('s')) {
             s.st++;
             if (s.st < 3) emit('silip_near', { st: s.st });
-            else { s.t3 = lerp(14, 9, diff('s')); emit('silip_scratch'); if (g.house.curtain) seen(); }
+            else { s.t3 = lerp(17, 12, diff('s')); emit('silip_scratch'); if (g.house.curtain) seen(); }
           }
         }
       } else {
@@ -194,6 +222,7 @@ var C1 = (function () {
       if (p.holdBreath) { p.breath -= dt; if (p.breath <= 0) { p.breath = 0; p.holdBreath = false; emit('gasp'); } }
       else p.breath = Math.min(p.breathMax, p.breath + dt * 2.2);
       if (g.blackoutAt && g.house.power && g.hour() >= g.blackoutAt) { g.house.power = false; emit('blackout'); }
+      if (!g.quiet && energy(dt)) return;
       if (!g.quiet) {
         updK(dt); if (g.over) return;
         updS(dt); if (g.over) return;
