@@ -1,6 +1,9 @@
 /* ALAS-SAIS — UI, audio, input and screens */
 (function () {
   'use strict';
+  // a long press anywhere (also on the black bars beside the game) must not open the browser's menu
+  window.addEventListener('contextmenu', function (e) { e.preventDefault(); }, { capture: true });
+  document.addEventListener('selectstart', function (e) { e.preventDefault(); }, { capture: true });
   var $ = function (id) { return document.getElementById(id); };
   // preload only what Chapter 1 and the menu need (the house rooms load when Chapter 2 opens)
   var IMG = ['hero_kumot', 'hero_silip', 'menu_bed', 'menu_bed_off', 'menu_bed_off_lit', 'menu_morning', 'menu_living_on', 'menu_living_tvoff', 'c1_hub_off', 'c1_hub_off_lit'];
