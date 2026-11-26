@@ -1,3 +1,4 @@
+import os
 """Chapter 1 bedroom (Lola's room): door, curtained window with iron grill, old aparador, bed.
 usage: python3 bed1.py -- out.png SAMPLES --view=hub|door|window|cabinet [--curtain=open|closed] [--door=ajar|open|closed]
        [--silip=0..3] [--barang=0..4] [--kumot]"""
@@ -126,7 +127,11 @@ for p in parts: p.parent = hinge; p.matrix_parent_inverse = hinge.matrix_world.i
 PEEK = int(OPT.get('peek', -1))
 if PEEK >= 0: DOOR = 'peek'
 SWING = 0 if DOOR == 'closed' and VIEW == 'door' else (int(DOOR[2:]) if DOOR.startswith('sw') else None)
-hinge.rotation_euler = (0, 0, math.radians(84 if SWING is not None else {'ajar': 84, 'gap': 84, 'peek': 84, 'open': 92, 'closed': 0}[DOOR]))
+# closing the door is one continuous move: you step back from the doorway into the room as the real door swings shut
+# in front of you. Each frame name is a step of that move: camera spot, door angle, and how far the gaze has turned to the door.
+CLOSE_FR = {80: ((0.08, -0.05), 84, 0.1), 62: ((0.02, -0.5), 80, 0.3), 46: ((-0.05, -0.95), 60, 0.55), 32: ((-0.1, -1.1), 35, 0.8),
+            18: ((-0.1, -1.1), 15, 0.92), 0: ((-0.1, -1.1), 0, 1.0)}
+hinge.rotation_euler = (0, 0, math.radians(CLOSE_FR[SWING][1] if SWING is not None else {'ajar': 84, 'gap': 84, 'peek': 84, 'open': 92, 'closed': 0}[DOOR]))
 sw = mat_basic('sw', (0.75, 0.7, 0.6), 0.5)
 box('switch', (0.08, 0.02, 0.12), (dx + 0.75, D - 0.01, 1.3), sw, bevel=0.005)
 
@@ -447,26 +452,16 @@ elif VIEW == 'plan':   # debug: the whole house from above, cut at ceiling heigh
 elif VIEW == 'hub':
     camera((0.25, -0.15, 1.6), (0.75, 4.4, 1.28), lens=17)
 elif VIEW == 'door':
-    # standing beside the door frame, looking diagonally to the left into the hallway (FNAF4's left door)
-    # every door frame shares one camera: leaning out of the doorway, head tilted (FNAF4). The hall runs to the kitchen,
-    # the sala door is seen at an angle. Holding swings the door shut across this same view (SWING = door angle, 0 = shut).
+    # Leaning out of the doorway, head tilted (FNAF4): the hall to the kitchen, the sala door at an angle. Closing: see CLOSE_FR.
     import mathutils
-    cpos = mathutils.Vector((dx + 0.12, D + 0.3, 1.5)); ctg = mathutils.Vector((HXP(4.3), D + 1.0, 1.32))
+    if SWING is None: cpos = mathutils.Vector((dx + 0.12, D + 0.3, 1.5)); ctg = mathutils.Vector((HXP(4.3), D + 1.0, 1.32)); roll = -17
+    else:
+        (ox, oy), _, k = CLOSE_FR[SWING]
+        cpos = mathutils.Vector((dx + 0.12 + ox, D + 0.3 + oy, 1.5 - 0.04 * k))
+        ctg = mathutils.Vector((HXP(4.3), D + 1.0, 1.32)).lerp(mathutils.Vector((dx + 0.05, D, 1.25)), k); roll = -17 + 6 * k
     cam_ = camera(tuple(cpos), tuple(ctg), lens=22)
     fwd_ = (ctg - cpos).normalized()
-    cam_.rotation_euler = (mathutils.Quaternion(fwd_, math.radians(-17)) @ fwd_.to_track_quat('-Z', 'Y')).to_euler()
-    if SWING is not None:
-        bpy.context.view_layer.update()
-        bpy.ops.object.empty_add(location=(0, 0, 0)); sh_ = bpy.context.active_object
-        sh_.parent = cam_; sh_.location = (0.27, 0.0, -0.3); sh_.scale = (0.4, 0.4, 0.4); sh_.rotation_euler = (0, -math.radians(SWING), math.radians(17))   # undo the head tilt: the door stays upright in the world
-        swm_ = mat_noise('swWood', (0.2, 0.1, 0.045), (0.26, 0.14, 0.065), scale=5, rough=0.5)
-        swi_ = mat_noise('swInsetM', (0.15, 0.075, 0.033), (0.2, 0.1, 0.045), scale=5, rough=0.55)
-        sp_ = [box('swPanel', (1.55, 2.06, 0.045), (-0.775, 0, 0), swm_, bevel=0.005)]
-        for i_, yy in enumerate((0.4, -0.55)): sp_.append(box('swInset%d' % i_, (0.95, 0.7, 0.02), (-0.8, yy, 0.03), swi_, bevel=0.01))
-        sp_.append(sphere('swKnob', 0.035, (-1.4, -0.1, 0.05), brass))
-        sp_.append(decal('swScr', scr, (-0.45, 0.25, 0.031), (0.3, 0.6), 'z'))
-        for o_ in sp_: o_.parent = sh_
-        fl_ = point('swFill', (0, 0, 0), 12, color=(1.0, 0.65, 0.35), radius=0.15); fl_ = fl_ or bpy.data.objects['swFill']; fl_.parent = cam_; fl_.location = (-0.05, 0.3, 0.05)
+    cam_.rotation_euler = (mathutils.Quaternion(fwd_, math.radians(roll)) @ fwd_.to_track_quat('-Z', 'Y')).to_euler()
     if PEEK >= 0:
         import mathutils
         src_ = mathutils.Vector((dx + 0.05, D + 0.25, 1.4)); tg_ = mathutils.Vector((HXP(3.0), D + 0.75, 1.1))
@@ -496,11 +491,29 @@ if 'pano' in OPT and VIEW in ('hub', 'living', 'kitchen'):
     cam = bpy.context.scene.camera; bpy.context.view_layer.update()
     fwd = cam.matrix_world.to_quaternion() @ mathutils.Vector((0, 0, -1))
     yaw = math.atan2(fwd.y, fwd.x); pitch = math.asin(max(-1, min(1, fwd.z)))
-    LON, LAT = {'hub': (152, 62), 'living': (150, 52), 'kitchen': (150, 54)}[VIEW]
+    LON, LAT = {'hub': (152, 44), 'living': (150, 46), 'kitchen': (150, 48)}[VIEW]
     cam.rotation_euler = mathutils.Vector((math.cos(yaw), math.sin(yaw), 0)).to_track_quat('-Z', 'Y').to_euler()
     cd = cam.data; cd.type = 'PANO'; cd.panorama_type = 'EQUIRECTANGULAR'
     cd.longitude_min = math.radians(-LON / 2); cd.longitude_max = math.radians(LON / 2)
     cd.latitude_min = pitch + math.radians(-LAT / 2); cd.latitude_max = pitch + math.radians(LAT / 2)
     sc_ = bpy.context.scene; sc_.render.resolution_y = 720; sc_.render.resolution_x = int(round(720 * LON / LAT / 2) * 2)
+
+    if os.environ.get('PROBE'):
+        cw = cam.matrix_world.copy(); inv = cw.inverted(); bpy.context.view_layer.update(); cw = cam.matrix_world.copy(); inv = cw.inverted()
+        def pp(v):
+            l = inv @ v; lon = math.degrees(math.atan2(l.x, -l.z)); lat = math.degrees(math.atan2(l.y, math.hypot(l.x, l.z)))
+            return ((lon + LON / 2) / LON * 100, (math.degrees(pitch) + LAT / 2 - lat) / LAT * 100)
+        if os.environ['PROBE'] == 'list':
+            for o in bpy.data.objects:
+                if o.type == 'MESH': print('OBJ', o.name)
+        for pat in os.environ['PROBE'].split(','):
+            pts = []
+            for o in bpy.data.objects:
+                if o.type == 'MESH' and pat.lower() in o.name.lower() and o.visible_get():
+                    pts += [pp(o.matrix_world @ mathutils.Vector(c)) for c in o.bound_box]
+            if pts:
+                xs = [a for a, b in pts]; ys = [b for a, b in pts]
+                print('PROBE', pat, [round(min(xs), 1), round(min(ys), 1), round(max(xs) - min(xs), 1), round(max(ys) - min(ys), 1)])
+        raise SystemExit
 
 render(out)
