@@ -72,12 +72,18 @@
   function T(key, n) { var v = L()[key]; if (v === undefined) v = STR.en[key]; return typeof v === 'string' && n !== undefined ? v.replace('{n}', n) : v; }
 
   // ------------------------------------------------------------ scaling
+  // portrait phones (or an app that keeps the page upright) get the stage turned sideways to fill the screen:
+  // turn the phone and it reads as landscape. Upright landscape windows just letterbox.
+  var stageRot = false, stageOx = 0, stageOy = 0;
   function fit() {
-    var w = window.innerWidth, h = window.innerHeight, s = Math.min(w / 1280, h / 720); stageScale = s;
-    var st = $('stage'); st.style.transform = 'scale(' + s + ')';
-    st.style.left = ((w - 1280 * s) / 2) + 'px'; st.style.top = ((h - 720 * s) / 2) + 'px';
-    var portrait = h > w * 1.1;
-    $('rotate').style.display = (portrait && game && !rotateDismissed) ? 'flex' : 'none';
+    var w = window.innerWidth, h = window.innerHeight, st = $('stage');
+    stageRot = h > w * 1.1;
+    var s = stageRot ? Math.min(h / 1280, w / 720) : Math.min(w / 1280, h / 720); stageScale = s;
+    if (stageRot) { stageOx = (w + 720 * s) / 2; stageOy = (h - 1280 * s) / 2; st.style.transform = 'rotate(90deg) scale(' + s + ')'; }
+    else { stageOx = (w - 1280 * s) / 2; stageOy = (h - 720 * s) / 2; st.style.transform = 'scale(' + s + ')'; }
+    st.style.left = stageOx + 'px'; st.style.top = stageOy + 'px';
+    document.body.classList.toggle('rot', stageRot);
+    $('rotate').style.display = 'none';
   }
   var rotateDismissed = false;
   window.addEventListener('resize', fit);
@@ -738,7 +744,7 @@
     return S;
   }
   var stageScale = 1;
-  function toStage(e) { var r = $('stage').getBoundingClientRect(); return [(e.clientX - r.left) / stageScale, (e.clientY - r.top) / stageScale]; }
+  function toStage(e) { return stageRot ? [(e.clientY - stageOy) / stageScale, (stageOx - e.clientX) / stageScale] : [(e.clientX - stageOx) / stageScale, (e.clientY - stageOy) / stageScale]; }
   function bindSpot(el, s) {
     var down = false, held = false, timer = 0;
     el.addEventListener('pointerdown', function (e) {

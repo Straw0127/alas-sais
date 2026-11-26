@@ -351,7 +351,8 @@ img.w6am{display:block;height:120px;width:auto;margin:0 auto;filter:drop-shadow(
 .cpanel .cred-attr{font:400 13px Inter,sans-serif;color:#8f8676}
 /* warning before the menu */
 #scr-warn{background:radial-gradient(ellipse at 50% 40%,#1a0c0a,#000 70%)}
-.warnbox{max-width:860px;text-align:center;gap:14px}
+.warnbox{text-align:center;gap:14px;padding:40px 180px}
+.warnbox>*{max-width:860px}
 .warn-ico{width:74px;height:74px;margin:0 auto;border:3px solid #c94a3a;border-radius:50%;font:700 44px Oswald,sans-serif;color:#c94a3a;line-height:66px;animation:pulse 1.6s ease-in-out infinite}
 .warnbox h3{margin:4px 0;font:700 32px Oswald,sans-serif;letter-spacing:8px;color:#e9dfcb}
 .warnbox p{margin:0;font:400 18px/1.55 Inter,sans-serif;color:#d8cdb8}
