@@ -515,7 +515,7 @@ if JS:
     # who: (builder, start position, its face relative to its origin when facing -y, how close the face ends up)
     before = set(o.name for o in bpy.data.objects)
     WPS = []; BREAK = (); LEAP = 0.0; WG = 0.8 if f < 2 else 0.22   # wings spread outside, folded to come through
-    DROP = 0.3; OP = None; LENS1 = 30
+    DROP = 0.3; OP = None; LENS1 = 30; AIM0 = 0.0
     if JS == 'kumot':   # she does not fit through the door: she stays in the hall and leans in through the doorway, right to your face
         build_kumot_batibat(0, 0); P0 = (dx, D + 0.8, 0); FL = (0, -0.5, 2.12)
         OP = [(0.0, (dx, D + 0.8, 0), 0, 1, 0.5), (0.16, (dx, D + 0.8, 0), 55, 1, 0.5), (1.0, (dx, D + 0.75, 0), 50, 1, 0.5)]   # ducks under the lintel
@@ -535,7 +535,7 @@ if JS:
         OP = [(0.0, (CX + 0.35, HY1 + 0.9, 1.0), 0, 1), (0.16, (CX + 0.1, HY1 + 0.7, 1.0), 0, 1), (0.34, (CX, HY1, 1.0), 0, 1), (0.56, (CX + 0.01, HY1 - 0.5, 1.05), 0, 1), (1.0, (CX + 0.02, HY0 + 0.87, 1.0), 0, 1)]
     elif JS == 'bangungot':   # beside the bed; then she is on it, hunched over you (the kulambo torn down), creeping up to your face
         build_kumot_batibat(0, 0); P0 = (0.0, 0.6, 0.0); FL = (0, -0.5, 2.12); BREAK = ('kulambo',)
-        OP = [(0.0, (0.0, 0.6, 0), 0, 1), (0.16, (0.95, 2.0, 0), 55, 1), (1.0, (0.84, 2.0, 0), 62, 1)]   # from the side of the bed she bends right over you
+        OP = [(0.0, (0.0, 0.6, 0), 0, 1), (0.16, (0.95, 2.0, 0), 55, 1), (1.0, (0.84, 2.0, 0), 62, 1)]; AIM0 = 0.75   # she comes from the side: you turn to her at once   # from the side of the bed she bends right over you
     elif JS == 'kumotu':   build_kumot_batibat(0, 0); P0 = (-0.15, 1.75, 0); FL = (0, -0.5, 2.12); DC = 0.42   # at the gap under the bed
     elif JS == 'malikh':   build_tiyanak(0, 0, 0.0, crawl=True); P0 = LW(0.3, 2.15, 0); FL = (0, -0.34, 0.6); DC = 0.42   # round the end of the sofa
     elif JS == 'barang':   build_barang((0, 0, 0), 0.0, stage=4, glow=1.0); P0 = (fx - 0.45, AY + 0.1, 0); FL = (0, -0.23, 1.45); DC = 0.42
@@ -578,7 +578,7 @@ if JS:
         vv = C - O; yaw = math.atan2(vv.x, -vv.y)
         side_ = mathutils.Vector((math.cos(yaw), math.sin(yaw), 0)) * SIDE[f]
         e.location = O + side_; e.rotation_euler = (math.radians(pit), 0, yaw); e.scale = (xs, 1, zs)
-        F = face_at(); aim(cam, (C + fwd0 * 3).lerp(F, min(1, k * 1.4)), TILT[f], lens0 + (LENS1 - lens0) * k)
+        F = face_at(); aim(cam, (C + fwd0 * 3).lerp(F, min(1, (AIM0 if f >= 2 else 0) + k * 1.4)), TILT[f], lens0 + (LENS1 - lens0) * k)
         point('jsKey', tuple(F + mathutils.Vector((0.2, 0.2, 0.45))), 5 + 9 * k, color=(1.0, 0.75, 0.55), radius=0.15)
         if f >= 2 and BREAK:
             for o in bpy.data.objects:
