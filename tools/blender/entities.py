@@ -302,14 +302,17 @@ def build_kumot_batibat(x=0, y=0, peer=False):
     cloth.data.materials.clear(); cloth.data.materials.append(shroud)
     w = bpy.data.objects.get('kHeadWrap')
     if w: w.data.materials.clear(); w.data.materials.append(shroud)
-    # long white hair spilling from under the shroud at the face
+    # long white hair spilling from under the shroud at the face: many fine strands, each hanging with a slight wave
     hair = mat_basic('whiteHair', (0.55, 0.53, 0.5), 0.45)
     hx, hy, hz = (x, y - 0.33, 2.02) if not peer else (x, y - 0.42, 1.74)
     import random as _r; _r.seed(13)
-    for i in range(34):
-        L = _r.uniform(0.45, 1.0); ox = _r.uniform(-0.12, 0.12)
-        h = cyl('wHair%d' % i, 0.0028, L, (hx + ox, hy + _r.uniform(-0.03, 0.03), hz - L / 2 + 0.1), hair, verts=5)
-        h.rotation_euler = (_r.uniform(-0.15, 0.15), _r.uniform(-0.1, 0.1), 0)
+    for i in range(90):
+        L = _r.uniform(0.45, 1.0); ox = _r.uniform(-0.12, 0.12); oy = _r.uniform(-0.03, 0.03)
+        n_ = 7; vv = []
+        for j in range(n_):
+            u = j / (n_ - 1); w = 0.008 * math.sin(u * 6 + i * 1.7) * u
+            vv.append((ox + w + 0.012 * u * (1 if ox > 0 else -1), oy - 0.01 * u, 0.1 - L * u))
+        h = skin_body('wHair%d' % i, vv, [(k_, k_ + 1) for k_ in range(n_ - 1)], [_r.uniform(0.0016, 0.0024)] * (n_ - 1) + [0.0008], hair, sub=1, loc=(hx, hy, hz))
     # black mourning ribbon (luksa) pinned on the shroud
     blk = mat_basic('luksa', (0.01, 0.01, 0.01), 0.5)
     box('luksa', (0.05, 0.01, 0.09), (x + 0.12, y - 0.28, 1.6 if not peer else 1.5), blk, rot=(0, 0, 0.3))

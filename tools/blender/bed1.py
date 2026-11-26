@@ -515,10 +515,11 @@ if JS:
     # who: (builder, start position, its face relative to its origin when facing -y, how close the face ends up)
     before = set(o.name for o in bpy.data.objects)
     WPS = []; BREAK = (); LEAP = 0.0; WG = 0.8 if f < 2 else 0.22   # wings spread outside, folded to come through
-    DROP = 0.3; OP = None; LENS1 = 30; AIM0 = 0.0
+    DROP = 0.3; OP = None; LENS1 = 30; AIM0 = 0.0; BEND = 0; AIMS = None
     if JS == 'kumot':   # she does not fit through the door: she stays in the hall and leans in through the doorway, right to your face
-        build_kumot_batibat(0, 0); P0 = (dx, D + 0.8, 0); FL = (0, -0.5, 2.12)
-        OP = [(0.0, (dx, D + 0.8, 0), 0, 1, 0.5), (0.16, (dx, D + 0.8, 0), 55, 1, 0.5), (1.0, (dx, D + 0.75, 0), 50, 1, 0.5)]   # ducks under the lintel
+        build_kumot_batibat(0, 0); P0 = (dx - 0.06, D + 0.72, 0); FL = (0, -0.5, 2.12)
+        BEND = 0 if f < 2 else 42 + 22 * k   # she steps into the doorway bending at the waist under the lintel, her face at yours
+        OP = [(0.0, (dx - 0.06, D + 0.72, 0), 0, 1, 0.68), (0.16, (dx - 0.06, D + 0.55, 0), 0, 1, 0.68), (1.0, (dx - 0.06, D + 0.15, 0), 0, 1, 0.68)]   # ducks under the lintel
     elif JS == 'malikmata':
         build_tiyanak(0, 0, 0.0, crawl=True); P0 = LW(0.35, LDIM[1] - 1.0, 0); FL = (0, -0.34, 0.6)   # leaps up over the stand fan in front of you and comes down at your face
         OP = [(0.0, LW(0.35, LDIM[1] - 1.0, 0), 0, 1), (0.16, LW(0.1, 2.9, 0), 0, 1), (0.34, LW(-0.15, 2.3, 0.5), 0, 1), (0.56, LW(-0.3, 2.0, 1.5), 0, 1), (1.0, LW(-0.35, 1.8, 1.5), 0, 1)]
@@ -539,6 +540,25 @@ if JS:
     elif JS == 'kumotu':   build_kumot_batibat(0, 0); P0 = (-0.15, 1.75, 0); FL = (0, -0.5, 2.12); DC = 0.42   # at the gap under the bed
     elif JS == 'malikh':   build_tiyanak(0, 0, 0.0, crawl=True); P0 = LW(0.3, 2.15, 0); FL = (0, -0.34, 0.6); DC = 0.42   # round the end of the sofa
     elif JS == 'barang':   build_barang((0, 0, 0), 0.0, stage=4, glow=1.0); P0 = (fx - 0.45, AY + 0.1, 0); FL = (0, -0.23, 1.45); DC = 0.42
+    # Kumot bends at the waist (her legs stay standing): every point above the hip turns forward round the hip, the turn
+    # easing in over a band, so the body curves instead of tipping over like a plank
+    def bend_pt(p, a, hip=1.1, band=0.45):
+        dz = p[2] - hip
+        if dz <= 0 or not a: return mathutils.Vector(p)
+        t = min(1.0, dz / band); t = t * t * (3 - 2 * t); g_ = math.radians(a) * t
+        return mathutils.Vector((p[0], p[1] * math.cos(g_) - dz * math.sin(g_), hip + dz * math.cos(g_) + p[1] * math.sin(g_)))
+    if JS == 'kumot':   # her hem clears the threshold strip as she steps in
+        import bmesh as _bm
+        cl_ = bpy.data.objects.get('kumotCloth')
+        if cl_:
+            _b = _bm.new(); _b.from_mesh(cl_.data); mw_ = cl_.matrix_world
+            _bm.ops.delete(_b, geom=[v for v in _b.verts if (mw_ @ v.co).z < 0.14], context='VERTS'); _b.to_mesh(cl_.data); _b.free()
+    if BEND:
+        for o in bpy.data.objects:
+            if o.name in before or o.type != 'MESH': continue
+            mw = o.matrix_world.copy(); inv = mw.inverted()
+            for v in o.data.vertices: v.co = inv @ bend_pt(bend_pt(mw @ v.co, -0.85 * BEND, 1.92, 0.12), BEND)   # the head tips back up so she looks at you
+        FL = tuple(bend_pt(bend_pt(FL, -0.85 * BEND, 1.92, 0.12), BEND))
     e = group_at(before, (0, 0, 0), 0.0)
     def aim(cam_, F_, tilt_, lens_):   # turn the camera to the face (with a lurch) and narrow the lens
         fwd_ = (F_ - cam_.location).normalized()
@@ -566,7 +586,9 @@ if JS:
             F = face_at(); aim(cam, (cam.location + fwd0 * 3).lerp(F, min(1, 0.35 + qe)), TILT[f], lens0 + (30 - lens0) * qe)
         point('jsKey', tuple(F + mathutils.Vector((0.2, 0.15, 0.45))), 6 + 12 * k, color=(1.0, 0.75, 0.55), radius=0.15)
     if OP is None and JS == 'malikh':   # behind the sofa: it goes round to the front, hops onto the seat and looms over the back at you
-        OP = [(0.0, LW(0.3, 2.15, 0), 0, 1), (0.16, LW(0.75, 2.1, 0), 0, 1), (0.34, LW(0.75, 2.1, 0.62), 0, 1), (0.56, LW(0.75, 1.45, 0.62), 0, 1), (1.0, LW(0.75, 1.4, 0.62), 0, 1)]; LENS1 = 44
+        # it crawls along the floor between the sofa's end and the stand fan (over the fan's flat base) toward you, keeping
+        # low; the view only swings onto it when it is close
+        OP = [(0.0, LW(0.3, 2.15, 0), 0, 1), (0.16, LW(0.12, 2.0, 0), 0, 1), (0.34, LW(0.03, 1.6, 0.05), 5, 1), (0.56, LW(0.03, 1.4, 0.0), 10, 0.9), (0.76, LW(0.03, 1.3, 0.0), 15, 0.8), (1.0, LW(0.03, 1.25, 0.0), 20, 0.75)]; LENS1 = 36; AIMS = 0.3
     if OP is not None:   # a path of (k, origin, pitch, height scale); it always faces you
         cam = bpy.context.scene.camera; C = cam.location.copy(); lens0 = cam.data.lens; fwd0 = cam.matrix_world.to_quaternion() @ mathutils.Vector((0, 0, -1))
         for i_ in range(len(OP) - 1):
@@ -578,7 +600,8 @@ if JS:
         vv = C - O; yaw = math.atan2(vv.x, -vv.y)
         side_ = mathutils.Vector((math.cos(yaw), math.sin(yaw), 0)) * SIDE[f]
         e.location = O + side_; e.rotation_euler = (math.radians(pit), 0, yaw); e.scale = (xs, 1, zs)
-        F = face_at(); aim(cam, (C + fwd0 * 3).lerp(F, min(1, (AIM0 if f >= 2 else 0) + k * 1.4)), TILT[f], lens0 + (LENS1 - lens0) * k)
+        af = min(1, (AIM0 if f >= 2 else 0) + k * 1.4) if AIMS is None else max(0.0, min(1.0, (k - AIMS) / (1 - AIMS))) ** 0.7
+        F = face_at(); aim(cam, (C + fwd0 * 3).lerp(F, af), TILT[f] * (0.4 if AIMS is not None and k < AIMS else 1), lens0 + (LENS1 - lens0) * k)
         point('jsKey', tuple(F + mathutils.Vector((0.2, 0.2, 0.45))), 5 + 9 * k, color=(1.0, 0.75, 0.55), radius=0.15)
         if f >= 2 and BREAK:
             for o in bpy.data.objects:
