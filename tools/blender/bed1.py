@@ -462,6 +462,9 @@ elif VIEW == 'door':
         spot('peekTorch', tuple(src_), (tg_ - src_).to_track_quat('-Z', 'Y').to_euler(), 520, angle=math.radians(38), color=(1.0, 0.93, 0.8), blend=0.9)
     point('doorFill', (dx + 0.5, D - 1.7, 2.2), 6, color=(1.0, 0.7, 0.42), radius=0.4)
     point('viewFill', (dx + 0.9, D - 1.2, 1.9), 3, color=(1.0, 0.65, 0.35), radius=0.3)
+elif VIEW == 'sleep':   # lying in Lola's bed, head on the pillow, looking down past your feet
+    camera((-1.4, 2.05, 0.86), (-1.4, -0.2, 1.05), lens=22)
+    point('sleepFill', (-0.9, 1.0, 2.0), 3, color=(1.0, 0.6, 0.32), radius=0.3)
 elif VIEW == 'window':
     camera((0.15, WY - 0.05, 1.52), (W / 2 + 1, WY, 1.48), lens=22)
 elif VIEW == 'under':
@@ -492,6 +495,7 @@ if JS:
     elif JS == 'malikmata': build_tiyanak(0, 0, 0.0, crawl=True); P0 = LW(0.35, LDIM[1] - 1.0, 0); FL = (0, -0.34, 0.6); DC = 0.5
     elif JS == 'kalansing': build_kalansing(0, 0); add_aswang_tongue(0, 0); P0 = KW(0.2, KDIM[1] - 0.9, 0); FL = (0, -0.66, 1.0); DC = 0.85
     elif JS == 'silip':    build_manananggal(0, 0, 0, wing=0.8); P0 = (W / 2 + 0.6, WY, 1.05); FL = (0, -0.1, 0.66); DC = 0.8
+    elif JS == 'bangungot': build_kumot_batibat(0, 0); P0 = (-1.4, 0.05, 0.0); FL = (0, -0.5, 2.12); DC = 0.55
     elif JS == 'barang':   build_barang((0, 0, 0), 0.0, stage=4, glow=1.0); P0 = (fx - 0.05, AY + 0.1, 0); FL = (0, -0.23, 1.45); DC = 0.42
     e = group_at(before, (0, 0, 0), 0.0)
     cam = bpy.context.scene.camera; C = cam.location.copy(); bpy.context.view_layer.update()
@@ -546,6 +550,8 @@ if 'pano' in OPT and VIEW in ('hub', 'living', 'kitchen'):
         def pp(v):
             l = inv @ v; lon = math.degrees(math.atan2(l.x, -l.z)); lat = math.degrees(math.atan2(l.y, math.hypot(l.x, l.z)))
             return ((lon + LON / 2) / LON * 100, (math.degrees(pitch) + LAT / 2 - lat) / LAT * 100)
+        for pt_ in [p for p in os.environ.get('PROBEPT', '').split(';') if p]:
+            print('PT', pt_, [round(v, 2) for v in pp(mathutils.Vector([float(c) for c in pt_.split(',')]))])
         if os.environ['PROBE'] == 'list':
             for o in bpy.data.objects:
                 if o.type == 'MESH': print('OBJ', o.name)

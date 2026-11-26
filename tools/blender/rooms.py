@@ -94,7 +94,9 @@ def build_kitchen(KAL=False, LIT=False, KALIN=False):
         build_kalansing(-0.6, 1.9); add_aswang_tongue(-0.6, 1.9)
     elif KAL:   # in the doorway from the hall
         build_kalansing(1.3, D + 0.45); add_aswang_tongue(1.3, D + 0.45)
-        point('kalRim', (1.3, D - 0.4, 1.7), 45, color=(0.7, 0.8, 0.7), radius=0.2)
+        import mathutils as _mu   # a tight rim on her only: the kitchen itself must not brighten when she arrives
+        _src = _mu.Vector((1.3, D - 0.6, 2.2)); _tg = _mu.Vector((1.3, D + 0.45, 0.9))
+        spot('kalRim', tuple(_src), (_tg - _src).to_track_quat('-Z', 'Y').to_euler(), 30, angle=math.radians(28), color=(0.7, 0.8, 0.7), blend=0.5)
 
     return W, D, H
 
@@ -169,6 +171,8 @@ def build_living(MALIK=False, LIGHTS=False, TVOFF=True, LIT=False):
     cyl('tube', 0.02, 1.2, (0, 2.6, H - 0.06), tm, rot=(0, math.radians(90), 0))
     if tube_on:
         area('tubeL', (0, 2.6, H - 0.1), (0, 0, 0), 120, size=(1.2, 0.1), color=(0.85, 1.0, 0.9))
+    else:   # lights off: the street light through the jalousie keeps the room just readable (you have to see the sofa and the TV)
+        area('streetFill', (W / 2 - 0.3, 2.6, 2.3), (0, math.radians(-70), 0), 28, size=(1.4, 1.2), color=(0.45, 0.55, 0.85))
 
     # plastic-covered sofa in foreground right (we stand beside it)
     fabric = mat_floral('sofa', (0.2, 0.16, 0.08), (0.3, 0.22, 0.1), (0.12, 0.1, 0.05), scale=6)
@@ -191,6 +195,11 @@ def build_living(MALIK=False, LIGHTS=False, TVOFF=True, LIT=False):
     santo_nino(-1.8, D - 0.25, 1.9)
     galon(2.1, D - 0.4)
     wire_run([(0.95, D - 0.02, 1.36), (0.95, D - 0.02, H - 0.02), (0, D - 0.02, H - 0.02), (0, 2.6, H - 0.02)])
+    # a stand fan between the sofa and the chairs (the blades are drawn and spun by the game; here only base, pole and cage)
+    fmetal = mat_basic('fanmetalL', (0.08, 0.09, 0.1), 0.35, metal=0.6)
+    cyl('lfanBase', 0.2, 0.04, (-0.3, 1.5, 0.02), fmetal); cyl('lfanPole', 0.02, 1.1, (-0.3, 1.5, 0.57), fmetal)
+    lcage = cyl('lfanCage', 0.24, 0.14, (-0.3, 1.5, 1.2), fmetal, rot=(math.radians(90), 0, math.radians(-60)), verts=24)
+    lcage.modifiers.new('w', 'WIREFRAME').thickness = 0.006
     if MALIK:
         from entities import build_tiyanak
         build_tiyanak(0.15, D - 0.75, 0.0, crawl=True)
