@@ -115,12 +115,12 @@ cyl('yardTrunk', 0.18, 4.2, (CX - 2.2, HY1 + 7.0, 2.1), mat_noise('yTrunk', (0.0
 sphere('yardCanopy', 1.8, (CX - 2.2, HY1 + 7.0, 4.6), mat_noise('yLeaves', (0.02, 0.04, 0.02), (0.04, 0.07, 0.03), scale=3), scale=(1.3, 1.1, 0.8))
 area('yardMoon', (CX + 3.5, HY1 + 6.0, 5.0), (math.radians(-40), 0, math.radians(235)), 45, size=(4, 4), color=(0.45, 0.58, 1.0))
 door_mat = mat_planks('door', (0.2, 0.1, 0.045), (0.24, 0.13, 0.06), scale=2.5, rough=0.5)
-bpy.ops.object.empty_add(location=(dx + 0.45, D - 0.05, 0)); hinge = bpy.context.active_object
+bpy.ops.object.empty_add(location=(dx - 0.45, D - 0.05, 0)); hinge = bpy.context.active_object   # hung on the left jamb (seen from the room)
 parts = [box('doorPanel', (0.88, 0.045, 2.06), (dx + 0.01, D - 0.05, 1.03), door_mat, bevel=0.005)]
 for i, z in enumerate((1.55, 0.6)):
     parts.append(box('panel%d' % i, (0.62, 0.02, 0.7), (dx + 0.01, D - 0.075, z), wood_dark, bevel=0.01))
 brass = mat_basic('brass', (0.6, 0.42, 0.15), 0.3, metal=1.0)
-parts.append(sphere('knob', 0.03, (dx - 0.35, D - 0.1, 1.0), brass))
+parts.append(sphere('knob', 0.03, (dx + 0.35, D - 0.1, 1.0), brass))
 scr = mat_stain('scratch', (0.02, 0.012, 0.006), scale=40, lo=0.55, hi=0.6)
 parts.append(decal('scratchesDoor', scr, (dx + 0.1, D - 0.076, 1.25), (0.3, 0.6), '-y'))
 for p in parts: p.parent = hinge; p.matrix_parent_inverse = hinge.matrix_world.inverted()
@@ -131,7 +131,7 @@ SWING = 0 if DOOR == 'closed' and VIEW == 'door' else (int(DOOR[2:]) if DOOR.sta
 # in front of you. Each frame name is a step of that move: camera spot, door angle, and how far the gaze has turned to the door.
 CLOSE_FR = {80: ((0.08, -0.05), 84, 0.1), 62: ((0.02, -0.5), 80, 0.3), 46: ((-0.05, -0.95), 60, 0.55), 32: ((-0.1, -1.1), 35, 0.8),
             18: ((-0.1, -1.1), 15, 0.92), 0: ((-0.1, -1.1), 0, 1.0)}
-hinge.rotation_euler = (0, 0, math.radians(CLOSE_FR[SWING][1] if SWING is not None else {'ajar': 84, 'gap': 84, 'peek': 84, 'open': 92, 'closed': 0}[DOOR]))
+hinge.rotation_euler = (0, 0, -math.radians(CLOSE_FR[SWING][1] if SWING is not None else {'ajar': 84, 'gap': 84, 'peek': 84, 'open': 92, 'closed': 0}[DOOR]))
 sw = mat_basic('sw', (0.75, 0.7, 0.6), 0.5)
 box('switch', (0.08, 0.02, 0.12), (dx + 0.75, D - 0.01, 1.3), sw, bevel=0.005)
 
@@ -382,7 +382,7 @@ if KPOS > 0:   # what the flashlight finds down the hallway
     from entities import build_kumot_batibat
     before = set(o.name for o in bpy.data.objects)
     build_kumot_batibat(0, 0, peer=(KPOS == 3))
-    kp = {1: ((HXP(3.85), CY, 0), 90), 2: ((HXP(1.7), CY + 0.1, 0), 90), 3: ((dx - 0.25, D + 0.72, 0), 0)}[KPOS]
+    kp = {1: ((HXP(3.85), CY, 0), 90), 2: ((dx - 0.75, D + 0.9, 0), 25) if VIEW == 'door' else ((HXP(1.7), CY + 0.1, 0), 90), 3: ((dx - 0.15, D + 0.5, 0), 12)}[KPOS]
     group_at(before, kp[0], math.radians(kp[1]))
 if KUMOT:
     from entities import build_kumot_batibat
@@ -452,19 +452,16 @@ elif VIEW == 'plan':   # debug: the whole house from above, cut at ceiling heigh
 elif VIEW == 'hub':
     camera((0.25, -0.15, 1.6), (0.75, 4.4, 1.28), lens=17)
 elif VIEW == 'door':
-    # FNAF4-style: you stand a step inside the room facing the doorway, the real door hinged on the right. Holding it shut,
-    # the door swings across the opening in front of you (frames sw80..sw18, closed); the camera stays put.
-    # With the light on (peek) you lean out of the doorway and shine it down the hall toward the kitchen.
+    # FNAF4-style: you stand a step inside the room, a little to the right, looking out through the doorway and down the
+    # hall toward the kitchen. The door hangs on the left jamb: open, it rests against the wall on the left; held, it swings
+    # across the opening in front of you (sw80..sw18, closed). The flashlight (peek) lights this same view.
     import mathutils
-    if PEEK >= 0: cpos = mathutils.Vector((dx + 0.05, D + 0.2, 1.5)); ctg = mathutils.Vector((HXP(4.3), D + 0.8, 1.3)); roll = -7
-    else: cpos = mathutils.Vector((dx + 0.05, D - 2.3, 1.55)); ctg = mathutils.Vector((dx - 0.05, D + 1.3, 1.12)); roll = 0
-    cam_ = camera(tuple(cpos), tuple(ctg), lens=22 if PEEK >= 0 else 19)
-    fwd_ = (ctg - cpos).normalized()
-    cam_.rotation_euler = (mathutils.Quaternion(fwd_, math.radians(roll)) @ fwd_.to_track_quat('-Z', 'Y')).to_euler()
+    cpos = mathutils.Vector((dx + 0.8, D - 2.25, 1.55)); ctg = mathutils.Vector((dx - 0.2, D + 1.1, 1.18))
+    cam_ = camera(tuple(cpos), tuple(ctg), lens=19)
     if PEEK >= 0:
-        src_ = mathutils.Vector((dx + 0.05, D + 0.15, 1.4)); tg_ = mathutils.Vector((HXP(3.0), D + 0.75, 1.1))
-        spot('peekTorch', tuple(src_), (tg_ - src_).to_track_quat('-Z', 'Y').to_euler(), 700, angle=math.radians(40), color=(1.0, 0.93, 0.8), blend=0.85)
-    else: point('doorFill', (dx + 0.2, D - 1.6, 2.2), 5, color=(1.0, 0.7, 0.42), radius=0.4)
+        src_ = cpos + mathutils.Vector((0.12, 0.15, -0.2)); tg_ = mathutils.Vector((dx - 0.4, D + 0.85, 1.1))
+        spot('peekTorch', tuple(src_), (tg_ - src_).to_track_quat('-Z', 'Y').to_euler(), 520, angle=math.radians(38), color=(1.0, 0.93, 0.8), blend=0.9)
+    point('doorFill', (dx + 0.6, D - 1.8, 2.2), 5, color=(1.0, 0.7, 0.42), radius=0.4)
     point('viewFill', (dx + 0.9, D - 1.2, 1.9), 3, color=(1.0, 0.65, 0.35), radius=0.3)
 elif VIEW == 'window':
     camera((0.15, WY - 0.05, 1.52), (W / 2 + 1, WY, 1.48), lens=22)
