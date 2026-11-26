@@ -210,7 +210,7 @@
   }
   var CH_NIGHTS = { 1: 5, 2: 5, 3: 7 }, CH_READY = { 1: true, 2: true, 3: true };
   // PREVIEW: everything open so the whole game can be checked. Set to false to bring the normal unlocks back.
-  var PREVIEW_ALL = true;
+  var PREVIEW_ALL = false;
   function chUnlocked(ch) { return PREVIEW_ALL || ch === 1 || (ch === 2 && save.prog.c1 >= 5) || (ch === 3 && save.prog.c1 >= 5 && save.prog.c2 >= 5); }
   function renderNights() {
     var box = $('night-list'); box.innerHTML = '';
