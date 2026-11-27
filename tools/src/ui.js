@@ -1569,7 +1569,7 @@
       var pts = cuPoints(customRun.lv), rk = customRun.key;
       save.custom.records[rk] = Math.max(save.custom.records[rk] || 0, pts); store();
       $('win-n').textContent = T('custom_night'); $('win-time').textContent = T('cu_won', pts);
-      game = null; setTimeout(function () { show('scr-win'); }, 300); return;
+      game = null; setTimeout(function () { winShow(); }, 300); return;
     }
     var key = 'c' + curCh, n = game.night, last = n >= CH_NIGHTS[curCh];
     save.prog[key] = Math.max(save.prog[key] || 0, n);
@@ -1578,7 +1578,18 @@
     store(); renderTexts();
     game = null;
     if (last) { $('end-title').textContent = T('ch_n', curCh).toUpperCase() + ' · ' + T('end_title'); $('end-text').textContent = T('c' + curCh + '_end') || T('end_text'); }
-    setTimeout(function () { show(last ? 'scr-end' : 'scr-win'); }, 300);
+    setTimeout(function () { if (last) show('scr-end'); else winShow(); }, 300);
+  }
+  // 5:59 rolls over to 6:00 in the dark (the bell), then the morning comes into the room, then the words, then the buttons
+  var winT = [];
+  function winShow() {
+    var w = $('scr-win'); winT.forEach(clearTimeout); winT = []; w.classList.remove('go', 'morning', 'txt', 'btn'); show('scr-win');
+    var at = function (ms, f) { winT.push(setTimeout(f, ms)); };
+    if (save.set.motion) { w.classList.add('go', 'morning', 'txt', 'btn'); return; }
+    at(700, function () { w.classList.add('go'); });
+    at(1500, function () { w.classList.add('morning'); });
+    at(3000, function () { w.classList.add('txt'); });
+    at(3900, function () { w.classList.add('btn'); });
   }
   function onDeath(who) {
     cleanupScene(); stopBreath(); stopAll();
