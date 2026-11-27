@@ -304,7 +304,7 @@ def ap_door(name, hy, sign, angle):
         ps.append(decal(name + 'Rot', silver, (fx - 0.044, cy, z0 + 1.15), (0.3, 0.6), '-x'))
     for p in ps: p.parent = e; p.matrix_parent_inverse = e.matrix_world.inverted()
     e.rotation_euler = (0, 0, math.radians(angle))
-ang = {0: 0, 1: 22, 2: 42, 3: 64, 4: 88}[BAR]   # wide enough to see from the middle of the room
+ang = ({0: 0, 1: 40, 2: 58, 3: 76, 4: 88} if VIEW == 'cabinet' else {0: 0, 1: 22, 2: 42, 3: 64, 4: 88})[BAR]   # wide enough to see from the middle of the room; up close it swings wider so the gap reads as open
 ap_door('apDoorR', AY + AW / 2, 1, -ang)
 ap_door('apDoorL', AY - AW / 2, -1, 9 if BAR >= 4 else 0)
 from pinoy import santo_nino
